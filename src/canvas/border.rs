@@ -24,12 +24,12 @@ pub struct Border {
 impl Border {
     pub fn new(mut position: Position<i32>, size: Size<i32>, pixel_size: u16) -> Result<Self> {
         let size = size / pixel_size as i32;
-        let texture = Texture::from_disk("border2.png")?;
+        let texture = Texture::from_disk("border.png")?;
 
         // Fixed sizes for the corners and the sides
         let corner_size = Size::new(3, 3);
-        let vert_size = Size::new(3, size.height - corner_size.height * 2 - position.y);
-        let horz_size = Size::new(size.width - corner_size.width * 2 - position.x, 3);
+        let vert_size = Size::new(3, size.height - corner_size.height * 2);
+        let horz_size = Size::new(size.width - corner_size.width * 2, 3);
 
         // -----------------------------------------------------------------------------
         //     - Bottom left -

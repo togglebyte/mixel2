@@ -43,7 +43,7 @@ pub struct Canvas {
 impl Canvas {
     pub fn new(window_size: Size<i32>, context: &mut Context) -> Result<Self> {
         let mut application_renderer = Renderer::default(context)?;
-        application_renderer.pixel_size = 2;
+        application_renderer.pixel_size = 1;
         let application_viewport = Viewport::new(Position::zero(), window_size);
 
         let mut pixel_renderer = Renderer::default(context)?;
