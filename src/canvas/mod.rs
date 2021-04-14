@@ -1,43 +1,27 @@
 use anyhow::Result;
+use nalgebra::Vector3;
 use nightmaregl::events::Key;
-use nightmaregl::texture::{Texture, Wrap};
-use nightmaregl::{Context, Pixel, Position, Renderer, Size, Sprite, VertexData, Viewport};
+use nightmaregl::texture::Texture;
+use nightmaregl::{Context, Pixel, Pixels, Position, Renderer, Size, Sprite, VertexData, Viewport};
 
-mod pixelbuffer;
 mod border;
+mod cursor;
+mod pixelbuffer;
+mod draw;
 
-use pixelbuffer::PixelBuffer;
 use border::Border;
-
-// -----------------------------------------------------------------------------
-//     - Layers -
-// -----------------------------------------------------------------------------
-struct Layer {
-    texture: Texture<i32>,
-    buffer: PixelBuffer,
-}
-
-impl Layer {
-    pub fn new(size: Size<i32>) -> Self {
-        let buffer = PixelBuffer::new(Pixel::transparent(), size.cast());
-        let texture = Texture::default_with_data(size, buffer.0.as_bytes());
-        Self { texture, buffer }
-    }
-}
+use draw::Draw;
 
 // -----------------------------------------------------------------------------
 //     - Canvas -
 // -----------------------------------------------------------------------------
 pub struct Canvas {
-    background: Texture<i32>,
     border: Border,
     application_renderer: Renderer<VertexData>,
     application_viewport: Viewport,
-    draw_area_sprite: Sprite<i32>,
-    layers: Vec<Layer>,
     canvas_viewport: Viewport,
-    current_layer: usize,
-    pixel_renderer: Renderer<VertexData>,
+    canvas_size: Size<i32>,
+    draw: Draw,
 }
 
 impl Canvas {
@@ -46,84 +30,78 @@ impl Canvas {
         application_renderer.pixel_size = 1;
         let application_viewport = Viewport::new(Position::zero(), window_size);
 
-        let mut pixel_renderer = Renderer::default(context)?;
-        pixel_renderer.pixel_size = 8;
-        
+        // -----------------------------------------------------------------------------
+        //     - Canvas viewport -
+        // -----------------------------------------------------------------------------
         let canvas_viewport = {
-            let padding = 128 / application_renderer.pixel_size as i32;
+            let padding = 256 / application_renderer.pixel_size;
             let pos = application_viewport.position + Position::new(padding, padding);
             let size = *application_viewport.size() - Size::new(padding * 2, padding * 2);
-            
+
             Viewport::new(pos, size)
         };
 
-        let border = Border::new(canvas_viewport.position, *canvas_viewport.size(), application_renderer.pixel_size)?;
+        let canvas_size = Size::new(32, 32);
 
-        let size = Size::new(32, 32);
-        let layer = Layer::new(size);
+        // -----------------------------------------------------------------------------
+        //     - Border -
+        // -----------------------------------------------------------------------------
+        let border = Border::new(
+            canvas_viewport.position,
+            *canvas_viewport.size(),
+            application_renderer.pixel_size,
+        )?;
 
-        let background = Texture::from_disk("background.png")?;
-
-        let mut draw_area_sprite = Sprite::new(&background);
-        draw_area_sprite.position = canvas_viewport.centre();
-        draw_area_sprite.anchor -= (draw_area_sprite.size / 2).into();
+        // -----------------------------------------------------------------------------
+        //     - Draw -
+        // -----------------------------------------------------------------------------
+        let draw = Draw::new(Size::new(32, 32), context, canvas_viewport.centre())?;
 
         let inst = Self {
-            application_viewport,
-            application_renderer,
-            background,
             border,
-            draw_area_sprite,
-            layers: vec![layer],
+            application_renderer,
+            application_viewport,
             canvas_viewport,
-            current_layer: 0,
-            pixel_renderer,
+            canvas_size,
+            draw,
         };
 
         Ok(inst)
     }
 
     pub fn input(&mut self, key: Key) {
+        // let pixel_size = self.pixel_renderer.pixel_size as i32;
+
         match key {
-            Key::H => self.draw_area_sprite.position.x -= 1 * self.pixel_renderer.pixel_size as i32,
-            Key::L => self.draw_area_sprite.position.x += 1 * self.pixel_renderer.pixel_size as i32,
-            Key::K => self.draw_area_sprite.position.y += 1 * self.pixel_renderer.pixel_size as i32,
-            Key::J => self.draw_area_sprite.position.y -= 1 * self.pixel_renderer.pixel_size as i32,
-            Key::A => self.pixel_renderer.pixel_size += 1,
-            Key::S => self.pixel_renderer.pixel_size -= 1,
+            // Move the cursor  
+            Key::H => self.draw.offset_cursor(Position::new(-1, 0)),
+            Key::L => self.draw.offset_cursor(Position::new(1, 0) ),
+            Key::K => self.draw.offset_cursor(Position::new(0, -1) ),
+            Key::J => self.draw.offset_cursor(Position::new(0, 1)),
+
+            // Draw a pixel
+            Key::Space => self.draw.draw(),
+
+            // Move
+            Key::Left  => self.draw.offset_canvas(Position::new(-1, 0)),
+            Key::Right => self.draw.offset_canvas(Position::new(1, 0)),
+            Key::Up    => self.draw.offset_canvas(Position::new(0, 1)),
+            Key::Down  => self.draw.offset_canvas(Position::new(0, -1)),
+
+            // Scale up / down the pixel
+            Key::A => self.draw.resize_pixel(1),
+            Key::S => self.draw.resize_pixel(-1),
             _ => {}
         }
     }
 
     pub fn resize(&mut self, new_size: Size<i32>) {
         self.application_viewport.resize(new_size);
-        // TODO: resize all layer viewports as well.
-        // Move the sprite into the centre of the screen
+        // self.canvas_viewport.reszie(new_size);
     }
 
     pub fn render(&mut self, context: &mut Context) {
-        // Use the same vertex data for the canvas and
-        // the layers.
-
-        // Canvas / Drawable area
-        let vertex_data = [self
-            .draw_area_sprite
-            .vertex_data_scaled(self.pixel_renderer.pixel_size as f32)];
-
-        self.pixel_renderer
-            .render(&self.background, &vertex_data, &self.canvas_viewport, context);
-
-        // Layers
-        let errors = self
-            .layers
-            .iter()
-            .map(|l| {
-                self.pixel_renderer
-                    .render(&l.texture, &vertex_data, &self.canvas_viewport, context)
-            })
-            .collect::<Vec<_>>();
-
-        // Borders
+        // Borders and everything but the drawable area
         self.application_renderer.render(
             &self.border.texture,
             &self.border.vertex_data,
@@ -131,5 +109,25 @@ impl Canvas {
             context,
         );
 
+        // Render the drawable area
+        self.draw.render(&self.canvas_viewport, context);
+    }
+
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use nightmaregl::*;
+
+    #[test]
+    fn moving_cursor() {
+        let viewport = Viewport::new(Position::zero(), Size::new(800, 600));
+        let mut canvas = Sprite::from_size(Size::new(32, 32));
+        let mut cursor = Sprite::from_size(Size::new(1, 1));
+        cursor.position = Position::new(0, 0);
+        canvas.position = Position::new(0, 0);
+
+        assert_eq!(expected, actual);
     }
 }

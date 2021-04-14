@@ -8,4 +8,5 @@ edition = "2018"
 
 [dependencies]
 anyhow = "1.0.40"
+nalgebra = "0.26.1"
 nightmaregl = { path = "../nightmaregl" }

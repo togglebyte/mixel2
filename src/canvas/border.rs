@@ -2,28 +2,16 @@ use anyhow::Result;
 use nightmaregl::texture::Texture;
 use nightmaregl::{Position, Size, Sprite, VertexData, Point, Rect, FillMode};
 
-// TODO: A Viewport border:
-// * Eight sprites (each corner, each side)
-// * Sprite sheet as texture
-// * Repeat x,y texture for the sides
-//
-// Border colours:
-// #081726 Dark
-// #18426d Mid
-// #2d639a Light
-//
-// Note: add a black pixel border around the actual canvas sprite as well
 pub struct Border {
-    top_left: Sprite<i32>,
-    top: Sprite<i32>,
-    top_right: Sprite<i32>,
     pub texture: Texture<i32>,
     pub vertex_data: [VertexData; 8],
 }
 
 impl Border {
-    pub fn new(mut position: Position<i32>, size: Size<i32>, pixel_size: u16) -> Result<Self> {
-        let size = size / pixel_size as i32;
+    pub fn new(mut position: Position<i32>, size: Size<i32>, pixel_size: i32) -> Result<Self> {
+        let z_index = 10;
+
+        let size = size / pixel_size;
         let texture = Texture::from_disk("border.png")?;
 
         // Fixed sizes for the corners and the sides
@@ -35,6 +23,7 @@ impl Border {
         //     - Bottom left -
         // -----------------------------------------------------------------------------
         let mut bottom_left = Sprite::new(&texture);
+        bottom_left.z_index = z_index;
         bottom_left.texture_rect = Rect::new(Point::new(0, 4), corner_size);
         bottom_left.position = position;
         bottom_left.size = corner_size;
@@ -45,6 +34,7 @@ impl Border {
         //     - Left -
         // -----------------------------------------------------------------------------
         let mut left = Sprite::new(&texture);
+        left.z_index = z_index;
         left.texture_rect = Rect::new(Point::new(0, 4), Size::new(3, 1));
         left.position = position;
         left.size = vert_size;
@@ -66,6 +56,7 @@ impl Border {
         //     - Top -
         // -----------------------------------------------------------------------------
         let mut top = Sprite::new(&texture);
+        top.z_index = z_index;
         top.texture_rect = Rect::new(Point::new(3, 0), Size::new(1, 3));
         top.position = position;
         top.size = horz_size;
@@ -86,6 +77,7 @@ impl Border {
         //     - Right -
         // -----------------------------------------------------------------------------
         let mut right = Sprite::new(&texture);
+        right.z_index = z_index;
         right.texture_rect = Rect::new(Point::new(4, 4), Size::new(3, 1));
         right.position = position;
         right.size = vert_size;
@@ -96,6 +88,7 @@ impl Border {
         //     - Bottom right -
         // -----------------------------------------------------------------------------
         let mut bottom_right = Sprite::new(&texture);
+        bottom_right.z_index = z_index;
         bottom_right.texture_rect = Rect::new(Point::new(4, 4), corner_size );
         bottom_right.position = position;
         bottom_right.size = corner_size;
@@ -106,6 +99,7 @@ impl Border {
         //     - Bottom -
         // -----------------------------------------------------------------------------
         let mut bottom = Sprite::new(&texture);
+        bottom.z_index = z_index;
         bottom.texture_rect = Rect::new(Point::new(3, 4), Size::new(1, 3));
         bottom.position = position;
         bottom.size = horz_size;
@@ -122,9 +116,6 @@ impl Border {
         ];
 
         let inst = Self {
-            top_left,
-            top,
-            top_right,
             texture,
             vertex_data,
         };

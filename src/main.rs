@@ -4,11 +4,14 @@ use anyhow::Result;
 
 mod application;
 mod canvas;
+mod commandline;
 
 use application::App;
 
 fn main() -> Result<()> {
-    let (eventloop, mut context) = Context::builder("Mixel: the modal pixel editor").build()?;
+    let (eventloop, mut context) = Context::builder("Mixel: the modal pixel editor")
+        .vsync(false)
+        .build()?;
 
     let window_size = context.window_size();
     let mut app = App::new(window_size, &mut context)?;
