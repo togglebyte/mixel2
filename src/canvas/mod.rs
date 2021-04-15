@@ -20,7 +20,6 @@ pub struct Canvas {
     application_renderer: Renderer<VertexData>,
     application_viewport: Viewport,
     canvas_viewport: Viewport,
-    canvas_size: Size<i32>,
     draw: Draw,
 }
 
@@ -41,8 +40,6 @@ impl Canvas {
             Viewport::new(pos, size)
         };
 
-        let canvas_size = Size::new(32, 32);
-
         // -----------------------------------------------------------------------------
         //     - Border -
         // -----------------------------------------------------------------------------
@@ -62,7 +59,6 @@ impl Canvas {
             application_renderer,
             application_viewport,
             canvas_viewport,
-            canvas_size,
             draw,
         };
 

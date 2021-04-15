@@ -46,8 +46,6 @@ impl Draw {
         // -----------------------------------------------------------------------------
         let mut cursor = Cursor::new();
 
-        // cursor.anchor = (cursor.sprite.size / 2).into();
-
         // -----------------------------------------------------------------------------
         //     - Renderer -
         // -----------------------------------------------------------------------------
@@ -55,15 +53,21 @@ impl Draw {
         renderer.pixel_size = 23;
 
         // -----------------------------------------------------------------------------
-        //     - Drawable area -
+        //     - Drawable area (sprite) -
         // -----------------------------------------------------------------------------
-        let position = (position / renderer.pixel_size).into();
+        // let position = (position / renderer.pixel_size).into();
         let mut sprite = Sprite::new(&background);
         sprite.position = position;
         sprite.anchor -= (sprite.size / 2).into();
 
+        // -----------------------------------------------------------------------------
+        //     - Default layer -
+        // -----------------------------------------------------------------------------
         let layer = Layer::new(size);
 
+        // -----------------------------------------------------------------------------
+        //     - Instance -
+        // -----------------------------------------------------------------------------
         let inst = Self {
             cursor_pos: Position::new(0, 0),
             size,
@@ -86,9 +90,9 @@ impl Draw {
 
     pub fn render(&self, viewport: &Viewport, context: &mut Context) {
         let pixel_size = self.renderer.pixel_size as f32;
+
         // Canvas / Drawable area
-        // let mut vertex_data = self.sprite.vertex_data_scaled(pixel_size);
-        let mut vertex_data = self.sprite.vertex_data();
+        let mut vertex_data = self.sprite.vertex_data_scaled(pixel_size);
 
         self.renderer.render(
             &self.background,
@@ -157,7 +161,7 @@ impl Draw {
     }
 
     pub fn offset_canvas(&mut self, offset: Position<i32>) {
-        self.sprite.position += offset * self.renderer.pixel_size;
+        self.sprite.position += offset * 32;
     }
 
     pub fn resize_pixel(&mut self, size: i32) {
