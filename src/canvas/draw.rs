@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use log::error;
 use anyhow::Result;
 use nalgebra::Vector3;
@@ -6,12 +8,13 @@ use nightmaregl::{Context, Pixel, Pixels, Position, Renderer, Size, Sprite, Vert
 
 use super::cursor::Cursor;
 use super::pixelbuffer::PixelBuffer;
+use super::savebuffer::SaveBuffer;
 
 // -----------------------------------------------------------------------------
 //     - Layers -
 // -----------------------------------------------------------------------------
-struct Layer {
-    texture: Texture<i32>,
+pub struct Layer {
+    pub texture: Texture<i32>,
     buffer: PixelBuffer,
 }
 
@@ -35,6 +38,7 @@ pub struct Draw {
     layers: Vec<Layer>,
     renderer: Renderer<VertexData>,
     cursor_pos: Position<i32>,
+    save_buffer: SaveBuffer,
 }
 
 impl Draw {
@@ -77,6 +81,7 @@ impl Draw {
             current_layer: 0,
             layers: vec![layer],
             renderer,
+            save_buffer: SaveBuffer::new(context)?
         };
 
         Ok(inst)
@@ -175,6 +180,20 @@ impl Draw {
 
     pub fn resize_pixel(&mut self, size: i32) {
         self.renderer.pixel_size += size;
+    }
+
+    pub fn write_to_disk(&mut self, path: impl AsRef<Path>, overwrite: bool, context: &mut Context) {
+        if !overwrite && path.as_ref().exists() {
+            error!("File exists. Use ! to overwrite");
+            return;
+        }
+
+        self.save_buffer.save(
+            path,
+            &self.sprite,
+            &self.layers,
+            context
+        );
     }
 }
 

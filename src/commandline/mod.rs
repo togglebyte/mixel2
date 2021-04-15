@@ -4,6 +4,12 @@ use nightmaregl::events::Key;
 use nightmaregl::text::{Text, WordWrap};
 use nightmaregl::{Texture, Context, Pixel, Pixels, Position, Renderer, Size, Sprite, VertexData, Viewport};
 
+mod parser;
+mod commands;
+
+use parser::Parser;
+pub use commands::Command;
+
 // -----------------------------------------------------------------------------
 //     - Cursor -
 // -----------------------------------------------------------------------------
@@ -110,49 +116,52 @@ impl CommandLine {
         self.viewport.resize(viewport_size(new_size, self.font_size))
     }
 
-    pub fn input(&mut self, key: Key) -> Result<()> {
+    pub fn input(&mut self, key: Key) -> Option<Command> {
         match key {
             Key::Back => {
                 self.visible_buffer.pop();
                 self.input_buffer.pop();
-                self.update_text()?;
+                self.update_text();
             }
             Key::Return => {
-                self.input_buffer.drain(..).collect::<String>();
+                let input = self.input_buffer.drain(..).collect::<String>();
+                let command = Parser::parse(&input);
                 self.visible_buffer.clear();
-                self.update_text()?;
+                self.update_text();
+                return Some(command);
             }
             _ => {}
         }
-        Ok(())
+
+        None
     }
 
-    pub fn input_char(&mut self, c: char) -> Result<()> {
+    pub fn input_char(&mut self, c: char) {
         if c.is_control() {
-            return Ok(());
+            return;
         }
 
         self.input_buffer.push(c);
         self.visible_buffer.push(c);
-        self.update_text()?;
-
-        Ok(())
+        self.update_text();
     }
 
-    fn update_text(&mut self) -> Result<()> {
-        self.text.set_text(&self.visible_buffer)?;
+    fn update_text(&mut self) {
+        if let Err(e) = self.text.set_text(&self.visible_buffer) {
+            error!("Failed to set text: {:?}", e);
+        }
 
         while self.text.caret().x + self.cursor.sprite.size.width > self.viewport.size().width as f32 {
             if self.visible_buffer.is_empty() {
                 break;
             }
             self.visible_buffer.drain(..1);
-            self.text.set_text(&self.visible_buffer)?;
+            if let Err(e) = self.text.set_text(&self.visible_buffer) {
+                error!("Failed to set text: {:?}", e);
+            }
         }
 
         self.cursor.sprite.position = Position::new(self.text.caret().x, self.font_size / 3.0);
-
-        Ok(())
     }
 }
 

@@ -2,11 +2,13 @@ use log::error;
 use anyhow::Result;
 use nightmaregl::events::Key;
 use nightmaregl::{Context, Position, Renderer, Size, VertexData, Viewport};
+use crate::commandline::Command;
 
 mod border;
 mod cursor;
 mod pixelbuffer;
 mod draw;
+mod savebuffer;
 
 use border::Border;
 use draw::Draw;
@@ -112,21 +114,10 @@ impl Canvas {
         self.draw.render(&self.canvas_viewport, context);
     }
 
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-    use nightmaregl::*;
-
-    #[test]
-    fn moving_cursor() {
-        let viewport = Viewport::new(Position::zero(), Size::new(800, 600));
-        let mut canvas = Sprite::from_size(Size::new(32, 32));
-        let mut cursor = Sprite::from_size(Size::new(1, 1));
-        cursor.position = Position::new(0, 0);
-        canvas.position = Position::new(0, 0);
-
-        assert_eq!(expected, actual);
+    pub fn exec(&mut self, command: Command, context: &mut Context) {
+        match command {
+            Command::Noop | Command::Quit => {}
+            Command::Save { path, overwrite } => self.draw.write_to_disk(path, overwrite, context),
+        }
     }
 }

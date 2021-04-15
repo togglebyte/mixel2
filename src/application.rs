@@ -4,7 +4,7 @@ use nightmaregl::events::Key;
 use anyhow::Result;
 
 use crate::canvas::Canvas;
-use crate::commandline::CommandLine;
+use crate::commandline::{Command, CommandLine};
 
 // -----------------------------------------------------------------------------
 //     - Mode -
@@ -21,6 +21,7 @@ pub enum Mode {
 //     - App -
 // -----------------------------------------------------------------------------
 pub struct App {
+    pub close: bool,
     mode: Mode,
     canvas: Canvas,
     command_line: CommandLine,
@@ -34,6 +35,7 @@ impl App {
             command_line: CommandLine::new(window_size, context)?,
             window_size,
             mode: Mode::Normal,
+            close: false,
         };
 
         Ok(inst)
@@ -47,13 +49,11 @@ impl App {
 
     pub fn input_char(&mut self, c: char) {
         if let Mode::Command = self.mode {
-            if let Err(e) = self.command_line.input_char(c) {
-                error!("Command line input failed: {:?}", e);
-            }
+            self.command_line.input_char(c);
         }
     }
 
-    pub fn input(&mut self, key: Key) -> Result<()> {
+    pub fn input(&mut self, key: Key, context: &mut Context) {
         match (self.mode, key) {
             (Mode::Normal, Key::Colon) => self.mode = Mode::Command,
             (Mode::Insert, Key::Escape) => self.mode = Mode::Normal,
@@ -65,15 +65,21 @@ impl App {
         }
 
         match self.mode {
-            Mode::Command => self.command_line.input(key)?,
+            Mode::Command => {
+                match self.command_line.input(key) {
+                    Some(Command::Quit) => self.close = true,
+                    Some(command) => self.canvas.exec(command, context),
+                    None => {}
+                }
+            }
             _ => self.canvas.input(key),
         }
-
-        Ok(())
     }
 
     pub fn render(&mut self, context: &mut Context) {
-        self.command_line.render(context);
+        if let Mode::Command = self.mode {
+            self.command_line.render(context);
+        }
         self.canvas.render(context);
     }
 }

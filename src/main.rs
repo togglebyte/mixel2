@@ -22,11 +22,11 @@ fn main() -> Result<()> {
 
     eventloop.run(move |event| {
         match event {
-            Event::Char('q') => return LoopAction::Quit,
             Event::Char(c) => app.input_char(c),
-            Event::Key { key, state: KeyState::Pressed } => {
-                if let Err(e) = app.input(key) {
-                    error!("input error: {:?}", e);
+            Event::Key { key, state: KeyState::Pressed } => { 
+                app.input(key, &mut context);
+                if app.close {
+                    return LoopAction::Quit;
                 }
             }
             Event::Draw(_dt) => {
