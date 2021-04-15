@@ -1,8 +1,7 @@
+use log::error;
 use anyhow::Result;
-use nalgebra::Vector3;
 use nightmaregl::events::Key;
-use nightmaregl::texture::Texture;
-use nightmaregl::{Context, Pixel, Pixels, Position, Renderer, Size, Sprite, VertexData, Viewport};
+use nightmaregl::{Context, Position, Renderer, Size, VertexData, Viewport};
 
 mod border;
 mod cursor;
@@ -98,12 +97,16 @@ impl Canvas {
 
     pub fn render(&mut self, context: &mut Context) {
         // Borders and everything but the drawable area
-        self.application_renderer.render(
+        let res = self.application_renderer.render(
             &self.border.texture,
             &self.border.vertex_data,
             &self.application_viewport,
             context,
         );
+
+        if let Err(e) = res { 
+            error!("Failed to render the application: {:?}", e);
+        }
 
         // Render the drawable area
         self.draw.render(&self.canvas_viewport, context);

@@ -1,0 +1,21 @@
+src/canvas/border.rs:3:68: warning: unused import: `FillMode`
+src/canvas/draw.rs:3:5: warning: unused import: `nightmaregl::events::Key`
+src/commandline.rs:4:37: warning: unused import: `Wrap`
+src/canvas/cursor.rs:28:32: warning: unused variable: `position`
+src/canvas/draw.rs:110:13: warning: unused variable: `errors`
+src/canvas/draw.rs:47:13: warning: variable does not need to be mutable
+src/application.rs:16:5: warning: variant is never constructed: `Visual`
+src/canvas/cursor.rs:4:5: warning: field is never read: `size`
+src/canvas/cursor.rs:24:12: warning: associated function is never used: `move_by`
+src/canvas/cursor.rs:28:12: warning: associated function is never used: `position`
+src/canvas/draw.rs:15:5: warning: field is never read: `buffer`
+src/canvas/draw.rs:85:12: warning: associated function is never used: `new_layer`
+src/commandline.rs:109:12: warning: associated function is never used: `resize`
+src/canvas/mod.rs:101:9: warning: unused `std::result::Result` that must be used
+src/canvas/draw.rs:97:9: warning: unused `std::result::Result` that must be used
+src/canvas/draw.rs:137:9: warning: unused `std::result::Result` that must be used
+src/commandline.rs:121:17: warning: unused return value of `collect` that must be used
+src/commandline.rs:140:9: warning: unused `std::result::Result` that must be used
+src/commandline.rs:147:13: warning: unused `std::result::Result` that must be used
+warning: 22 warnings emitted
+    Finished dev [unoptimized + debuginfo] target(s) in 0.05s

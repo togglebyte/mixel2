@@ -1,7 +1,6 @@
-use nightmaregl::{Position, Size, Sprite, Texture, Pixels, Pixel};
+use nightmaregl::{Size, Sprite, Texture, Pixels, Pixel};
 
 pub struct Cursor {
-    size: Size<i32>,
     pub sprite: Sprite<i32>,
     pub texture: Texture<i32>,
 }
@@ -15,16 +14,8 @@ impl Cursor {
         sprite.z_index = 20;
 
         Self {
-            size: Size::new(1, 1),
             texture,
             sprite,
         }
-    }
-
-    pub fn move_by(&mut self, offset: Position<i32>) {
-        self.sprite.position += offset;
-    }
-
-    pub fn position(&mut self, position: Position<i32>) {
     }
 }

@@ -1,6 +1,6 @@
 use anyhow::Result;
 use nightmaregl::texture::Texture;
-use nightmaregl::{Position, Size, Sprite, VertexData, Point, Rect, FillMode};
+use nightmaregl::{Position, Size, Sprite, VertexData, Point, Rect};
 
 pub struct Border {
     pub texture: Texture<i32>,

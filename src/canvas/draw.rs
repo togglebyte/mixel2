@@ -1,6 +1,6 @@
+use log::error;
 use anyhow::Result;
 use nalgebra::Vector3;
-use nightmaregl::events::Key;
 use nightmaregl::texture::Texture;
 use nightmaregl::{Context, Pixel, Pixels, Position, Renderer, Size, Sprite, VertexData, Viewport};
 
@@ -44,7 +44,7 @@ impl Draw {
         // -----------------------------------------------------------------------------
         //     - Cursor -
         // -----------------------------------------------------------------------------
-        let mut cursor = Cursor::new();
+        let cursor = Cursor::new();
 
         // -----------------------------------------------------------------------------
         //     - Renderer -
@@ -94,12 +94,16 @@ impl Draw {
         // Canvas / Drawable area
         let mut vertex_data = self.sprite.vertex_data_scaled(pixel_size);
 
-        self.renderer.render(
+        let res = self.renderer.render(
             &self.background,
             &[vertex_data],
             viewport,
             context,
         );
+
+        if let Err(e) = res {
+            error!("Failed to render the background: {:?}", e);
+        }
 
         // Decrease the z_index, 
         vertex_data
@@ -124,7 +128,8 @@ impl Draw {
                     context,
                 )
             })
-            .collect::<Vec<_>>();
+            .filter(Result::is_err)
+            .for_each(|e| error!("Failed to render layer: {:?}", e));
 
         let x = vertex_data.model[(0, 3)];
         let y = vertex_data.model[(1, 3)];
@@ -134,12 +139,16 @@ impl Draw {
         cursor_vd.model[(1, 3)] = y + (self.size.height - 1 - self.cursor_pos.y) as f32;
 
         // Cursor
-        self.renderer.render(
+        let res = self.renderer.render(
             &self.cursor.texture,
             &[cursor_vd],
             &viewport,
             context,
         );
+
+        if let Err(e) = res {
+            error!("Failed to render the cursor: {:?}", e );
+        }
     }
 
     pub fn draw(&mut self) {

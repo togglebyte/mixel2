@@ -1,8 +1,8 @@
+use log::error;
 use anyhow::Result;
 use nightmaregl::events::Key;
 use nightmaregl::text::{Text, WordWrap};
-use nightmaregl::texture::{Texture, Wrap};
-use nightmaregl::{Context, Pixel, Pixels, Position, Renderer, Size, Sprite, VertexData, Viewport};
+use nightmaregl::{Texture, Context, Pixel, Pixels, Position, Renderer, Size, Sprite, VertexData, Viewport};
 
 // -----------------------------------------------------------------------------
 //     - Cursor -
@@ -42,7 +42,7 @@ impl Cursor {
         );
 
         if let Err(e) = res {
-            eprintln!("cursor renderer failed: {:?}", e);
+            error!("cursor renderer failed: {:?}", e);
         }
     }
 }
@@ -100,7 +100,7 @@ impl CommandLine {
         );
 
         if let Err(e) = res {
-            eprintln!("Failed to render text: {:?}", e);
+            error!("Failed to render text: {:?}", e);
         }
 
         self.cursor.render(context, &self.viewport);
@@ -110,44 +110,49 @@ impl CommandLine {
         self.viewport.resize(viewport_size(new_size, self.font_size))
     }
 
-    pub fn input(&mut self, key: Key) {
+    pub fn input(&mut self, key: Key) -> Result<()> {
         match key {
             Key::Back => {
                 self.visible_buffer.pop();
                 self.input_buffer.pop();
-                self.update_text();
+                self.update_text()?;
             }
             Key::Return => {
                 self.input_buffer.drain(..).collect::<String>();
                 self.visible_buffer.clear();
-                self.update_text();
+                self.update_text()?;
             }
             _ => {}
         }
+        Ok(())
     }
 
-    pub fn input_char(&mut self, c: char) {
+    pub fn input_char(&mut self, c: char) -> Result<()> {
         if c.is_control() {
-            return;
+            return Ok(());
         }
 
         self.input_buffer.push(c);
         self.visible_buffer.push(c);
-        self.update_text();
+        self.update_text()?;
+
+        Ok(())
     }
 
-    fn update_text(&mut self) {
-        self.text.set_text(&self.visible_buffer);
+    fn update_text(&mut self) -> Result<()> {
+        self.text.set_text(&self.visible_buffer)?;
 
         while self.text.caret().x + self.cursor.sprite.size.width > self.viewport.size().width as f32 {
             if self.visible_buffer.is_empty() {
-                return;
+                break;
             }
             self.visible_buffer.drain(..1);
-            self.text.set_text(&self.visible_buffer);
+            self.text.set_text(&self.visible_buffer)?;
         }
 
         self.cursor.sprite.position = Position::new(self.text.caret().x, self.font_size / 3.0);
+
+        Ok(())
     }
 }
 

@@ -1,3 +1,5 @@
+use pretty_env_logger;
+use log::error;
 use nightmaregl::events::{Event, KeyState, LoopAction};
 use nightmaregl::{Pixel, Context};
 use anyhow::Result;
@@ -9,6 +11,8 @@ mod commandline;
 use application::App;
 
 fn main() -> Result<()> {
+    pretty_env_logger::init();
+
     let (eventloop, mut context) = Context::builder("Mixel: the modal pixel editor")
         .vsync(false)
         .build()?;
@@ -20,7 +24,11 @@ fn main() -> Result<()> {
         match event {
             Event::Char('q') => return LoopAction::Quit,
             Event::Char(c) => app.input_char(c),
-            Event::Key { key, state: KeyState::Pressed } => app.input(key),
+            Event::Key { key, state: KeyState::Pressed } => {
+                if let Err(e) = app.input(key) {
+                    error!("input error: {:?}", e);
+                }
+            }
             Event::Draw(_dt) => {
                 // Clear the background with Nypsiee blue
                 context.clear(Pixel { r: 12, g: 34, b: 56, a: 255 }.into());
