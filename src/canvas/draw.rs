@@ -116,7 +116,7 @@ impl Draw {
             .append_translation_mut(&Vector3::from([0.0, 0.0, -1.0]));
 
         // Layers
-        let errors = self
+        self
             .layers
             .iter()
             .enumerate()
@@ -159,10 +159,7 @@ impl Draw {
     pub fn draw(&mut self) {
         let position = self.cursor_pos;
         let layer = &self.layers[self.current_layer];
-        let pixel = Pixel {
-            r: 255,
-            ..Default::default()
-        };
+        let pixel = self.cursor.color;
         let size = Size::new(1, 1);
         let pixels = Pixels::from_pixel(pixel, size);
         layer

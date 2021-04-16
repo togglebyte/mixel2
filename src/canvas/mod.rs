@@ -1,8 +1,10 @@
-use log::error;
 use anyhow::Result;
+use log::error;
 use nightmaregl::events::Key;
 use nightmaregl::{Context, Position, Renderer, Size, VertexData, Viewport};
+
 use crate::commandline::Command;
+use crate::config::Action;
 
 mod border;
 mod cursor;
@@ -66,28 +68,31 @@ impl Canvas {
         Ok(inst)
     }
 
-    pub fn input(&mut self, key: Key) {
+    pub fn input(&mut self, action: Action) {
         // let pixel_size = self.pixel_renderer.pixel_size as i32;
 
-        match key {
+        match action {
+            Action::Right => self.draw.offset_cursor(Position::new(-1, 0)),
+            _ => {}
+
             // Move the cursor  
-            Key::H => self.draw.offset_cursor(Position::new(-1, 0)),
-            Key::L => self.draw.offset_cursor(Position::new(1, 0) ),
-            Key::K => self.draw.offset_cursor(Position::new(0, -1) ),
-            Key::J => self.draw.offset_cursor(Position::new(0, 1)),
+            // Key::H => self.draw.offset_cursor(Position::new(-1, 0)),
+            // Key::L => self.draw.offset_cursor(Position::new(1, 0) ),
+            // Key::K => self.draw.offset_cursor(Position::new(0, -1) ),
+            // Key::J => self.draw.offset_cursor(Position::new(0, 1)),
 
-            // Draw a pixel
-            Key::Space => self.draw.draw(),
+            // // Draw a pixel
+            // Key::Space => self.draw.draw(),
 
-            // Move
-            Key::Left  => self.draw.offset_canvas(Position::new(-1, 0)),
-            Key::Right => self.draw.offset_canvas(Position::new(1, 0)),
-            Key::Up    => self.draw.offset_canvas(Position::new(0, 1)),
-            Key::Down  => self.draw.offset_canvas(Position::new(0, -1)),
+            // // Move
+            // Key::Left  => self.draw.offset_canvas(Position::new(-1, 0)),
+            // Key::Right => self.draw.offset_canvas(Position::new(1, 0)),
+            // Key::Up    => self.draw.offset_canvas(Position::new(0, 1)),
+            // Key::Down  => self.draw.offset_canvas(Position::new(0, -1)),
 
-            // Scale up / down the pixel
-            Key::A => self.draw.resize_pixel(1),
-            Key::S => self.draw.resize_pixel(-1),
+            // // Scale up / down the pixel
+            // Key::A => self.draw.resize_pixel(1),
+            // Key::S => self.draw.resize_pixel(-1),
             _ => {}
         }
     }

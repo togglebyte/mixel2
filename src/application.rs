@@ -1,9 +1,10 @@
-use log::error;
-use nightmaregl::{Context, Size};
-use nightmaregl::events::Key;
 use anyhow::Result;
+use log::error;
+use nightmaregl::events::{Key, Modifiers};
+use nightmaregl::{Context, Size};
 
 use crate::canvas::Canvas;
+use crate::config::Config;
 use crate::commandline::{Command, CommandLine};
 
 // -----------------------------------------------------------------------------
@@ -26,16 +27,18 @@ pub struct App {
     canvas: Canvas,
     command_line: CommandLine,
     window_size: Size<i32>,
+    config: Config,
 }
 
 impl App {
-    pub fn new(window_size: Size<i32>, context: &mut Context) -> Result<Self> {
+    pub fn new(config: Config, window_size: Size<i32>, context: &mut Context) -> Result<Self> {
         let inst = Self {
             canvas: Canvas::new(window_size, context)?,
             command_line: CommandLine::new(window_size, context)?,
             window_size,
             mode: Mode::Normal,
             close: false,
+            config,
         };
 
         Ok(inst)
@@ -53,26 +56,27 @@ impl App {
         }
     }
 
-    pub fn input(&mut self, key: Key, context: &mut Context) {
+    pub fn input(&mut self, key: Key, modifiers: Modifiers, context: &mut Context) {
         match (self.mode, key) {
             (Mode::Normal, Key::Colon) => self.mode = Mode::Command,
             (Mode::Insert, Key::Escape) => self.mode = Mode::Normal,
             (Mode::Visual, Key::Escape) => self.mode = Mode::Normal,
             (Mode::Command, Key::Escape) => self.mode = Mode::Normal,
-            (Mode::Normal, Key::I) => self.mode = Mode::Insert,
-            (Mode::Normal, Key::V) => self.mode = Mode::Visual,
+            (Mode::Normal, Key::I) if modifiers.is_empty() => self.mode = Mode::Insert,
+            (Mode::Normal, Key::V) if modifiers.is_empty() => self.mode = Mode::Visual,
             _ => {}
         }
 
         match self.mode {
-            Mode::Command => {
-                match self.command_line.input(key) {
-                    Some(Command::Quit) => self.close = true,
-                    Some(command) => self.canvas.exec(command, context),
-                    None => {}
-                }
+            Mode::Command => match self.command_line.input(key) {
+                Some(Command::Quit) => self.close = true,
+                Some(command) => self.canvas.exec(command, context),
+                None => {}
+            },
+            _ => {
+                let action = self.config.key_map(key, modifiers);
+                self.canvas.input(action);
             }
-            _ => self.canvas.input(key),
         }
     }
 

@@ -6,7 +6,10 @@ edition = "2018"
 
 [dependencies]
 anyhow = "1.0.40"
+figment = "0.10.5"
 log = "0.4.14"
 nalgebra = "0.26.1"
 nightmaregl = { path = "../nightmaregl" }
 pretty_env_logger = "0.4.0"
+serde = { version ="1.0.125", features = ["derive"] }
+toml = "0.5.8"

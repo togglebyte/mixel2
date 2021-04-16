@@ -1,9 +1,9 @@
 use std::path::Path;
 
-use log::error;
 use anyhow::Result;
-use nightmaregl::{Position, Size, Sprite, Framebuffer, Renderer, VertexData, Viewport, Context};
-use nightmaregl::texture::{Texture, Format};
+use log::error;
+use nightmaregl::texture::{Format, Texture};
+use nightmaregl::{Context, Framebuffer, Position, Renderer, Size, Sprite, VertexData, Viewport};
 
 use super::draw::Layer;
 
@@ -14,7 +14,7 @@ pub struct SaveBuffer {
 
 impl SaveBuffer {
     pub fn new(context: &mut Context) -> Result<Self> {
-        let mut renderer = Renderer::default(context)?;
+        let renderer = Renderer::default(context)?;
         let inst = Self {
             renderer,
             viewport: Viewport::new(Position::zero(), Size::new(32, 32)),
@@ -23,8 +23,16 @@ impl SaveBuffer {
         Ok(inst)
     }
 
-    pub fn save(&mut self, path: impl AsRef<Path>, sprite: &Sprite<i32>, layers: &[Layer], context: &mut Context) {
+    pub fn save(
+        &mut self,
+        path: impl AsRef<Path>,
+        sprite: &Sprite<i32>,
+        layers: &[Layer],
+        context: &mut Context,
+    ) {
         self.viewport.resize(sprite.size);
+        eprintln!("{:?}", "let's do swapsies");
+        self.viewport.swap_y();
 
         let fb = Framebuffer::new();
 
@@ -40,12 +48,9 @@ impl SaveBuffer {
         let vertex_data = [sprite.vertex_data()];
 
         layers.into_iter().for_each(|layer| {
-            let res = self.renderer.render(
-                &layer.texture,
-                &vertex_data,
-                &self.viewport,
-                context,
-            );
+            let res = self
+                .renderer
+                .render(&layer.texture, &vertex_data, &self.viewport, context);
 
             if let Err(e) = res {
                 error!("Failed to save layer: {:?}", e);

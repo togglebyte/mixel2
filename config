@@ -1,0 +1,17 @@
+[commands]
+left  = "h"
+right = "l"
+up    = "k"
+down  = "j"
+
+top_left     = "H"
+top_right    = "L"
+bottom_left  = "J"
+bottom_right = "K"
+
+delete = "x" 
+undo   = "u"
+redo   = "<C-r>"
+
+[commands.visual]
+fill = "<C-f>"
