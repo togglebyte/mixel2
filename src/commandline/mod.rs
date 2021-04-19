@@ -11,49 +11,6 @@ use parser::Parser;
 pub use commands::Command;
 
 // -----------------------------------------------------------------------------
-//     - Cursor -
-// -----------------------------------------------------------------------------
-struct Cursor {
-    renderer: Renderer<VertexData>,
-    texture: Texture<f32>,
-    sprite: Sprite<f32>,
-}
-
-impl Cursor {
-    pub fn new(font_size: f32, context: &mut Context) -> Result<Self> {
-        let renderer = Renderer::default_font(context)?;
-
-        let cursor_size = Size::new(font_size, font_size * 2.0);
-        let cursor_pixels = Pixels::from_pixel(Pixel::white(), Size::new(1, 1));
-
-        let texture = Texture::default_with_data(Size::new(1.0, 1.0), cursor_pixels.as_bytes());
-        let mut sprite = Sprite::new(&texture);
-        sprite.size = cursor_size;
-
-        let inst = Self {
-            renderer,
-            texture,
-            sprite,
-        };
-
-        Ok(inst)
-    }
-
-    fn render(&mut self, context: &mut Context, viewport: &Viewport) {
-        let res = self.renderer.render(
-            &self.texture,
-            &[self.sprite.vertex_data()],
-            viewport,
-            context,
-        );
-
-        if let Err(e) = res {
-            error!("cursor renderer failed: {:?}", e);
-        }
-    }
-}
-
-// -----------------------------------------------------------------------------
 //     - Command line -
 // -----------------------------------------------------------------------------
 pub struct CommandLine {
@@ -116,6 +73,10 @@ impl CommandLine {
         self.viewport.resize(viewport_size(new_size, self.font_size))
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.input_buffer.is_empty()
+    }
+
     pub fn input(&mut self, key: Key) -> Option<Command> {
         match key {
             Key::Back => {
@@ -165,6 +126,54 @@ impl CommandLine {
     }
 }
 
+// -----------------------------------------------------------------------------
+//     - Cursor -
+// -----------------------------------------------------------------------------
+struct Cursor {
+    renderer: Renderer<VertexData>,
+    texture: Texture<f32>,
+    sprite: Sprite<f32>,
+}
+
+impl Cursor {
+    pub fn new(font_size: f32, context: &mut Context) -> Result<Self> {
+        let renderer = Renderer::default_font(context)?;
+
+        let cursor_size = Size::new(font_size, font_size * 2.0);
+        let cursor_pixels = Pixels::from_pixel(Pixel::white(), Size::new(1, 1));
+
+        let texture = Texture::default_with_data(Size::new(1.0, 1.0), cursor_pixels.as_bytes());
+        let mut sprite = Sprite::new(&texture);
+        sprite.size = cursor_size;
+
+        let inst = Self {
+            renderer,
+            texture,
+            sprite,
+        };
+
+        Ok(inst)
+    }
+
+    fn render(&mut self, context: &mut Context, viewport: &Viewport) {
+        let res = self.renderer.render(
+            &self.texture,
+            &[self.sprite.vertex_data()],
+            viewport,
+            context,
+        );
+
+        if let Err(e) = res {
+            error!("cursor renderer failed: {:?}", e);
+        }
+    }
+}
+
+// -----------------------------------------------------------------------------
+//     - Viewport size -
+//     Used when resizing
+// -----------------------------------------------------------------------------
 fn viewport_size(size: Size<i32>, font_size: f32) -> Size<i32> {
     Size::new(size.width, (font_size * 2.0) as i32)
 }
+

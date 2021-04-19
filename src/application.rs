@@ -4,8 +4,8 @@ use nightmaregl::events::{Key, Modifiers};
 use nightmaregl::{Context, Size};
 
 use crate::canvas::Canvas;
-use crate::config::Config;
 use crate::commandline::{Command, CommandLine};
+use crate::config::Config;
 
 // -----------------------------------------------------------------------------
 //     - Mode -
@@ -68,11 +68,23 @@ impl App {
         }
 
         match self.mode {
-            Mode::Command => match self.command_line.input(key) {
-                Some(Command::Quit) => self.close = true,
-                Some(command) => self.canvas.exec(command, context),
-                None => {}
-            },
+            Mode::Command => {
+                match self.command_line.input(key) {
+                    Some(Command::Quit) => self.close = true,
+                    Some(command) => self.canvas.exec(command, context),
+                    None => {}
+                }
+
+                if let Key::Return = key {
+                    self.mode = Mode::Normal;
+                }
+
+                if let Key::Back = key {
+                    if self.command_line.is_empty() {
+                        self.mode = Mode::Normal;
+                    }
+                }
+            }
             _ => {
                 let action = self.config.key_map(key, modifiers);
                 self.canvas.input(action);

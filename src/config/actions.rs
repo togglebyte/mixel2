@@ -10,5 +10,10 @@ pub enum Action {
     Up,
     Down,
 
+    UpLeft,
+    UpRight,
+    DownLeft,
+    DownRight,
+
     Noop,
 }

@@ -72,7 +72,15 @@ impl Canvas {
         // let pixel_size = self.pixel_renderer.pixel_size as i32;
 
         match action {
-            Action::Right => self.draw.offset_cursor(Position::new(-1, 0)),
+            Action::Left => self.draw.offset_cursor(Position::new(-1, 0)),
+            Action::Right => self.draw.offset_cursor(Position::new(1, 0)),
+            Action::Up => self.draw.offset_cursor(Position::new(0, -1)),
+            Action::Down => self.draw.offset_cursor(Position::new(0, 1)),
+
+            Action::UpLeft => self.draw.offset_cursor(Position::new(-1, -1)),
+            Action::UpRight => self.draw.offset_cursor(Position::new(1, -1)),
+            Action::DownLeft => self.draw.offset_cursor(Position::new(-1, 1)),
+            Action::DownRight => self.draw.offset_cursor(Position::new(1, 1)),
             _ => {}
 
             // Move the cursor  
