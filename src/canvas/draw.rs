@@ -4,7 +4,10 @@ use log::error;
 use anyhow::Result;
 use nalgebra::Vector3;
 use nightmaregl::texture::Texture;
-use nightmaregl::{Context, Pixel, Pixels, Position, Renderer, Size, Sprite, VertexData, Viewport};
+use nightmaregl::{Context, Pixel, Pixels, Position, Renderer, Size, Sprite, FillMode, VertexData, Viewport};
+use nightmaregl::framebuffer::{Framebuffer, FramebufferTarget};
+
+use crate::commandline::commands::Extent;
 
 use super::cursor::Cursor;
 use super::pixelbuffer::PixelBuffer;
@@ -54,14 +57,16 @@ impl Draw {
         //     - Renderer -
         // -----------------------------------------------------------------------------
         let mut renderer = Renderer::default(context)?;
-        renderer.pixel_size = 23;
+        renderer.pixel_size = 22;
 
         // -----------------------------------------------------------------------------
         //     - Drawable area (sprite) -
         // -----------------------------------------------------------------------------
         // let position = (position / renderer.pixel_size).into();
         let mut sprite = Sprite::new(&background);
+        sprite.size = size;
         sprite.position = position;
+        sprite.fill = FillMode::Repeat;
         sprite.anchor -= (sprite.size / 2).into();
 
         // -----------------------------------------------------------------------------
@@ -191,6 +196,64 @@ impl Draw {
             &self.layers,
             context
         );
+    }
+
+    pub fn resize_canvas(&mut self, extent: Extent, context: &mut Context) -> Result<()> {
+        // Maybe use framebuffer blitting:
+        // https://www.khronos.org/opengl/wiki/Framebuffer#Blitting
+        //
+        // Create two frame buffers, then blit to copy the 
+        // pixels from one texture to another.
+        //
+        // Create one framebuffer for reading.
+        // Attach texture from the layer to that framebuffer.
+        //
+        // Create another framebuffer for writing
+        // that has the new size in a new texture.
+        //
+        // Resize the sprite.
+        //
+        // Render... 
+
+        let new_size = Size::new(48, 32);
+
+        // Create a new sprite
+        let mut sprite = Sprite::from_size(new_size);
+        // sprite.fill = FillMode::Repeat;
+        // sprite.position = self.sprite.position;
+        // sprite.anchor = self.sprite.anchor;
+
+        // self.sprite = sprite;
+        self.sprite.size = new_size;
+        let vertex_data = [self.sprite.vertex_data()];
+        let viewport = Viewport::new(Position::zero(), new_size);
+
+        // Setup renderer
+        let renderer = Renderer::default(context)?;
+
+        for layer in &mut self.layers {
+            // Read from
+            let mut read_buffer = Framebuffer::new(FramebufferTarget::Read);
+            read_buffer.attach_texture(&layer.texture);
+            read_buffer.bind();
+
+            // Write to
+            let mut write_buffer = Framebuffer::new(FramebufferTarget::Draw);
+            let pixels = Pixels::from_pixel(Pixel::transparent(), new_size.cast());
+            let texture = Texture::default_with_data(new_size, pixels.as_bytes());
+            write_buffer.attach_texture(&texture);
+            write_buffer.bind();
+
+            // Blit
+            renderer.render(
+                &texture,
+                &vertex_data,
+                &viewport,
+                context,
+            );
+        }
+
+        Ok(())
     }
 }
 

@@ -3,7 +3,7 @@ use log::error;
 use nightmaregl::events::Key;
 use nightmaregl::{Context, Position, Renderer, Size, VertexData, Viewport};
 
-use crate::commandline::Command;
+use crate::commandline::commands::{Extent, Command};
 use crate::config::Action;
 
 mod border;
@@ -127,10 +127,14 @@ impl Canvas {
         self.draw.render(&self.canvas_viewport, context);
     }
 
-    pub fn exec(&mut self, command: Command, context: &mut Context) {
+    pub fn exec(&mut self, command: Command, context: &mut Context) -> Result<()> {
         match command {
             Command::Noop | Command::Quit => {}
             Command::Save { path, overwrite } => self.draw.write_to_disk(path, overwrite, context),
+            Command::Extend(ext) => self.draw.resize_canvas(ext, context)?,
+            _ => unimplemented!(),
         }
+
+        Ok(())
     }
 }

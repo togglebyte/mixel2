@@ -5,10 +5,10 @@ use nightmaregl::text::{Text, WordWrap};
 use nightmaregl::{Texture, Context, Pixel, Pixels, Position, Renderer, Size, Sprite, VertexData, Viewport};
 
 mod parser;
-mod commands;
+pub mod commands;
 
 use parser::Parser;
-pub use commands::Command;
+use commands::Command;
 
 // -----------------------------------------------------------------------------
 //     - Command line -
@@ -86,7 +86,8 @@ impl CommandLine {
             }
             Key::Return => {
                 let input = self.input_buffer.drain(..).collect::<String>();
-                let command = Parser::parse(&input);
+                let parser = Parser::new(&input);
+                let command = parser.parse();
                 self.visible_buffer.clear();
                 self.update_text();
                 return Some(command);

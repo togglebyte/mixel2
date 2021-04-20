@@ -1,117 +1,42 @@
 use std::iter::Peekable;
 use std::str::Chars;
 
-use super::commands::Command;
+use super::commands::{Command, Extent};
 
 pub struct Parser<'a> {
-    chars: Peekable<Chars<'a>>,
+    command: &'a str,
+    args: &'a str,
 }
 
 impl<'a> Parser<'a> {
     pub fn new(src: &'a str) -> Self {
-        let chars = src.chars().peekable();
-
+        let command_end = src.find(' ').unwrap_or(src.len());
+        let (command, args) = src.trim().split_at(command_end);
         Self {
-            chars,
+            command: command.trim().get(1..).unwrap_or(""),
+            args: args.trim(),
         }
     }
 
-    pub fn parseit(mut self) -> Command {
-        Command::Noop
-
-//         self.chars.next(); // Skip the `:` char.
-
-//         loop {
-//             let c = match self.chars.next() {
-//                 Some(c) => c,
-//                 None => return Command::Noop,
-//             };
-
-//             let next = self.chars.peek();
-//             match (c, next) {
-//                 // Single char commands
-//                 ('q', _) => return Command::Quit,
-
-//                 ('w', next)) => {
-//                     let quit = *next == 'q';
-//                     if quite {
-//                         self.consume();
-//                     }
-
-//                     match *next {
-//                         'q' => {
-//                             self.consume();
-//                         }
-//                         '!' => {
-//                             self.consume();
-//                         }
-//                         _ => {}
-//                     }
-
-//                     let path = self.string();
-//                     if path.is_empty() {
-//                         return Command::Noop;
-//                     }
-//                     return Command::Save{ overwrite, path };
-//                 }
-//                 // ('w', Some(nc @ ' ')) | ('w', Some(nc @ '!')) => {
-//                 //     let overwrite = *nc == '!';
-//                 //     let path = chars.skip_while(|c|c.is_whitespace()).collect::<String>();
-//                 //     if path.is_empty() {
-//                 //         return Command::Noop;
-//                 //     }
-//                 //     return Command::Save{ path, overwrite };
-//                 // }
-//                 _ => {}
-//             }
-//         }
-    }
-
-    fn string(self) -> String {
-        self.chars.skip_while(|c|c.is_whitespace()).collect::<String>()
-    }
-
-    fn consume(&mut self) {
-        drop(self.chars.next());
-    }
-}
-
-impl<'a> Parser<'a> {
-    pub fn parse(input: &str) -> Command {
-        let mut chars = input.chars().peekable();
-        chars.next();
-
-        loop {
-            let c = match chars.next() {
-                Some(c) => c,
-                None => return Command::Noop,
-            };
-
-            let next = chars.peek();
-            match (c, next) {
-                // Single char commands
-                ('q', _) => return Command::Quit,
-
-                // Double char commands
-                ('w', Some('q')) => {
-                    chars.next(); // consume 'q'
-                    let overwrite = match chars.peek() {
-                        Some('!') => true,
-                        _ => false,
-                    };
-                    let path = chars.skip_while(|c|c.is_whitespace()).collect::<String>();
-                    return Command::Save{ path, overwrite };
+    pub fn parse(mut self) -> Command {
+        macro_rules! extend {
+            ($dir:ident) => {
+                match self.args.parse::<i32>() {
+                    Ok(n) => Command::Extend(Extent { $dir: n, ..Default::default() }),
+                    Err(_) => Command::Noop,
                 }
-                ('w', Some(nc @ ' ')) | ('w', Some(nc @ '!')) => {
-                    let overwrite = *nc == '!';
-                    let path = chars.skip_while(|c|c.is_whitespace()).collect::<String>();
-                    if path.is_empty() {
-                        return Command::Noop;
-                    }
-                    return Command::Save{ path, overwrite };
-                }
-                _ => {}
             }
+        }
+
+        eprintln!("{:?} | {}", self.command, self.args);
+
+        match self.command {
+            "q" => Command::Quit,
+            "extendl" => extend!(left),
+            "extendr" => extend!(right),
+            "extendu" => extend!(up),
+            "extendd" => extend!(down),
+            _ => Command::Noop,
         }
     }
 }
@@ -137,7 +62,13 @@ mod test {
     #[test]
     fn save() {
         let input = ":w test.png";
-        let output = matches!(Parser::parse(input), Command::Save { overwrite: false, .. });
+        let output = matches!(
+            Parser::parse(input),
+            Command::Save {
+                overwrite: false,
+                ..
+            }
+        );
         assert!(output);
     }
 }

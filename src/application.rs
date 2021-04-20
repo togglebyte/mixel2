@@ -4,7 +4,8 @@ use nightmaregl::events::{Key, Modifiers};
 use nightmaregl::{Context, Size};
 
 use crate::canvas::Canvas;
-use crate::commandline::{Command, CommandLine};
+use crate::commandline::CommandLine;
+use crate::commandline::commands::Command;
 use crate::config::Config;
 
 // -----------------------------------------------------------------------------
@@ -56,7 +57,7 @@ impl App {
         }
     }
 
-    pub fn input(&mut self, key: Key, modifiers: Modifiers, context: &mut Context) {
+    pub fn input(&mut self, key: Key, modifiers: Modifiers, context: &mut Context) -> Result<()> {
         match (self.mode, key) {
             (Mode::Normal, Key::Colon) => self.mode = Mode::Command,
             (Mode::Insert, Key::Escape) => self.mode = Mode::Normal,
@@ -71,7 +72,7 @@ impl App {
             Mode::Command => {
                 match self.command_line.input(key) {
                     Some(Command::Quit) => self.close = true,
-                    Some(command) => self.canvas.exec(command, context),
+                    Some(command) => self.canvas.exec(command, context)?,
                     None => {}
                 }
 
@@ -90,6 +91,8 @@ impl App {
                 self.canvas.input(action);
             }
         }
+
+        Ok(())
     }
 
     pub fn render(&mut self, context: &mut Context) {

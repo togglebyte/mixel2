@@ -3,7 +3,8 @@ use std::path::Path;
 use anyhow::Result;
 use log::error;
 use nightmaregl::texture::{Format, Texture};
-use nightmaregl::{Context, Framebuffer, Position, Renderer, Size, Sprite, VertexData, Viewport};
+use nightmaregl::{Context, Position, Renderer, Size, Sprite, VertexData, Viewport};
+use nightmaregl::framebuffer::Framebuffer;
 
 use super::draw::Layer;
 
@@ -34,7 +35,7 @@ impl SaveBuffer {
         eprintln!("{:?}", "let's do swapsies");
         self.viewport.swap_y();
 
-        let fb = Framebuffer::new();
+        let mut fb = Framebuffer::default();
 
         let texture = Texture::<i32>::new()
             .with_format(Format::Rgba)
