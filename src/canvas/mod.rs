@@ -3,13 +3,13 @@ use log::error;
 use nightmaregl::events::Key;
 use nightmaregl::{Context, Position, Renderer, Size, VertexData, Viewport};
 
-use crate::commandline::commands::{Extent, Command};
+use crate::commandline::commands::{Command, Extent};
 use crate::config::Action;
 
 mod border;
 mod cursor;
-mod pixelbuffer;
 mod draw;
+mod pixelbuffer;
 mod savebuffer;
 
 use border::Border;
@@ -68,43 +68,45 @@ impl Canvas {
         Ok(inst)
     }
 
-    pub fn input(&mut self, action: Action) {
-        match action {
-            Action::Left => self.draw.offset_cursor(Position::new(-1, 0)),
-            Action::Right => self.draw.offset_cursor(Position::new(1, 0)),
-            Action::Up => self.draw.offset_cursor(Position::new(0, -1)),
-            Action::Down => self.draw.offset_cursor(Position::new(0, 1)),
+    pub fn input(&mut self, action: Action, repeat: u16) {
+        for _ in 0..repeat {
+            match action {
+                Action::Left => self.draw.offset_cursor(Position::new(-1, 0)),
+                Action::Right => self.draw.offset_cursor(Position::new(1, 0)),
+                Action::Up => self.draw.offset_cursor(Position::new(0, -1)),
+                Action::Down => self.draw.offset_cursor(Position::new(0, 1)),
 
-            Action::UpLeft => self.draw.offset_cursor(Position::new(-1, -1)),
-            Action::UpRight => self.draw.offset_cursor(Position::new(1, -1)),
-            Action::DownLeft => self.draw.offset_cursor(Position::new(-1, 1)),
-            Action::DownRight => self.draw.offset_cursor(Position::new(1, 1)),
+                Action::UpLeft => self.draw.offset_cursor(Position::new(-1, -1)),
+                Action::UpRight => self.draw.offset_cursor(Position::new(1, -1)),
+                Action::DownLeft => self.draw.offset_cursor(Position::new(-1, 1)),
+                Action::DownRight => self.draw.offset_cursor(Position::new(1, 1)),
 
-            Action::CanvasLeft  => self.draw.offset_canvas(Position::new(-1, 0)),
-            Action::CanvasRight => self.draw.offset_canvas(Position::new(1, 0)),
-            Action::CanvasUp    => self.draw.offset_canvas(Position::new(0, 1)),
-            Action::CanvasDown  => self.draw.offset_canvas(Position::new(0, -1)),
-            _ => {}
+                Action::CanvasLeft => self.draw.offset_canvas(Position::new(-1, 0)),
+                Action::CanvasRight => self.draw.offset_canvas(Position::new(1, 0)),
+                Action::CanvasUp => self.draw.offset_canvas(Position::new(0, 1)),
+                Action::CanvasDown => self.draw.offset_canvas(Position::new(0, -1)),
+                _ => {}
 
-            // Move the cursor  
-            // Key::H => self.draw.offset_cursor(Position::new(-1, 0)),
-            // Key::L => self.draw.offset_cursor(Position::new(1, 0) ),
-            // Key::K => self.draw.offset_cursor(Position::new(0, -1) ),
-            // Key::J => self.draw.offset_cursor(Position::new(0, 1)),
+                // Move the cursor
+                // Key::H => self.draw.offset_cursor(Position::new(-1, 0)),
+                // Key::L => self.draw.offset_cursor(Position::new(1, 0) ),
+                // Key::K => self.draw.offset_cursor(Position::new(0, -1) ),
+                // Key::J => self.draw.offset_cursor(Position::new(0, 1)),
 
-            // // Draw a pixel
-            // Key::Space => self.draw.draw(),
+                // // Draw a pixel
+                // Key::Space => self.draw.draw(),
 
-            // // Move
-            // Key::Left  => self.draw.offset_canvas(Position::new(-1, 0)),
-            // Key::Right => self.draw.offset_canvas(Position::new(1, 0)),
-            // Key::Up    => self.draw.offset_canvas(Position::new(0, 1)),
-            // Key::Down  => self.draw.offset_canvas(Position::new(0, -1)),
+                // // Move
+                // Key::Left  => self.draw.offset_canvas(Position::new(-1, 0)),
+                // Key::Right => self.draw.offset_canvas(Position::new(1, 0)),
+                // Key::Up    => self.draw.offset_canvas(Position::new(0, 1)),
+                // Key::Down  => self.draw.offset_canvas(Position::new(0, -1)),
 
-            // // Scale up / down the pixel
-            // Key::A => self.draw.resize_pixel(1),
-            // Key::S => self.draw.resize_pixel(-1),
-            _ => {}
+                // // Scale up / down the pixel
+                // Key::A => self.draw.resize_pixel(1),
+                // Key::S => self.draw.resize_pixel(-1),
+                _ => {}
+            }
         }
     }
 
@@ -122,7 +124,7 @@ impl Canvas {
             context,
         );
 
-        if let Err(e) = res { 
+        if let Err(e) = res {
             error!("Failed to render the application: {:?}", e);
         }
 

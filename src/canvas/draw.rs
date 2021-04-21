@@ -4,7 +4,7 @@ use log::error;
 use anyhow::Result;
 use nalgebra::Vector3;
 use nightmaregl::texture::Texture;
-use nightmaregl::{Context, Pixel, Pixels, Position, Renderer, Size, Sprite, FillMode, VertexData, Viewport};
+use nightmaregl::{Context, Pixel, Pixels, Position, Renderer, Size, Sprite, FillMode, VertexData, Viewport, Rect};
 use nightmaregl::framebuffer::{Framebuffer, FramebufferTarget};
 
 use crate::commandline::commands::Extent;
@@ -173,7 +173,11 @@ impl Draw {
     }
 
     pub fn offset_cursor(&mut self, offset: Position<i32>) { 
-        self.cursor_pos += offset;
+        let p = (self.cursor_pos + offset).to_point();
+        let rect = Rect::from_size(self.sprite.size);
+        if rect.contains(p) {
+            self.cursor_pos += offset;
+        }
     }
 
     pub fn offset_canvas(&mut self, offset: Position<i32>) {

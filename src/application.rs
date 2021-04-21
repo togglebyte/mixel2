@@ -32,6 +32,7 @@ pub struct App {
     window_size: Size<i32>,
     config: Config,
     status: Status, 
+    action_counter: String,
 }
 
 impl App {
@@ -46,6 +47,7 @@ impl App {
             close: false,
             config,
             status,
+            action_counter: String::new(),
         };
 
         Ok(inst)
@@ -88,8 +90,16 @@ impl App {
                 }
             }
             _ => {
-                let action = self.config.key_map(input, modifiers);
-                self.canvas.input(action);
+                match input {
+                    Input::Key(Key::Escape) => self.action_counter.clear(),
+                    Input::Char(c @ '0'..='9') => self.action_counter.push(c),
+                    _ => {
+                        let count = self.action_counter.parse::<u16>().unwrap_or(1);
+                        self.action_counter.clear();
+                        let action = self.config.key_map(input, modifiers);
+                        self.canvas.input(action, count);
+                    }
+                }
             }
         }
 
