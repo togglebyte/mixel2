@@ -43,23 +43,23 @@ impl<'a> Parser<'a> {
     }
 }
 
-// #[cfg(test)]
-// mod test {
-//     use super::*;
+#[cfg(test)]
+mod test {
+    use super::*;
 
-//     #[test]
-//     fn quit() {
-//         let input = ":q";
-//         let output = matches!(Parser::parse(input), Command::Quit);
-//         assert!(output);
-//     }
+    #[test]
+    fn quit() {
+        let input = ":q";
+        let output = matches!(Parser::new(input).parse(), Command::Quit);
+        assert!(output);
+    }
 
-//     #[test]
-//     fn save_without_path() {
-//         let input = ":w";
-//         let output = matches!(Parser::parse(input), Command::Noop);
-//         assert!(output);
-//     }
+    #[test]
+    fn save_without_path() {
+        let input = ":w";
+        let output = matches!(Parser::new(input).parse(), Command::Noop);
+        assert!(output);
+    }
 
 //     #[test]
 //     fn save() {
@@ -73,4 +73,5 @@ impl<'a> Parser<'a> {
 //         );
 //         assert!(output);
 //     }
-// }
+
+}

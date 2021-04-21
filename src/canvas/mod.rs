@@ -69,8 +69,6 @@ impl Canvas {
     }
 
     pub fn input(&mut self, action: Action) {
-        // let pixel_size = self.pixel_renderer.pixel_size as i32;
-
         match action {
             Action::Left => self.draw.offset_cursor(Position::new(-1, 0)),
             Action::Right => self.draw.offset_cursor(Position::new(1, 0)),

@@ -75,18 +75,18 @@ fn str_to_key(s: &str) -> Option<Input> {
         "y" => Some(Input::Char('y')),
         "z" => Some(Input::Char('z')),
 
-        // Numbers
-        "0" => Some(Input::Char('0')),
-        "1" => Some(Input::Char('1')),
-        "1" => Some(Input::Char('1')),
-        "2" => Some(Input::Char('2')),
-        "3" => Some(Input::Char('3')),
-        "4" => Some(Input::Char('4')),
-        "5" => Some(Input::Char('5')),
-        "6" => Some(Input::Char('6')),
-        "7" => Some(Input::Char('7')),
-        "8" => Some(Input::Char('8')),
-        "9" => Some(Input::Char('9')),
+        // // Numbers
+        // "0" => Some(Input::Char('0')),
+        // "1" => Some(Input::Char('1')),
+        // "1" => Some(Input::Char('1')),
+        // "2" => Some(Input::Char('2')),
+        // "3" => Some(Input::Char('3')),
+        // "4" => Some(Input::Char('4')),
+        // "5" => Some(Input::Char('5')),
+        // "6" => Some(Input::Char('6')),
+        // "7" => Some(Input::Char('7')),
+        // "8" => Some(Input::Char('8')),
+        // "9" => Some(Input::Char('9')),
 
         // Special chars
         "'" => Some(Input::Char('\'')),
@@ -127,10 +127,10 @@ mod test {
 
     #[test]
     fn test_parse_key_combination() {
-        let input = parse_input("<C-S-b>").unwrap();
+        let (input, mods) = parse_input("<C-S-b>").unwrap();
 
         match input {
-            Input::Char('b', mods) => {
+            Input::Char('b') => {
                 assert!(mods.ctrl());
                 assert!(mods.shift());
                 assert!(!mods.alt());
