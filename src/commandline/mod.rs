@@ -81,13 +81,13 @@ impl CommandLine {
 
     pub fn input(&mut self, input: Input) -> Option<Command> {
         match input {
-            Input::Char(c, _) if c.is_control() => {}
-            Input::Char(c, _) => {
+            Input::Char(c) if c.is_control() => {}
+            Input::Char(c) => {
                 self.input_buffer.push(c);
                 self.visible_buffer.push(c);
                 self.update_text();
             }
-            Input::Key(key, modifiers) => match key {
+            Input::Key(key) => match key {
                 Key::Back => {
                     self.visible_buffer.pop();
                     self.input_buffer.pop();

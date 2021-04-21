@@ -35,12 +35,12 @@ fn main() -> Result<()> {
     eventloop.run(move |event| {
         match event {
             Event::Modifier(m) => modifiers = m,
-            Event::Char(c) => if let Err(e) = app.input(Input::from_char(c, modifiers), &mut context) {
+            Event::Char(c) => if let Err(e) = app.input(Input::from_char(c), modifiers, &mut context) {
                 error!("Failed to handle input: {:?}", e);
             }
             Event::Key { key, state: KeyState::Pressed } => {
-                if let Some(input) = Input::from_key(key, modifiers) {
-                    if let Err(e) = app.input(input, &mut context) {
+                if let Some(input) = Input::from_key(key) {
+                    if let Err(e) = app.input(input, modifiers, &mut context) {
                         error!("Failed to handle input: {:?}", e);
                     }
 

@@ -6,7 +6,6 @@ use crate::application::Mode;
 
 pub struct Status {
     text: Text,
-    cursor: Position<i32>,
     mode: Mode,
     cur_pos: Position<i32>,
     renderer: Renderer<VertexData>,
@@ -20,6 +19,7 @@ impl Status {
             let size = size.cast::<f32>();
             Position::new(10.0, size.height - 10.0 - font_size * 2.0)
         };
+
         let mut text = Text::from_path(
             "/usr/share/fonts/TTF/Hack-Regular.ttf",
             font_size,
@@ -33,8 +33,7 @@ impl Status {
 
         let inst = Self {
             text,
-            cursor: Position::zero(),
-            cur_pos: Position::zero(),
+            cur_pos: Position::new(-1, -1),
             mode: Mode::Normal,
             viewport: Viewport::new(Position::zero(), size),
             renderer,

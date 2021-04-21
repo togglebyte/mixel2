@@ -57,15 +57,15 @@ impl App {
         // self.command_line.resize(new_size);
     }
 
-    pub fn input(&mut self, input: Input, context: &mut Context) -> Result<()> {
+    pub fn input(&mut self, input: Input, modifiers: Modifiers, context: &mut Context) -> Result<()> {
         match (self.mode, input) {
-            (Mode::Normal, Input::Char(':', _)) => self.mode = Mode::Command,
-            (Mode::Insert, Input::Key(Key::Escape, _)) => self.mode = Mode::Normal,
-            (Mode::Visual, Input::Key(Key::Escape, _)) => self.mode = Mode::Normal,
-            (Mode::Command, Input::Key(Key::Escape, _)) => self.mode = Mode::Normal,
-            (Mode::Normal, Input::Char('i', modifiers)) if modifiers.is_empty() => self.mode = Mode::Insert,
-            (Mode::Visual, Input::Char('i', modifiers)) if modifiers.is_empty() => self.mode = Mode::Insert,
-            (Mode::Normal, Input::Char('v', modifiers)) if modifiers.is_empty() => self.mode = Mode::Visual,
+            (Mode::Normal, Input::Char(':')) => self.mode = Mode::Command,
+            (Mode::Insert, Input::Key(Key::Escape)) => self.mode = Mode::Normal,
+            (Mode::Visual, Input::Key(Key::Escape)) => self.mode = Mode::Normal,
+            (Mode::Command, Input::Key(Key::Escape)) => self.mode = Mode::Normal,
+            (Mode::Normal, Input::Char('i')) if modifiers.is_empty() => self.mode = Mode::Insert,
+            (Mode::Visual, Input::Char('i')) if modifiers.is_empty() => self.mode = Mode::Insert,
+            (Mode::Normal, Input::Char('v')) if modifiers.is_empty() => self.mode = Mode::Visual,
             _ => {}
         }
 
@@ -77,18 +77,18 @@ impl App {
                     None => {}
                 }
 
-                if let Input::Key(Key::Return, _) = input {
+                if let Input::Key(Key::Return) = input {
                     self.mode = Mode::Normal;
                 }
 
-                if let Input::Key(Key::Back, _) = input {
+                if let Input::Key(Key::Back) = input {
                     if self.command_line.is_empty() {
                         self.mode = Mode::Normal;
                     }
                 }
             }
             _ => {
-                let action = self.config.key_map(input);
+                let action = self.config.key_map(input, modifiers);
                 self.canvas.input(action);
             }
         }

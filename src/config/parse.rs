@@ -1,18 +1,18 @@
 use nightmaregl::events::{Key, Modifiers};
 use crate::input::Input;
 
-fn keys_and_mods(keys: impl Iterator<Item=Key>) -> (Vec<Key>, Vec<Modifiers>) {
-    let (keys, mods): (_, Vec<Key>) = keys.partition(|k| match k {
-        Key::LControl | Key::RControl => false,
-        Key::LAlt | Key::RAlt => false,
-        Key::LShift | Key::RShift => false,
+fn keys_and_mods(keys: impl Iterator<Item=Input>) -> (Vec<Input>, Vec<Modifiers>) {
+    let (keys, mods): (_, Vec<Input>) = keys.partition(|k| match k {
+        Input::Key(Key::LControl) | Input::Key(Key::RControl) => false,
+        Input::Key(Key::LAlt) | Input::Key(Key::RAlt) => false,
+        Input::Key(Key::LShift) | Input::Key(Key::RShift) => false,
         _ => true,
     });
 
     let mods = mods.into_iter().filter_map(|k| match k {
-        Key::LControl | Key::RControl => Some(Modifiers::CTRL),
-        Key::LAlt | Key::RAlt => Some(Modifiers::ALT),
-        Key::LShift | Key::RShift => Some(Modifiers::SHIFT),
+        Input::Key(Key::LControl) | Input::Key(Key::RControl) => Some(Modifiers::CTRL),
+        Input::Key(Key::LAlt) | Input::Key(Key::RAlt) => Some(Modifiers::ALT),
+        Input::Key(Key::LShift) | Input::Key(Key::RShift) => Some(Modifiers::SHIFT),
         _ => None
     }).collect();
 
@@ -22,7 +22,7 @@ fn keys_and_mods(keys: impl Iterator<Item=Key>) -> (Vec<Key>, Vec<Modifiers>) {
 // -----------------------------------------------------------------------------
 //     - Parse input -
 // -----------------------------------------------------------------------------
-pub(super) fn parse_input(input: &str) -> Result<Input, String> {
+pub(super) fn parse_input(input: &str) -> Result<(Input, Modifiers), String> {
     if input.starts_with('<') && input.ends_with('>') {
         let input = &input[1..input.len() - 1];
         let keys = input.split('-').filter_map(str_to_key);
@@ -33,83 +33,84 @@ pub(super) fn parse_input(input: &str) -> Result<Input, String> {
         mods.into_iter().for_each(|m| modifiers.insert(m));
 
         match (input.contains("--"), keys.into_iter().next()) {
-            (true, _) => Ok(Input::Key(Key::Minus, modifiers)),
-            (false, Some(key)) => Ok(Input::Key(key, modifiers)),
+            (true, _) => Ok((Input::Char('-'), modifiers)),
+            (false, Some(key)) => Ok((key, modifiers)),
             (false, None) => Err("No key mapping provided".to_owned()),
         }
     } else {
         match str_to_key(input) {
-            Some(k) => Ok(Input::Key(k, Modifiers::empty())),
+            Some(k) => Ok((k, Modifiers::empty())),
             None => Err(format!("\"{}\" is not a valid key", input))
         }
     }
 }
 
-fn str_to_key(s: &str) -> Option<Key> {
+fn str_to_key(s: &str) -> Option<Input> {
     match s {
         // Alpha
-        "a" => Some(Key::A),
-        "b" => Some(Key::B),
-        "c" => Some(Key::C),
-        "d" => Some(Key::D),
-        "e" => Some(Key::E),
-        "f" => Some(Key::F),
-        "g" => Some(Key::G),
-        "h" => Some(Key::H),
-        "i" => Some(Key::I),
-        "j" => Some(Key::J),
-        "k" => Some(Key::K),
-        "l" => Some(Key::L),
-        "m" => Some(Key::M),
-        "n" => Some(Key::N),
-        "o" => Some(Key::O),
-        "p" => Some(Key::P),
-        "q" => Some(Key::Q),
-        "r" => Some(Key::R),
-        "s" => Some(Key::S),
-        "t" => Some(Key::T),
-        "u" => Some(Key::U),
-        "v" => Some(Key::V),
-        "w" => Some(Key::W),
-        "x" => Some(Key::X),
-        "y" => Some(Key::Y),
-        "z" => Some(Key::Z),
+        "a" => Some(Input::Char('a')),
+        "b" => Some(Input::Char('b')),
+        "c" => Some(Input::Char('c')),
+        "d" => Some(Input::Char('d')),
+        "e" => Some(Input::Char('e')),
+        "f" => Some(Input::Char('f')),
+        "g" => Some(Input::Char('g')),
+        "h" => Some(Input::Char('h')),
+        "i" => Some(Input::Char('i')),
+        "j" => Some(Input::Char('j')),
+        "k" => Some(Input::Char('k')),
+        "l" => Some(Input::Char('l')),
+        "m" => Some(Input::Char('m')),
+        "n" => Some(Input::Char('n')),
+        "o" => Some(Input::Char('o')),
+        "p" => Some(Input::Char('p')),
+        "q" => Some(Input::Char('q')),
+        "r" => Some(Input::Char('r')),
+        "s" => Some(Input::Char('s')),
+        "t" => Some(Input::Char('t')),
+        "u" => Some(Input::Char('u')),
+        "v" => Some(Input::Char('v')),
+        "w" => Some(Input::Char('w')),
+        "x" => Some(Input::Char('x')),
+        "y" => Some(Input::Char('y')),
+        "z" => Some(Input::Char('z')),
 
         // Numbers
-        "0" => Some(Key::Key0),
-        "1" => Some(Key::Key1),
-        "1" => Some(Key::Key1),
-        "2" => Some(Key::Key2),
-        "3" => Some(Key::Key3),
-        "4" => Some(Key::Key4),
-        "5" => Some(Key::Key5),
-        "6" => Some(Key::Key6),
-        "7" => Some(Key::Key7),
-        "8" => Some(Key::Key8),
-        "9" => Some(Key::Key9),
+        "0" => Some(Input::Char('0')),
+        "1" => Some(Input::Char('1')),
+        "1" => Some(Input::Char('1')),
+        "2" => Some(Input::Char('2')),
+        "3" => Some(Input::Char('3')),
+        "4" => Some(Input::Char('4')),
+        "5" => Some(Input::Char('5')),
+        "6" => Some(Input::Char('6')),
+        "7" => Some(Input::Char('7')),
+        "8" => Some(Input::Char('8')),
+        "9" => Some(Input::Char('9')),
 
         // Special chars
-        "'" => Some(Key::Apostrophe),
-        "*" => Some(Key::Asterisk),
-        "@" => Some(Key::At),
-        "\\" => Some(Key::Backslash),
-        ":" => Some(Key::Colon),
-        "=" => Some(Key::Equals),
-        "-" => Some(Key::Minus),
-        "+" => Some(Key::Plus),
-        "." => Some(Key::Period),
-        "]" => Some(Key::RBracket),
-        "[" => Some(Key::LBracket),
-        ";" => Some(Key::Semicolon),
-        "/" => Some(Key::Slash),
-        "_" => Some(Key::Underline),
-        "Tab" => Some(Key::Tab),
+        "'" => Some(Input::Char('\'')),
+        "*" => Some(Input::Char('*')),
+        "@" => Some(Input::Char('@')),
+        ":" => Some(Input::Char(':')),
+        "=" => Some(Input::Char('=')),
+        "-" => Some(Input::Char('-')),
+        "+" => Some(Input::Char('+')),
+        "." => Some(Input::Char('.')),
+        "[" => Some(Input::Char('[')),
+        "]" => Some(Input::Char(']')),
+        ";" => Some(Input::Char(';')),
+        "/" => Some(Input::Char('/')),
+        "_" => Some(Input::Char('_')),
+        "\\" => Some(Input::Char('\\')),
+
+        "Tab" => Some(Input::Key(Key::Tab)),
 
         // Modifiers
-        "C" => Some(Key::LControl),
-        "S" => Some(Key::LShift),
-        "A" => Some(Key::LAlt),
-        "Left" => Some(Key::Left),
+        "C" => Some(Input::Key(Key::LControl)),
+        "S" => Some(Input::Key(Key::LShift)),
+        "A" => Some(Input::Key(Key::LAlt)),
+        "Left" => Some(Input::Key(Key::Left)),
         _ => None,
     }
 }
@@ -121,7 +122,7 @@ mod test {
     #[test]
     fn test_parse_key() {
         let actual = parse_input("a").unwrap();
-        assert!(matches!(actual, Input::Key(Key::A, _)));
+        assert!(matches!(actual, (Input::Char('a'), _)));
     }
 
     #[test]
@@ -129,7 +130,7 @@ mod test {
         let input = parse_input("<C-S-b>").unwrap();
 
         match input {
-            Input::Key(Key::B, mods) => {
+            Input::Char('b', mods) => {
                 assert!(mods.ctrl());
                 assert!(mods.shift());
                 assert!(!mods.alt());
@@ -142,14 +143,14 @@ mod test {
     #[test]
     fn test_directionals() {
         let actual = parse_input("<Left>").unwrap();
-        assert!(matches!(actual, Input::Key(Key::Left, _)));
+        assert!(matches!(actual, (Input::Key(Key::Left), _)));
     }
 
     #[test]
     fn test_directionals_with_modifier() {
         let input = parse_input("<S-Left>").unwrap();
         match input {
-            Input::Key(Key::Left, mods) => {
+            (Input::Key(Key::Left), mods) => {
                 assert!(mods.shift());
                 assert!(!mods.ctrl());
                 assert!(!mods.alt());

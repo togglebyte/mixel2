@@ -18,7 +18,7 @@ pub use actions::Action;
 //     - Config -
 // -----------------------------------------------------------------------------
 pub struct Config {
-    actions: HashMap<Input, Action>,
+    actions: HashMap<(Input, Modifiers), Action>,
 }
 
 impl Config {
@@ -29,8 +29,8 @@ impl Config {
         Ok(inst)
     }
 
-    pub fn key_map(&self, input: Input) -> Action {
-        *self.actions.get(&input).unwrap_or(&Action::Noop)
+    pub fn key_map(&self, input: Input, modifiers: Modifiers) -> Action {
+        *self.actions.get(&(input, modifiers)).unwrap_or(&Action::Noop)
     }
 }
 
