@@ -1,3 +1,4 @@
+use log::error;
 use pretty_env_logger;
 use nightmaregl::events::{Event, KeyState, LoopAction, Modifiers};
 use nightmaregl::{Pixel, Context};
@@ -7,7 +8,10 @@ mod application;
 mod canvas;
 mod commandline;
 mod config;
+mod input;
+mod status;
 
+use input::Input;
 use application::App;
 use config::Config;
 
@@ -23,15 +27,26 @@ fn main() -> Result<()> {
     let window_size = context.window_size();
     let mut app = App::new(config, window_size, &mut context)?;
 
+    // Dealing with horrible input:
+    // * Any char is ignored as a VirtualKeycode
+    // * VirtualKeycodes and chars are stored in one enum
+    // * Struct is passed to `input` functions
     let mut modifiers = Modifiers::empty();
     eventloop.run(move |event| {
         match event {
-            Event::Char(c) => app.input_char(c),
             Event::Modifier(m) => modifiers = m,
-            Event::Key { key, state: KeyState::Pressed } => { 
-                app.input(key, modifiers, &mut context);
-                if app.close {
-                    return LoopAction::Quit;
+            Event::Char(c) => if let Err(e) = app.input(Input::from_char(c, modifiers), &mut context) {
+                error!("Failed to handle input: {:?}", e);
+            }
+            Event::Key { key, state: KeyState::Pressed } => {
+                if let Some(input) = Input::from_key(key, modifiers) {
+                    if let Err(e) = app.input(input, &mut context) {
+                        error!("Failed to handle input: {:?}", e);
+                    }
+
+                    if app.close {
+                        return LoopAction::Quit;
+                    }
                 }
             }
             Event::Draw(_dt) => {

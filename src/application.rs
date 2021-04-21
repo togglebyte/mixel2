@@ -1,17 +1,19 @@
 use anyhow::Result;
 use log::error;
 use nightmaregl::events::{Key, Modifiers};
-use nightmaregl::{Context, Size};
+use nightmaregl::{Context, Size, Position};
 
 use crate::canvas::Canvas;
 use crate::commandline::CommandLine;
 use crate::commandline::commands::Command;
 use crate::config::Config;
+use crate::input::Input;
+use crate::status::Status;
 
 // -----------------------------------------------------------------------------
 //     - Mode -
 // -----------------------------------------------------------------------------
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Mode {
     Normal,
     Insert,
@@ -29,10 +31,13 @@ pub struct App {
     command_line: CommandLine,
     window_size: Size<i32>,
     config: Config,
+    status: Status, 
 }
 
 impl App {
     pub fn new(config: Config, window_size: Size<i32>, context: &mut Context) -> Result<Self> {
+        let mut status = Status::new(window_size, context)?;
+
         let inst = Self {
             canvas: Canvas::new(window_size, context)?,
             command_line: CommandLine::new(window_size, context)?,
@@ -40,6 +45,7 @@ impl App {
             mode: Mode::Normal,
             close: false,
             config,
+            status,
         };
 
         Ok(inst)
@@ -51,43 +57,38 @@ impl App {
         // self.command_line.resize(new_size);
     }
 
-    pub fn input_char(&mut self, c: char) {
-        if let Mode::Command = self.mode {
-            self.command_line.input_char(c);
-        }
-    }
-
-    pub fn input(&mut self, key: Key, modifiers: Modifiers, context: &mut Context) -> Result<()> {
-        match (self.mode, key) {
-            (Mode::Normal, Key::Colon) => self.mode = Mode::Command,
-            (Mode::Insert, Key::Escape) => self.mode = Mode::Normal,
-            (Mode::Visual, Key::Escape) => self.mode = Mode::Normal,
-            (Mode::Command, Key::Escape) => self.mode = Mode::Normal,
-            (Mode::Normal, Key::I) if modifiers.is_empty() => self.mode = Mode::Insert,
-            (Mode::Normal, Key::V) if modifiers.is_empty() => self.mode = Mode::Visual,
+    pub fn input(&mut self, input: Input, context: &mut Context) -> Result<()> {
+        match (self.mode, input) {
+            (Mode::Normal, Input::Char(':', _)) => self.mode = Mode::Command,
+            (Mode::Insert, Input::Key(Key::Escape, _)) => self.mode = Mode::Normal,
+            (Mode::Visual, Input::Key(Key::Escape, _)) => self.mode = Mode::Normal,
+            (Mode::Command, Input::Key(Key::Escape, _)) => self.mode = Mode::Normal,
+            (Mode::Normal, Input::Char('i', modifiers)) if modifiers.is_empty() => self.mode = Mode::Insert,
+            (Mode::Visual, Input::Char('i', modifiers)) if modifiers.is_empty() => self.mode = Mode::Insert,
+            (Mode::Normal, Input::Char('v', modifiers)) if modifiers.is_empty() => self.mode = Mode::Visual,
             _ => {}
         }
 
         match self.mode {
             Mode::Command => {
-                match self.command_line.input(key) {
+                match self.command_line.input(input) {
                     Some(Command::Quit) => self.close = true,
                     Some(command) => self.canvas.exec(command, context)?,
                     None => {}
                 }
 
-                if let Key::Return = key {
+                if let Input::Key(Key::Return, _) = input {
                     self.mode = Mode::Normal;
                 }
 
-                if let Key::Back = key {
+                if let Input::Key(Key::Back, _) = input {
                     if self.command_line.is_empty() {
                         self.mode = Mode::Normal;
                     }
                 }
             }
             _ => {
-                let action = self.config.key_map(key, modifiers);
+                let action = self.config.key_map(input);
                 self.canvas.input(action);
             }
         }
@@ -99,6 +100,11 @@ impl App {
         if let Mode::Command = self.mode {
             self.command_line.render(context);
         }
+
         self.canvas.render(context);
+        self.status.set_mode(self.mode);
+        self.status.set_cur_pos(self.canvas.cur_pos());
+        self.status.render(context);
+        
     }
 }

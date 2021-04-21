@@ -40,7 +40,7 @@ pub struct Draw {
     current_layer: usize,
     layers: Vec<Layer>,
     renderer: Renderer<VertexData>,
-    cursor_pos: Position<i32>,
+    pub(super) cursor_pos: Position<i32>,
     save_buffer: SaveBuffer,
 }
 
@@ -199,29 +199,7 @@ impl Draw {
     }
 
     pub fn resize_canvas(&mut self, extent: Extent, context: &mut Context) -> Result<()> {
-        // Maybe use framebuffer blitting:
-        // https://www.khronos.org/opengl/wiki/Framebuffer#Blitting
-        //
-        // Create two frame buffers, then blit to copy the 
-        // pixels from one texture to another.
-        //
-        // Create one framebuffer for reading.
-        // Attach texture from the layer to that framebuffer.
-        //
-        // Create another framebuffer for writing
-        // that has the new size in a new texture.
-        //
-        // Resize the sprite.
-        //
-        // Render... 
-
         let new_size = Size::new(48, 32);
-
-        // Create a new sprite
-        let mut sprite = Sprite::from_size(new_size);
-        // sprite.fill = FillMode::Repeat;
-        // sprite.position = self.sprite.position;
-        // sprite.anchor = self.sprite.anchor;
 
         // self.sprite = sprite;
         self.sprite.size = new_size;

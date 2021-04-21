@@ -15,5 +15,10 @@ pub enum Action {
     DownLeft,
     DownRight,
 
+    CanvasLeft,
+    CanvasRight,
+    CanvasUp,
+    CanvasDown,
+
     Noop,
 }

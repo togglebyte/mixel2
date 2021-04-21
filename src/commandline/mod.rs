@@ -1,14 +1,18 @@
-use log::error;
 use anyhow::Result;
+use log::error;
 use nightmaregl::events::Key;
 use nightmaregl::text::{Text, WordWrap};
-use nightmaregl::{Texture, Context, Pixel, Pixels, Position, Renderer, Size, Sprite, VertexData, Viewport};
+use nightmaregl::{
+    Context, Pixel, Pixels, Position, Renderer, Size, Sprite, Texture, VertexData, Viewport,
+};
 
-mod parser;
+use crate::input::Input;
+
 pub mod commands;
+mod parser;
 
-use parser::Parser;
 use commands::Command;
+use parser::Parser;
 
 // -----------------------------------------------------------------------------
 //     - Command line -
@@ -28,7 +32,7 @@ impl CommandLine {
         let text_renderer = Renderer::default_font(context)?;
         let font_size = 18.0;
         let viewport = Viewport::new(Position::new(0, 0), viewport_size(size, font_size));
-        
+
         let mut text = Text::from_path(
             "/usr/share/fonts/TTF/Hack-Regular.ttf",
             font_size,
@@ -55,12 +59,9 @@ impl CommandLine {
         let texture = self.text.texture();
         let text_vertex_data = self.text.vertex_data();
 
-        let res = self.text_renderer.render(
-            texture,
-            &text_vertex_data,
-            &self.viewport,
-            context,
-        );
+        let res = self
+            .text_renderer
+            .render(texture, &text_vertex_data, &self.viewport, context);
 
         if let Err(e) = res {
             error!("Failed to render text: {:?}", e);
@@ -70,42 +71,41 @@ impl CommandLine {
     }
 
     pub fn resize(&mut self, new_size: Size<i32>) {
-        self.viewport.resize(viewport_size(new_size, self.font_size))
+        self.viewport
+            .resize(viewport_size(new_size, self.font_size))
     }
 
     pub fn is_empty(&self) -> bool {
         self.input_buffer.is_empty()
     }
 
-    pub fn input(&mut self, key: Key) -> Option<Command> {
-        match key {
-            Key::Back => {
-                self.visible_buffer.pop();
-                self.input_buffer.pop();
+    pub fn input(&mut self, input: Input) -> Option<Command> {
+        match input {
+            Input::Char(c, _) if c.is_control() => {}
+            Input::Char(c, _) => {
+                self.input_buffer.push(c);
+                self.visible_buffer.push(c);
                 self.update_text();
             }
-            Key::Return => {
-                let input = self.input_buffer.drain(..).collect::<String>();
-                let parser = Parser::new(&input);
-                let command = parser.parse();
-                self.visible_buffer.clear();
-                self.update_text();
-                return Some(command);
-            }
-            _ => {}
+            Input::Key(key, modifiers) => match key {
+                Key::Back => {
+                    self.visible_buffer.pop();
+                    self.input_buffer.pop();
+                    self.update_text();
+                }
+                Key::Return => {
+                    let input = self.input_buffer.drain(..).collect::<String>();
+                    let parser = Parser::new(&input);
+                    let command = parser.parse();
+                    self.visible_buffer.clear();
+                    self.update_text();
+                    return Some(command);
+                }
+                _ => {}
+            },
         }
 
         None
-    }
-
-    pub fn input_char(&mut self, c: char) {
-        if c.is_control() {
-            return;
-        }
-
-        self.input_buffer.push(c);
-        self.visible_buffer.push(c);
-        self.update_text();
     }
 
     fn update_text(&mut self) {
@@ -113,7 +113,9 @@ impl CommandLine {
             error!("Failed to set text: {:?}", e);
         }
 
-        while self.text.caret().x + self.cursor.sprite.size.width > self.viewport.size().width as f32 {
+        while self.text.caret().x + self.cursor.sprite.size.width
+            > self.viewport.size().width as f32
+        {
             if self.visible_buffer.is_empty() {
                 break;
             }
@@ -177,4 +179,3 @@ impl Cursor {
 fn viewport_size(size: Size<i32>, font_size: f32) -> Size<i32> {
     Size::new(size.width, (font_size * 2.0) as i32)
 }
-

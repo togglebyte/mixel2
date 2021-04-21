@@ -6,6 +6,8 @@ use anyhow::Result;
 use nightmaregl::events::{Modifiers, Key};
 use serde::Deserialize;
 
+use crate::input::Input;
+
 mod actions;
 mod parse;
 
@@ -16,7 +18,7 @@ pub use actions::Action;
 //     - Config -
 // -----------------------------------------------------------------------------
 pub struct Config {
-    actions: HashMap<(Key, Modifiers), Action>,
+    actions: HashMap<Input, Action>,
 }
 
 impl Config {
@@ -27,8 +29,8 @@ impl Config {
         Ok(inst)
     }
 
-    pub fn key_map(&self, key: Key, modifiers: Modifiers) -> Action {
-        *self.actions.get(&(key, modifiers)).unwrap_or(&Action::Noop)
+    pub fn key_map(&self, input: Input) -> Action {
+        *self.actions.get(&input).unwrap_or(&Action::Noop)
     }
 }
 
@@ -46,8 +48,8 @@ impl ConfigSrc {
 
         macro_rules! parse {
             ($field:ident, $action:ident) => {
-                if let Ok(keys) = parse_input(&self.commands.$field) {
-                    actions.insert(keys, Action::$action);
+                if let Ok(input) = parse_input(&self.commands.$field) {
+                    actions.insert(input, Action::$action);
                 }
             }
         }
@@ -83,13 +85,12 @@ pub struct Commands {
     down_left: String,
     down_right: String,
 
-    visual: VisualCommands,
-}
+    canvas_left: String,
+    canvas_right: String,
+    canvas_up: String,
+    canvas_down: String,
 
-impl Commands {
-    pub fn action(&self, key: Key, modifiers: Modifiers) -> Action {
-        Action::Noop
-    }
+    visual: VisualCommands,
 }
 
 #[derive(Debug, Deserialize)]

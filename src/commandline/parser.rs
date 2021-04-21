@@ -1,6 +1,8 @@
 use std::iter::Peekable;
 use std::str::Chars;
 
+use log::info;
+
 use super::commands::{Command, Extent};
 
 pub struct Parser<'a> {
@@ -28,7 +30,7 @@ impl<'a> Parser<'a> {
             }
         }
 
-        eprintln!("{:?} | {}", self.command, self.args);
+        info!("{:?} | {}", self.command, self.args);
 
         match self.command {
             "q" => Command::Quit,
@@ -41,34 +43,34 @@ impl<'a> Parser<'a> {
     }
 }
 
-#[cfg(test)]
-mod test {
-    use super::*;
+// #[cfg(test)]
+// mod test {
+//     use super::*;
 
-    #[test]
-    fn quit() {
-        let input = ":q";
-        let output = matches!(Parser::parse(input), Command::Quit);
-        assert!(output);
-    }
+//     #[test]
+//     fn quit() {
+//         let input = ":q";
+//         let output = matches!(Parser::parse(input), Command::Quit);
+//         assert!(output);
+//     }
 
-    #[test]
-    fn save_without_path() {
-        let input = ":w";
-        let output = matches!(Parser::parse(input), Command::Noop);
-        assert!(output);
-    }
+//     #[test]
+//     fn save_without_path() {
+//         let input = ":w";
+//         let output = matches!(Parser::parse(input), Command::Noop);
+//         assert!(output);
+//     }
 
-    #[test]
-    fn save() {
-        let input = ":w test.png";
-        let output = matches!(
-            Parser::parse(input),
-            Command::Save {
-                overwrite: false,
-                ..
-            }
-        );
-        assert!(output);
-    }
-}
+//     #[test]
+//     fn save() {
+//         let input = ":w test.png";
+//         let output = matches!(
+//             Parser::parse(input),
+//             Command::Save {
+//                 overwrite: false,
+//                 ..
+//             }
+//         );
+//         assert!(output);
+//     }
+// }

@@ -4,10 +4,15 @@ right = "l"
 up    = "k"
 down  = "j"
 
-up_left     = "<S-h>"
-up_right    = "<S-l>"
+up_left    = "<S-h>"
+up_right   = "<S-l>"
 down_left  = "<S-j>"
 down_right = "<S-k>"
+
+canvas_left  = "<Left>"
+canvas_right = "<Right>"
+canvas_up    = "<Up>"
+canvas_down  = "<Down>"
 
 delete = "x" 
 undo   = "u"

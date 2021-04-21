@@ -81,6 +81,11 @@ impl Canvas {
             Action::UpRight => self.draw.offset_cursor(Position::new(1, -1)),
             Action::DownLeft => self.draw.offset_cursor(Position::new(-1, 1)),
             Action::DownRight => self.draw.offset_cursor(Position::new(1, 1)),
+
+            Action::CanvasLeft  => self.draw.offset_canvas(Position::new(-1, 0)),
+            Action::CanvasRight => self.draw.offset_canvas(Position::new(1, 0)),
+            Action::CanvasUp    => self.draw.offset_canvas(Position::new(0, 1)),
+            Action::CanvasDown  => self.draw.offset_canvas(Position::new(0, -1)),
             _ => {}
 
             // Move the cursor  
@@ -136,5 +141,9 @@ impl Canvas {
         }
 
         Ok(())
+    }
+
+    pub fn cur_pos(&self) -> Position<i32> {
+        self.draw.cursor_pos
     }
 }
