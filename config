@@ -14,6 +14,8 @@ canvas_right = "<Right>"
 canvas_up    = "<Up>"
 canvas_down  = "<Down>"
 
+next_x_pixel = "w"
+
 delete = "x" 
 undo   = "u"
 redo   = "<C-r>"

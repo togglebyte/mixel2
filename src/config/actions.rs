@@ -20,5 +20,8 @@ pub enum Action {
     CanvasUp,
     CanvasDown,
 
+    NextXPixel,
+    PrevXPixel,
+
     Noop,
 }

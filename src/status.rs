@@ -1,6 +1,9 @@
 use anyhow::Result;
-use nightmaregl::{Texture, Position, Pixels, Pixel, VertexData, Context, Size, Renderer, Viewport};
 use nightmaregl::text::{Text, WordWrap};
+use nightmaregl::pixels::{Pixel, Pixels};
+use nightmaregl::{
+    Context, Position, Renderer, Size, Texture, VertexData, Viewport,
+};
 
 use crate::application::Mode;
 
@@ -8,6 +11,7 @@ pub struct Status {
     text: Text,
     mode: Mode,
     cur_pos: Position<i32>,
+    layer: usize,
     renderer: Renderer<VertexData>,
     viewport: Viewport,
 }
@@ -24,7 +28,7 @@ impl Status {
             "/usr/share/fonts/TTF/Hack-Regular.ttf",
             font_size,
             WordWrap::NoWrap,
-            context
+            context,
         )?;
 
         text.position(position.cast());
@@ -35,6 +39,7 @@ impl Status {
             text,
             cur_pos: Position::new(-1, -1),
             mode: Mode::Normal,
+            layer: 0,
             viewport: Viewport::new(Position::zero(), size),
             renderer,
         };
@@ -56,8 +61,18 @@ impl Status {
         }
     }
 
+    pub fn set_layer(&mut self, layer: usize) {
+        if layer != self.layer {
+            self.layer = layer;
+            self.update_text();
+        }
+    }
+
     fn update_text(&mut self) {
-        let text = format!("x: {} y: {} | mode: {:?}", self.cur_pos.x, self.cur_pos.y, self.mode);
+        let text = format!(
+            "x: {} y: {} | mode: {:?} | layer: {}",
+            self.cur_pos.x, self.cur_pos.y, self.mode, self.layer
+        );
         self.text.set_text(text);
     }
 

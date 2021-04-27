@@ -64,6 +64,8 @@ impl ConfigSrc {
         parse!(down_left, DownLeft);
         parse!(down_right, DownRight);
 
+        parse!(next_x_pixel, NextXPixel);
+
         Config {
             actions,
         }
@@ -89,6 +91,8 @@ pub struct Commands {
     canvas_right: String,
     canvas_up: String,
     canvas_down: String,
+
+    next_x_pixel: String,
 
     visual: VisualCommands,
 }

@@ -1,11 +1,14 @@
 use std::path::Path;
 
-use log::error;
 use anyhow::Result;
+use log::error;
 use nalgebra::Vector3;
-use nightmaregl::texture::Texture;
-use nightmaregl::{Context, Pixel, Pixels, Position, Renderer, Size, Sprite, FillMode, VertexData, Viewport, Rect};
 use nightmaregl::framebuffer::{Framebuffer, FramebufferTarget};
+use nightmaregl::pixels::{Pixel, Pixels};
+use nightmaregl::texture::Texture;
+use nightmaregl::{
+    Context, FillMode, Position, Rect, Renderer, Size, Sprite, VertexData, Viewport,
+};
 
 use crate::commandline::commands::Extent;
 
@@ -33,6 +36,7 @@ impl Layer {
 //     - Draw -
 // -----------------------------------------------------------------------------
 pub struct Draw {
+    pub(super) cursor_pos: Position<i32>,
     size: Size<i32>,
     background: Texture<i32>,
     cursor: Cursor,
@@ -40,7 +44,6 @@ pub struct Draw {
     current_layer: usize,
     layers: Vec<Layer>,
     renderer: Renderer<VertexData>,
-    pub(super) cursor_pos: Position<i32>,
     save_buffer: SaveBuffer,
 }
 
@@ -64,7 +67,7 @@ impl Draw {
         // -----------------------------------------------------------------------------
         // let position = (position / renderer.pixel_size).into();
         let mut sprite = Sprite::new(&background);
-        sprite.size = size;
+        // sprite.size = size;
         sprite.position = position;
         sprite.fill = FillMode::Repeat;
         sprite.anchor -= (sprite.size / 2).into();
@@ -86,7 +89,7 @@ impl Draw {
             current_layer: 0,
             layers: vec![layer],
             renderer,
-            save_buffer: SaveBuffer::new(context)?
+            save_buffer: SaveBuffer::new(context, sprite.size)?,
         };
 
         Ok(inst)
@@ -104,25 +107,21 @@ impl Draw {
         // Canvas / Drawable area
         let mut vertex_data = self.sprite.vertex_data_scaled(pixel_size);
 
-        let res = self.renderer.render(
-            &self.background,
-            &[vertex_data],
-            viewport,
-            context,
-        );
+        let res = self
+            .renderer
+            .render(&self.background, &[vertex_data], viewport, context);
 
         if let Err(e) = res {
             error!("Failed to render the background: {:?}", e);
         }
 
-        // Decrease the z_index, 
+        // Decrease the z_index,
         vertex_data
             .model
             .append_translation_mut(&Vector3::from([0.0, 0.0, -1.0]));
 
         // Layers
-        self
-            .layers
+        self.layers
             .iter()
             .enumerate()
             .map(|(z_index, layer)| {
@@ -131,12 +130,8 @@ impl Draw {
                     .model
                     .append_translation_mut(&Vector3::from([0.0, 0.0, -z_index]));
 
-                self.renderer.render(
-                    &layer.texture,
-                    &[vertex_data],
-                    viewport,
-                    context,
-                )
+                self.renderer
+                    .render(&layer.texture, &[vertex_data], viewport, context)
             })
             .filter(Result::is_err)
             .for_each(|e| error!("Failed to render layer: {:?}", e));
@@ -149,30 +144,31 @@ impl Draw {
         cursor_vd.model[(1, 3)] = y + (self.size.height - 1 - self.cursor_pos.y) as f32;
 
         // Cursor
-        let res = self.renderer.render(
-            &self.cursor.texture,
-            &[cursor_vd],
-            &viewport,
-            context,
-        );
+        let res = self
+            .renderer
+            .render(&self.cursor.texture, &[cursor_vd], &viewport, context);
 
         if let Err(e) = res {
-            error!("Failed to render the cursor: {:?}", e );
+            error!("Failed to render the cursor: {:?}", e);
         }
     }
 
     pub fn draw(&mut self) {
-        let position = self.cursor_pos;
+        self.put_pixel(self.cursor_pos)
+    }
+
+    pub fn put_pixel(&mut self, position: Position<i32>) {
         let layer = &self.layers[self.current_layer];
         let pixel = self.cursor.color;
         let size = Size::new(1, 1);
         let pixels = Pixels::from_pixel(pixel, size);
+
         layer
             .texture
             .write_region(position, size.cast(), pixels.as_bytes());
     }
 
-    pub fn offset_cursor(&mut self, offset: Position<i32>) { 
+    pub fn offset_cursor(&mut self, offset: Position<i32>) {
         let p = (self.cursor_pos + offset).to_point();
         let rect = Rect::from_size(self.sprite.size);
         if rect.contains(p) {
@@ -188,18 +184,19 @@ impl Draw {
         self.renderer.pixel_size += size;
     }
 
-    pub fn write_to_disk(&mut self, path: impl AsRef<Path>, overwrite: bool, context: &mut Context) {
+    pub fn write_to_disk(
+        &mut self,
+        path: impl AsRef<Path>,
+        overwrite: bool,
+        context: &mut Context,
+    ) {
         if !overwrite && path.as_ref().exists() {
             error!("File exists. Use ! to overwrite");
             return;
         }
 
-        self.save_buffer.save(
-            path,
-            &self.sprite,
-            &self.layers,
-            context
-        );
+        self.save_buffer
+            .save(path, &self.sprite, &self.layers, context);
     }
 
     pub fn resize_canvas(&mut self, extent: Extent, context: &mut Context) -> Result<()> {
@@ -227,16 +224,29 @@ impl Draw {
             write_buffer.bind();
 
             // Blit
-            renderer.render(
-                &texture,
-                &vertex_data,
-                &viewport,
-                context,
-            );
+            renderer.render(&texture, &vertex_data, &viewport, context);
         }
 
         Ok(())
     }
+
+    pub fn next_x(&mut self) {
+        let layer = &self.layers[self.current_layer];
+        let x = self.cursor_pos.x;
+        let width = self.sprite.size.width - x;
+        let size = Size::new(width, 1);
+
+        let position = self.cursor_pos.cast();
+        let pixels = layer.texture.get_pixels::<Pixel>();
+
+        let region = pixels.region(position, size.cast());
+        for row in region.rows() {
+            for p in row.into_iter().skip(1) {
+                if p.a > 0 {
+                    break
+                }
+                self.cursor_pos.x += 1;
+            }
+        }
+    }
 }
-
-

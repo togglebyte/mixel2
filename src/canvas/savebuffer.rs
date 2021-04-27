@@ -14,11 +14,11 @@ pub struct SaveBuffer {
 }
 
 impl SaveBuffer {
-    pub fn new(context: &mut Context) -> Result<Self> {
+    pub fn new(context: &mut Context, size: Size<i32>) -> Result<Self> {
         let renderer = Renderer::default(context)?;
         let inst = Self {
             renderer,
-            viewport: Viewport::new(Position::zero(), Size::new(32, 32)),
+            viewport: Viewport::new(Position::zero(), size),
         };
 
         Ok(inst)
@@ -44,6 +44,7 @@ impl SaveBuffer {
         fb.attach_texture(&texture);
         fb.bind();
 
+        panic!("---====----- why is this size hard coded??? -----=====----");
         let sprite = Sprite::from_size(Size::new(32, 32));
 
         let vertex_data = [sprite.vertex_data()];
@@ -58,10 +59,11 @@ impl SaveBuffer {
             }
         });
 
-        if let Err(e) = texture.write_to_disk(path.as_ref()) {
-            if let Some(path) = path.as_ref().to_str() {
-                error!("Failed to save \"{}\" : {:?}", path, e);
-            }
-        }
+        unimplemented!("Write to disk is missing from texture");
+        // if let Err(e) = texture.write_to_disk(path.as_ref()) {
+        //     if let Some(path) = path.as_ref().to_str() {
+        //         error!("Failed to save \"{}\" : {:?}", path, e);
+        //     }
+        // }
     }
 }

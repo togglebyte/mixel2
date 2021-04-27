@@ -2,8 +2,9 @@ use anyhow::Result;
 use log::error;
 use nightmaregl::events::Key;
 use nightmaregl::text::{Text, WordWrap};
+use nightmaregl::pixels::{Pixel, Pixels};
 use nightmaregl::{
-    Context, Pixel, Pixels, Position, Renderer, Size, Sprite, Texture, VertexData, Viewport,
+    Context, Position, Renderer, Size, Sprite, Texture, VertexData, Viewport,
 };
 
 use crate::input::Input;

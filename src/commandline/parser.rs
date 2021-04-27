@@ -38,6 +38,18 @@ impl<'a> Parser<'a> {
             "extendr" => extend!(right),
             "extendu" => extend!(up),
             "extendd" => extend!(down),
+            "put" => {
+                let mut florp = self.args.split_whitespace();
+                let x = florp.next().map(str::parse::<i32>).map(Result::ok).flatten();
+                let y = florp.next().map(str::parse::<i32>).map(Result::ok).flatten();
+
+                match (x, y) {
+                    (Some(x), Some(y)) => Command::Put { x, y },
+                    _ => Command::Noop,
+                }
+                 
+
+            }
             _ => Command::Noop,
         }
     }

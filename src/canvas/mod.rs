@@ -11,6 +11,7 @@ mod cursor;
 mod draw;
 mod pixelbuffer;
 mod savebuffer;
+mod undostack;
 
 use border::Border;
 use draw::Draw;
@@ -85,27 +86,11 @@ impl Canvas {
                 Action::CanvasRight => self.draw.offset_canvas(Position::new(1, 0)),
                 Action::CanvasUp => self.draw.offset_canvas(Position::new(0, 1)),
                 Action::CanvasDown => self.draw.offset_canvas(Position::new(0, -1)),
-                _ => {}
 
-                // Move the cursor
-                // Key::H => self.draw.offset_cursor(Position::new(-1, 0)),
-                // Key::L => self.draw.offset_cursor(Position::new(1, 0) ),
-                // Key::K => self.draw.offset_cursor(Position::new(0, -1) ),
-                // Key::J => self.draw.offset_cursor(Position::new(0, 1)),
+                Action::NextXPixel => { self.draw.next_x(); }
+                Action::PrevXPixel => {}
 
-                // // Draw a pixel
-                // Key::Space => self.draw.draw(),
-
-                // // Move
-                // Key::Left  => self.draw.offset_canvas(Position::new(-1, 0)),
-                // Key::Right => self.draw.offset_canvas(Position::new(1, 0)),
-                // Key::Up    => self.draw.offset_canvas(Position::new(0, 1)),
-                // Key::Down  => self.draw.offset_canvas(Position::new(0, -1)),
-
-                // // Scale up / down the pixel
-                // Key::A => self.draw.resize_pixel(1),
-                // Key::S => self.draw.resize_pixel(-1),
-                _ => {}
+                Action::Noop => {}
             }
         }
     }
@@ -132,11 +117,13 @@ impl Canvas {
         self.draw.render(&self.canvas_viewport, context);
     }
 
+    // Commands coming from the command line
     pub fn exec(&mut self, command: Command, context: &mut Context) -> Result<()> {
         match command {
             Command::Noop | Command::Quit => {}
             Command::Save { path, overwrite } => self.draw.write_to_disk(path, overwrite, context),
             Command::Extend(ext) => self.draw.resize_canvas(ext, context)?,
+            Command::Put { x, y } => self.draw.put_pixel(Position::new(x, y)),
             _ => unimplemented!(),
         }
 

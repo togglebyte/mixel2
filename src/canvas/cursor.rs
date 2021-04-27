@@ -1,4 +1,5 @@
-use nightmaregl::{Size, Sprite, Texture, Pixels, Pixel};
+use nightmaregl::{Size, Sprite, Texture};
+use nightmaregl::pixels::{Pixels, Pixel};
 
 pub struct Cursor {
     pub sprite: Sprite<i32>,

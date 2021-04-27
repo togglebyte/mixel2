@@ -1,7 +1,8 @@
 use log::error;
 use pretty_env_logger;
 use nightmaregl::events::{Event, KeyState, LoopAction, Modifiers};
-use nightmaregl::{Pixel, Context};
+use nightmaregl::Context;
+use nightmaregl::pixels::Pixel;
 use anyhow::Result;
 
 mod application;

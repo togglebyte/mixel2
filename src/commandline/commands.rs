@@ -4,6 +4,7 @@ pub enum Command {
     Quit,
     Save { path: String, overwrite: bool },
     Extend(Extent),
+    Put { x: i32, y: i32 }
 }
 
 #[derive(Debug, Default)]
