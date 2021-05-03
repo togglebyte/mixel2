@@ -1,20 +1,21 @@
-use log::error;
-use pretty_env_logger;
-use nightmaregl::events::{Event, KeyState, LoopAction, Modifiers};
-use nightmaregl::Context;
-use nightmaregl::pixels::Pixel;
 use anyhow::Result;
+use log::error;
+use nightmaregl::events::{Event, KeyState, LoopAction, Modifiers};
+use nightmaregl::pixels::Pixel;
+use nightmaregl::Context;
+use pretty_env_logger;
 
 mod application;
-mod canvas;
+// mod canvas;
 mod commandline;
 mod config;
 mod input;
+mod listener;
 mod status;
 
-use input::Input;
 use application::App;
 use config::Config;
+use input::Input;
 
 fn main() -> Result<()> {
     pretty_env_logger::init();
@@ -36,10 +37,15 @@ fn main() -> Result<()> {
     eventloop.run(move |event| {
         match event {
             Event::Modifier(m) => modifiers = m,
-            Event::Char(c) => if let Err(e) = app.input(Input::from_char(c), modifiers, &mut context) {
-                error!("Failed to handle input: {:?}", e);
+            Event::Char(c) => {
+                if let Err(e) = app.input(Input::from_char(c), modifiers, &mut context) {
+                    error!("Failed to handle input: {:?}", e);
+                }
             }
-            Event::Key { key, state: KeyState::Pressed } => {
+            Event::Key {
+                key,
+                state: KeyState::Pressed,
+            } => {
                 if let Some(input) = Input::from_key(key) {
                     if let Err(e) = app.input(input, modifiers, &mut context) {
                         error!("Failed to handle input: {:?}", e);
@@ -52,7 +58,15 @@ fn main() -> Result<()> {
             }
             Event::Draw(_dt) => {
                 // Clear the background with Nypsiee blue
-                context.clear(Pixel { r: 12, g: 34, b: 56, a: 255 }.into());
+                context.clear(
+                    Pixel {
+                        r: 12,
+                        g: 34,
+                        b: 56,
+                        a: 255,
+                    }
+                    .into(),
+                );
                 app.render(&mut context);
                 context.swap_buffers();
             }

@@ -34,6 +34,7 @@ impl<'a> Parser<'a> {
 
         match self.command {
             "q" => Command::Quit,
+            "w" => Command::Save { path: self.args.to_owned(), overwrite: false },
             "extendl" => extend!(left),
             "extendr" => extend!(right),
             "extendu" => extend!(up),

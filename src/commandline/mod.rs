@@ -8,11 +8,13 @@ use nightmaregl::{
 };
 
 use crate::input::Input;
+use crate::listener::{Listener, Message};
+use crate::application::{Mode, Render};
 
-pub mod commands;
+mod commands;
 mod parser;
 
-use commands::Command;
+pub use commands::Command;
 use parser::Parser;
 
 // -----------------------------------------------------------------------------
@@ -26,6 +28,7 @@ pub struct CommandLine {
     text: Text,
     input_buffer: String,
     visible_buffer: String,
+    mode: Mode,
 }
 
 impl CommandLine {
@@ -51,36 +54,30 @@ impl CommandLine {
             text,
             input_buffer: String::new(),
             visible_buffer: String::new(),
+            mode: Mode::Normal,
         };
 
         Ok(inst)
     }
 
-    pub fn render(&mut self, context: &mut Context) {
-        let texture = self.text.texture();
-        let text_vertex_data = self.text.vertex_data();
-
-        let res = self
-            .text_renderer
-            .render(texture, &text_vertex_data, &self.viewport, context);
-
-        if let Err(e) = res {
-            error!("Failed to render text: {:?}", e);
-        }
-
-        self.cursor.render(context, &self.viewport);
+    fn render(&mut self, context: &mut Context) {
     }
 
-    pub fn resize(&mut self, new_size: Size<i32>) {
+    fn resize(&mut self, new_size: Size<i32>) {
         self.viewport
             .resize(viewport_size(new_size, self.font_size))
     }
 
-    pub fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.input_buffer.is_empty()
     }
 
-    pub fn input(&mut self, input: Input) -> Option<Command> {
+    fn input(&mut self, input: Input) -> Option<Command> {
+        match self.mode {
+            Mode::Command => {}
+            _ => return None,
+        }
+
         match input {
             Input::Char(c) if c.is_control() => {}
             Input::Char(c) => {
@@ -127,6 +124,45 @@ impl CommandLine {
         }
 
         self.cursor.sprite.position = Position::new(self.text.caret().x, self.font_size / 3.0);
+    }
+}
+
+impl Listener for CommandLine {
+    fn message(&mut self, message: &Message) -> Option<Message> {
+        match message {
+            Message::Input(input) => return self.input(*input).map(Message::Command),
+            Message::Resize(new_size) => self.resize(*new_size),
+            Message::ModeChanged(mode) => {
+                self.mode = *mode;
+                self.visible_buffer.clear();
+                self.input_buffer.clear();
+            }
+            _ => {},
+        }
+
+        None
+    }
+}
+
+impl Render for CommandLine {
+    fn render(&mut self, context: &mut Context) {
+        match self.mode {
+            Mode::Command => {}
+            _ => return
+        }
+
+        let texture = self.text.texture();
+        let text_vertex_data = self.text.vertex_data();
+
+        let res = self
+            .text_renderer
+            .render(texture, &text_vertex_data, &self.viewport, context);
+
+        if let Err(e) = res {
+            error!("Failed to render text: {:?}", e);
+        }
+
+        self.cursor.render(context, &self.viewport);
     }
 }
 

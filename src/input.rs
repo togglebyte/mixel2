@@ -7,7 +7,7 @@ pub enum Input {
 }
 
 impl Input {
-    pub fn from_char(c: char) -> Input {
+    pub fn from_char(mut c: char) -> Input {
         Input::Char(c)
     }
 

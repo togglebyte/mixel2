@@ -22,6 +22,8 @@ pub enum Action {
 
     NextXPixel,
     PrevXPixel,
+    NextYPixel,
+    PrevYPixel,
 
     Noop,
 }

@@ -13,33 +13,26 @@ use nightmaregl::{
 use crate::commandline::commands::Extent;
 
 use super::cursor::Cursor;
-use super::pixelbuffer::PixelBuffer;
 use super::savebuffer::SaveBuffer;
 
-// -----------------------------------------------------------------------------
-//     - Layers -
-// -----------------------------------------------------------------------------
-pub struct Layer {
-    pub texture: Texture<i32>,
-    buffer: PixelBuffer,
+
+pub use super::layer::Layer;
+
+pub enum Direction {
+    Left,
+    Right,
+    Up,
+    Down,
 }
 
-impl Layer {
-    pub fn new(size: Size<i32>) -> Self {
-        let buffer = PixelBuffer::new(Pixel::transparent(), size.cast());
-        let texture = Texture::default_with_data(size, buffer.0.as_bytes());
-        Self { texture, buffer }
-    }
-}
 
 // -----------------------------------------------------------------------------
 //     - Draw -
 // -----------------------------------------------------------------------------
 pub struct Draw {
-    pub(super) cursor_pos: Position<i32>,
     size: Size<i32>,
     background: Texture<i32>,
-    cursor: Cursor,
+    pub cursor: Cursor,
     sprite: Sprite<i32>,
     current_layer: usize,
     layers: Vec<Layer>,
@@ -54,7 +47,7 @@ impl Draw {
         // -----------------------------------------------------------------------------
         //     - Cursor -
         // -----------------------------------------------------------------------------
-        let cursor = Cursor::new();
+        let cursor = Cursor::new(Position::new(size.width / 2, size.height / 2));
 
         // -----------------------------------------------------------------------------
         //     - Renderer -
@@ -65,9 +58,7 @@ impl Draw {
         // -----------------------------------------------------------------------------
         //     - Drawable area (sprite) -
         // -----------------------------------------------------------------------------
-        // let position = (position / renderer.pixel_size).into();
         let mut sprite = Sprite::new(&background);
-        // sprite.size = size;
         sprite.position = position;
         sprite.fill = FillMode::Repeat;
         sprite.anchor -= (sprite.size / 2).into();
@@ -81,7 +72,6 @@ impl Draw {
         //     - Instance -
         // -----------------------------------------------------------------------------
         let inst = Self {
-            cursor_pos: Position::new(0, 0),
             size,
             background,
             cursor,
@@ -140,8 +130,8 @@ impl Draw {
         let y = vertex_data.model[(1, 3)];
 
         let mut cursor_vd = self.cursor.sprite.vertex_data_scaled(pixel_size);
-        cursor_vd.model[(0, 3)] = x + self.cursor_pos.x as f32;
-        cursor_vd.model[(1, 3)] = y + (self.size.height - 1 - self.cursor_pos.y) as f32;
+        cursor_vd.model[(0, 3)] = x + self.cursor.position.x as f32;
+        cursor_vd.model[(1, 3)] = y + (self.size.height - 1 - self.cursor.position.y) as f32;
 
         // Cursor
         let res = self
@@ -154,25 +144,28 @@ impl Draw {
     }
 
     pub fn draw(&mut self) {
-        self.put_pixel(self.cursor_pos)
+        self.put_pixel(self.cursor.position)
     }
 
     pub fn put_pixel(&mut self, position: Position<i32>) {
-        let layer = &self.layers[self.current_layer];
-        let pixel = self.cursor.color;
-        let size = Size::new(1, 1);
-        let pixels = Pixels::from_pixel(pixel, size);
+        let mut layer = &mut self.layers[self.current_layer];
 
         layer
-            .texture
-            .write_region(position, size.cast(), pixels.as_bytes());
+            .buffer
+            .insert_pixel(self.cursor.color, position.cast());
+
+        layer.texture.write_region(
+            Position::zero(),
+            layer.buffer.size().cast(),
+            layer.buffer.as_bytes(),
+        );
     }
 
     pub fn offset_cursor(&mut self, offset: Position<i32>) {
-        let p = (self.cursor_pos + offset).to_point();
+        let p = (self.cursor.position + offset).to_point();
         let rect = Rect::from_size(self.sprite.size);
         if rect.contains(p) {
-            self.cursor_pos += offset;
+            self.cursor.position += offset;
         }
     }
 
@@ -230,23 +223,55 @@ impl Draw {
         Ok(())
     }
 
-    pub fn next_x(&mut self) {
+    pub fn jump_cursor(&mut self, direction: Direction) -> Option<()> {
         let layer = &self.layers[self.current_layer];
-        let x = self.cursor_pos.x;
-        let width = self.sprite.size.width - x;
-        let size = Size::new(width, 1);
+        let (pos, size) = {
+            let size = self.sprite.size;
+            let pos = self.cursor.position;
 
-        let position = self.cursor_pos.cast();
-        let pixels = layer.texture.get_pixels::<Pixel>();
+            match direction {
+                Direction::Left => (
+                    Position::new(0, pos.y),
+                    Size::new(pos.x, 1),
+                ),
+                Direction::Right => (
+                    Position::new(pos.x, pos.y),
+                    Size::new(size.width - pos.x, 1)
+                ),
+                Direction::Up => (
+                    Position::new(pos.x, 0),
+                    Size::new(1, pos.y),
+                ),
+                Direction::Down => (
+                    Position::new(pos.x, pos.y),
+                    Size::new(1, size.height - pos.y),
+                )
+            }
+        };
 
-        let region = pixels.region(position, size.cast());
-        for row in region.rows() {
-            for p in row.into_iter().skip(1) {
-                if p.a > 0 {
-                    break
-                }
-                self.cursor_pos.x += 1;
+        let region = layer.buffer.region(pos.cast(), size.cast());
+
+        match direction {
+            Direction::Right => {
+                let row = region.rows().next().unwrap();
+                let steps = row.into_iter().position(|p| p.a > 0).unwrap_or(1) - 1;
+                self.cursor.position.x += steps as i32;
+            }
+            Direction::Left => {
+                let row = region.rows().next().unwrap();
+                let steps = row.into_iter().rev().position(|p| p.a > 0).unwrap_or(0);
+                self.cursor.position.x -= steps as i32;
+            }
+            Direction::Up => {
+                let steps = region.rows().rev().position(|c| c.first().unwrap().a > 0).unwrap_or(0);
+                self.cursor.position.y -= steps as i32;
+            }
+            Direction::Down => {
+                let steps = region.rows().position(|c| c.first().unwrap().a > 0).unwrap_or(1) - 1;
+                self.cursor.position.y += steps as i32;
             }
         }
+
+        None
     }
 }

@@ -9,12 +9,18 @@ use crate::config::Action;
 mod border;
 mod cursor;
 mod draw;
-mod pixelbuffer;
 mod savebuffer;
 mod undostack;
+mod layer;
 
 use border::Border;
-use draw::Draw;
+use draw::{Direction, Draw};
+
+pub enum DrawMode {
+    Normal,
+    Square,
+    Circle,
+}
 
 // -----------------------------------------------------------------------------
 //     - Canvas -
@@ -87,8 +93,10 @@ impl Canvas {
                 Action::CanvasUp => self.draw.offset_canvas(Position::new(0, 1)),
                 Action::CanvasDown => self.draw.offset_canvas(Position::new(0, -1)),
 
-                Action::NextXPixel => { self.draw.next_x(); }
-                Action::PrevXPixel => {}
+                Action::NextXPixel => { self.draw.jump_cursor(Direction::Right); }
+                Action::PrevXPixel => { self.draw.jump_cursor(Direction::Left); }
+                Action::NextYPixel => { self.draw.jump_cursor(Direction::Down); }
+                Action::PrevYPixel => { self.draw.jump_cursor(Direction::Up); }
 
                 Action::Noop => {}
             }
@@ -131,6 +139,6 @@ impl Canvas {
     }
 
     pub fn cur_pos(&self) -> Position<i32> {
-        self.draw.cursor_pos
+        self.draw.cursor.position
     }
 }

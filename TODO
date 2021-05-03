@@ -1,0 +1,17 @@
+* Border should be moved to the `Application`
+* Change savebuffer.rs to handle save and load
+* Remove undostack.rs
+* Move the code to manipulate the cursor into cursor.rs
+* Canvas becomes a message router for the cursor and all the layers
+* Cursor should have its own render function
+* Cursor should have an update function that can be called once the
+  cursor moves. Push pixels to the texture when the cursor moves?
+
+# Layers
+* Fill entire layer
+* Draw rect | put cursor into "rectangle" mode
+* Draw circle | put cursor into "circle" mode
+
+# Draw mode
+* Rect / Circle
+* Mirrored mode

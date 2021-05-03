@@ -5,7 +5,8 @@ use nightmaregl::{
     Context, Position, Renderer, Size, Texture, VertexData, Viewport,
 };
 
-use crate::application::Mode;
+use crate::listener::{Listener, Message};
+use crate::application::{Render, Mode};
 
 pub struct Status {
     text: Text,
@@ -75,8 +76,26 @@ impl Status {
         );
         self.text.set_text(text);
     }
+}
 
-    pub fn render(&self, context: &mut Context) {
+impl Listener for Status {
+    fn message(&mut self, message: &Message) -> Option<Message> {
+        if let Message::ModeChanged(mode) = message {
+            self.mode = *mode;
+            self.update_text();
+        }
+
+        if let Message::CursorPos(pos) = message {
+            self.cur_pos = *pos;
+            self.update_text();
+        }
+
+        None
+    }
+}
+
+impl Render for Status {
+    fn render(&mut self, context: &mut Context) {
         self.renderer.render(
             self.text.texture(),
             &self.text.vertex_data(),

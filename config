@@ -15,6 +15,9 @@ canvas_up    = "<Up>"
 canvas_down  = "<Down>"
 
 next_x_pixel = "w"
+prev_x_pixel = "b"
+prev_y_pixel = "<C-u>"
+next_y_pixel = "<C-d>"
 
 delete = "x" 
 undo   = "u"

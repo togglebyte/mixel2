@@ -5,6 +5,7 @@ use log::error;
 use nightmaregl::texture::{Format, Texture};
 use nightmaregl::{Context, Position, Renderer, Size, Sprite, VertexData, Viewport};
 use nightmaregl::framebuffer::Framebuffer;
+use nightmaregl::pixels::Pixel;
 
 use super::draw::Layer;
 
@@ -32,7 +33,6 @@ impl SaveBuffer {
         context: &mut Context,
     ) {
         self.viewport.resize(sprite.size);
-        eprintln!("{:?}", "let's do swapsies");
         self.viewport.swap_y();
 
         let mut fb = Framebuffer::default();
@@ -44,8 +44,7 @@ impl SaveBuffer {
         fb.attach_texture(&texture);
         fb.bind();
 
-        panic!("---====----- why is this size hard coded??? -----=====----");
-        let sprite = Sprite::from_size(Size::new(32, 32));
+        let sprite = Sprite::from_size(sprite.size);
 
         let vertex_data = [sprite.vertex_data()];
 
@@ -59,11 +58,13 @@ impl SaveBuffer {
             }
         });
 
-        unimplemented!("Write to disk is missing from texture");
-        // if let Err(e) = texture.write_to_disk(path.as_ref()) {
-        //     if let Some(path) = path.as_ref().to_str() {
-        //         error!("Failed to save \"{}\" : {:?}", path, e);
-        //     }
-        // }
+        if let Err(e) = texture.write_to_disk::<Pixel, _>(path.as_ref()) {
+            if let Some(path) = path.as_ref().to_str() {
+                error!("Failed to save \"{}\" : {:?}", path, e);
+            }
+        }
+
+        // Reset y coordinate
+        self.viewport.swap_y();
     }
 }
