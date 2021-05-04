@@ -6,7 +6,10 @@ use crate::commandline::Command;
 use crate::config::{Config, Action};
 
 pub trait Listener {
-    fn message(&mut self, m: &Message, config: &Config) -> Message;
+    fn message(&mut self, m: &Message, config: &Config) -> Message {
+        Message::Noop
+    }
+
     fn render(&mut self, context: &mut Context) {
     }
 }

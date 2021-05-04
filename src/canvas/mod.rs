@@ -6,7 +6,6 @@ use nightmaregl::{Context, Position, Renderer, Size, VertexData, Viewport};
 use crate::commandline::commands::{Command, Extent};
 use crate::config::Action;
 
-mod border;
 mod cursor;
 mod draw;
 mod savebuffer;
@@ -26,23 +25,20 @@ pub enum DrawMode {
 //     - Canvas -
 // -----------------------------------------------------------------------------
 pub struct Canvas {
-    border: Border,
-    application_renderer: Renderer<VertexData>,
-    application_viewport: Viewport,
-    canvas_viewport: Viewport,
+    viewport: Viewport,
     draw: Draw,
 }
 
 impl Canvas {
     pub fn new(window_size: Size<i32>, context: &mut Context) -> Result<Self> {
-        let mut application_renderer = Renderer::default(context)?;
-        application_renderer.pixel_size = 1;
-        let application_viewport = Viewport::new(Position::zero(), window_size);
+        // let mut application_renderer = Renderer::default(context)?;
+        // application_renderer.pixel_size = 1;
+        // let application_viewport = Viewport::new(Position::zero(), window_size);
 
         // -----------------------------------------------------------------------------
         //     - Canvas viewport -
         // -----------------------------------------------------------------------------
-        let canvas_viewport = {
+        let viewport = {
             let padding = 256 / application_renderer.pixel_size;
             let pos = application_viewport.position + Position::new(padding, padding);
             let size = *application_viewport.size() - Size::new(padding * 2, padding * 2);
@@ -54,9 +50,8 @@ impl Canvas {
         //     - Border -
         // -----------------------------------------------------------------------------
         let border = Border::new(
-            canvas_viewport.position,
+            viewport.position,
             *canvas_viewport.size(),
-            application_renderer.pixel_size,
         )?;
 
         // -----------------------------------------------------------------------------
@@ -66,9 +61,7 @@ impl Canvas {
 
         let inst = Self {
             border,
-            application_renderer,
-            application_viewport,
-            canvas_viewport,
+            viewport,
             draw,
         };
 
@@ -141,4 +134,7 @@ impl Canvas {
     pub fn cur_pos(&self) -> Position<i32> {
         self.draw.cursor.position
     }
+}
+
+impl Listener for Canvas {
 }

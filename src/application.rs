@@ -4,11 +4,12 @@ use log::error;
 use nightmaregl::events::{Key, Modifiers};
 use nightmaregl::{Context, Position, Size};
 
+use crate::border::Border;
 use crate::commandline::{Command, CommandLine};
 use crate::config::Config;
 use crate::input::{InputToAction, Input};
-use crate::status::Status;
 use crate::listener::{Message, Listener};
+use crate::status::Status;
 
 // -----------------------------------------------------------------------------
 //     - Mode -
@@ -47,6 +48,7 @@ impl App {
         inst.listeners.push(Box::new(Status::new(window_size, context)?));
         inst.listeners.push(Box::new(CommandLine::new(window_size, context)?));
         inst.listeners.push(Box::new(InputToAction::new(inst.mode)));
+        inst.listeners.push(Box::new(Border::new(window_size, context)?));
 
         Ok(inst)
     }

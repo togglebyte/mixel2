@@ -5,8 +5,9 @@ use nightmaregl::pixels::Pixel;
 use nightmaregl::Context;
 use pretty_env_logger;
 
-mod application;
 // mod canvas;
+mod application;
+mod border;
 mod commandline;
 mod config;
 mod input;
