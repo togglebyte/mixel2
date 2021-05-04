@@ -7,9 +7,10 @@ use nightmaregl::{
     Context, Position, Renderer, Size, Sprite, Texture, VertexData, Viewport,
 };
 
+use crate::config::Config;
 use crate::input::Input;
 use crate::listener::{Listener, Message};
-use crate::application::{Mode, Render};
+use crate::application::Mode;
 
 mod commands;
 mod parser;
@@ -127,24 +128,27 @@ impl CommandLine {
     }
 }
 
+// -----------------------------------------------------------------------------
+//     - Listener -
+// -----------------------------------------------------------------------------
 impl Listener for CommandLine {
-    fn message(&mut self, message: &Message) -> Option<Message> {
+    fn message(&mut self, message: &Message, _: &Config) -> Message {
         match message {
-            Message::Input(input) => return self.input(*input).map(Message::Command),
+            Message::Input(input, modifiers) => return self.input(*input).map(Message::Command).unwrap_or(Message::Noop),
             Message::Resize(new_size) => self.resize(*new_size),
             Message::ModeChanged(mode) => {
                 self.mode = *mode;
                 self.visible_buffer.clear();
                 self.input_buffer.clear();
             }
-            _ => {},
+            Message::CursorPos(_)
+            | Message::Command(_) => { }
+            _ => {}
         }
 
-        None
+        Message::Noop
     }
-}
 
-impl Render for CommandLine {
     fn render(&mut self, context: &mut Context) {
         match self.mode {
             Mode::Command => {}

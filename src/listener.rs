@@ -1,19 +1,23 @@
 use nightmaregl::{Position, Size, Context};
+use nightmaregl::events::Modifiers;
 use crate::input::Input;
-use crate::application::{Render, Mode};
+use crate::application::Mode;
 use crate::commandline::Command;
+use crate::config::{Config, Action};
 
-pub trait Listener : Render {
-    fn message(&mut self, m: &Message) -> Option<Message> {
-        None
+pub trait Listener {
+    fn message(&mut self, m: &Message, config: &Config) -> Message;
+    fn render(&mut self, context: &mut Context) {
     }
 }
 
-#[derive(Debug)]
 pub enum Message {
-    Input(Input),
+    Input(Input, Modifiers),
     CursorPos(Position<i32>),
     Resize(Size<i32>),
     ModeChanged(Mode),
     Command(Command),
+    Action(Action),
+    // Render(&'a mut Context),
+    Noop,
 }

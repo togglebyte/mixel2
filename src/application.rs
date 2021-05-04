@@ -4,20 +4,11 @@ use log::error;
 use nightmaregl::events::{Key, Modifiers};
 use nightmaregl::{Context, Position, Size};
 
-// use crate::canvas::Canvas;
 use crate::commandline::{Command, CommandLine};
 use crate::config::Config;
-use crate::input::Input;
+use crate::input::{InputToAction, Input};
 use crate::status::Status;
 use crate::listener::{Message, Listener};
-
-// -----------------------------------------------------------------------------
-//     - Render trait -
-// -----------------------------------------------------------------------------
-pub trait Render {
-    fn render(&mut self, context: &mut Context) {
-    }
-}
 
 // -----------------------------------------------------------------------------
 //     - Mode -
@@ -55,6 +46,7 @@ impl App {
 
         inst.listeners.push(Box::new(Status::new(window_size, context)?));
         inst.listeners.push(Box::new(CommandLine::new(window_size, context)?));
+        inst.listeners.push(Box::new(InputToAction::new(inst.mode)));
 
         Ok(inst)
     }
@@ -86,7 +78,7 @@ impl App {
             self.handle_messages(Message::ModeChanged(mode));
         }
 
-        self.handle_messages(Message::Input(input));
+        self.handle_messages(Message::Input(input, modifiers));
 
         match (self.mode, input) {
             (Mode::Command, Input::Key(Key::Return)) => {
@@ -96,25 +88,6 @@ impl App {
             _ => {}
         };
 
-
-        // match self.mode {
-        //     Mode::Command => {
-        //         match self.command_line.input(input) {
-        //             Some(Command::Quit) => self.close = true,
-        //             Some(command) => self.canvas.exec(command, context)?,
-        //             None => {}
-        //         }
-
-        //         if let Input::Key(Key::Return) = input {
-        //             self.mode = Mode::Normal;
-        //         }
-
-        //         if let Input::Key(Key::Back) = input {
-        //             if self.command_line.is_empty() {
-        //                 self.mode = Mode::Normal;
-        //             }
-        //         }
-        //     }
         //     _ => {
         //         match input {
         //             Input::Key(Key::Escape) => self.action_counter.clear(),
@@ -147,21 +120,20 @@ impl App {
 
     fn handle_messages(&mut self, m: Message) {
         let mut messages = VecDeque::new();
+        messages.push_back(m);
 
         // Quit?
         let close = &mut self.close;
 
-        self.listeners.iter_mut().for_each(|l| {
-            if let Some(message) = l.message(&m) {
-                if let Message::Command(Command::Quit) = message {
-                    // yes, quit
-                    *close = true;
+        while let Some(m) = messages.pop_front() {
+            for l in self.listeners.iter_mut() {
+                match l.message(&m, &self.config) {
+                    Message::Noop => {}
+                    Message::Command(Command::Quit) => *close = true,
+                    msg => messages.push_back(msg),
                 }
-                messages.push_back(message);
             }
-        });
-
-        messages.drain(..).for_each(|m| self.handle_messages(m));
+        }
     }
 
 }
