@@ -1,15 +1,15 @@
 use std::collections::VecDeque;
 use anyhow::Result;
-use log::error;
 use nightmaregl::events::{Key, Modifiers};
-use nightmaregl::{Context, Position, Size};
+use nightmaregl::{Context as GlContext, Size};
 
 use crate::border::Border;
 use crate::commandline::{Command, CommandLine};
 use crate::config::Config;
 use crate::input::{InputToAction, Input};
-use crate::listener::{Message, Listener};
+use crate::listener::{Message, MessageCtx, Listener};
 use crate::status::Status;
+// use crate::canvas::Canvas;
 
 // -----------------------------------------------------------------------------
 //     - Mode -
@@ -30,18 +30,18 @@ pub struct App {
     mode: Mode,
     window_size: Size<i32>,
     config: Config,
-    action_counter: String,
+    // action_counter: String,
     listeners: Vec<Box<dyn Listener>>,
 }
 
 impl App {
-    pub fn new(config: Config, window_size: Size<i32>, context: &mut Context) -> Result<Self> {
+    pub fn new(config: Config, window_size: Size<i32>, context: &mut GlContext) -> Result<Self> {
         let mut inst = Self {
             window_size,
             mode: Mode::Normal,
             close: false,
             config,
-            action_counter: String::new(),
+            // action_counter: String::new(),
             listeners: vec![],
         };
 
@@ -53,16 +53,16 @@ impl App {
         Ok(inst)
     }
 
-    pub fn resize(&mut self, new_size: Size<i32>) {
+    pub fn resize(&mut self, new_size: Size<i32>, context: &mut GlContext) {
         self.window_size = new_size;
-        self.handle_messages(Message::Resize(new_size));
+        self.handle_messages(Message::Resize(new_size), context);
     }
 
     pub fn input(
         &mut self,
         input: Input,
         modifiers: Modifiers,
-        context: &mut Context,
+        context: &mut GlContext,
     ) -> Result<()> {
         let mode = match (self.mode, input) {
             (Mode::Insert,  Input::Key(Key::Escape)) => Some(Mode::Normal),
@@ -77,15 +77,15 @@ impl App {
 
         if let Some(mode) = mode {
             self.mode = mode;
-            self.handle_messages(Message::ModeChanged(mode));
+            self.handle_messages(Message::ModeChanged(mode), context);
         }
 
-        self.handle_messages(Message::Input(input, modifiers));
+        self.handle_messages(Message::Input(input, modifiers), context);
 
         match (self.mode, input) {
             (Mode::Command, Input::Key(Key::Return)) => {
                 self.mode = Mode::Normal;
-                self.handle_messages(Message::ModeChanged(self.mode));
+                self.handle_messages(Message::ModeChanged(self.mode), context);
             }
             _ => {}
         };
@@ -114,13 +114,14 @@ impl App {
         Ok(())
     }
 
-    pub fn render(&mut self, context: &mut Context) {
+    pub fn render(&mut self, context: &mut GlContext) {
         self.listeners.iter_mut().for_each(|l| {
             l.render(context);
         });
     }
 
-    fn handle_messages(&mut self, m: Message) {
+    fn handle_messages(&mut self, m: Message, context: &mut GlContext) {
+        let ctx = MessageCtx { config : &self.config, context };
         let mut messages = VecDeque::new();
         messages.push_back(m);
 
@@ -129,9 +130,13 @@ impl App {
 
         while let Some(m) = messages.pop_front() {
             for l in self.listeners.iter_mut() {
-                match l.message(&m, &self.config) {
+                match l.message(&m, &ctx) {
                     Message::Noop => {}
                     Message::Command(Command::Quit) => *close = true,
+                    Message::Command(Command::NewCanvas(size)) => {
+                        // TODO: Message to create a new canvas
+                        //       Something needs to track canvasses
+                    }
                     msg => messages.push_back(msg),
                 }
             }

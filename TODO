@@ -1,8 +1,9 @@
-* Border should be moved to the `Application`
+* Split `Message` into sub types (Canvas messages)
+* Config should live in another struct (MessageCtx)
+* Context / or Appy whatever should hold the canvas size
+* Appliaction should update MessageCtx on resize
+
 * Change savebuffer.rs to handle save and load
-* Remove undostack.rs
-* Move the code to manipulate the cursor into cursor.rs
-* Canvas becomes a message router for the cursor and all the layers
 * Cursor should have its own render function
 * Cursor should have an update function that can be called once the
   cursor moves. Push pixels to the texture when the cursor moves?
@@ -12,6 +13,7 @@
 * Draw rect | put cursor into "rectangle" mode
 * Draw circle | put cursor into "circle" mode
 
+Maaaaaybe?
 # Draw mode
 * Rect / Circle
 * Mirrored mode

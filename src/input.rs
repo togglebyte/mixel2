@@ -1,8 +1,7 @@
 use nightmaregl::events::Key;
 
 use crate::application::Mode;
-use crate::Config;
-use crate::listener::{Listener, Message};
+use crate::listener::{Listener, Message, MessageCtx};
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum Input {
@@ -11,7 +10,7 @@ pub enum Input {
 }
 
 impl Input {
-    pub fn from_char(mut c: char) -> Input {
+    pub fn from_char(c: char) -> Input {
         Input::Char(c)
     }
 
@@ -42,13 +41,13 @@ impl InputToAction {
 }
 
 impl Listener for InputToAction {
-    fn message(&mut self, msg: &Message, config: &Config) -> Message {
+    fn message(&mut self, msg: &Message, context: &MessageCtx) -> Message {
         match (self.0, msg) {
             (Mode::Normal, Message::Input(input, modifiers)) => {
-                Message::Action(config.key_map(*input, *modifiers))
+                Message::Action(context.config.key_map(*input, *modifiers))
             }
             (Mode::Insert, Message::Input(input, modifiers)) => {
-                Message::Action(config.key_map(*input, *modifiers))
+                Message::Action(context.config.key_map(*input, *modifiers))
             }
             (_, Message::ModeChanged(mode)) => {
                 self.0 = *mode;

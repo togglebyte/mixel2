@@ -2,8 +2,7 @@ use anyhow::Result;
 use nightmaregl::texture::Texture;
 use nightmaregl::{Renderer, Position, Size, Sprite, VertexData, Point, Rect, Context, Viewport};
 
-use crate::listener::{Listener, Message};
-use crate::config::Config;
+use crate::listener::{Listener, Message, MessageCtx};
 
 const VERTEX_DATA_SIZE: usize = 8;
 
@@ -129,11 +128,8 @@ impl Border {
         // -----------------------------------------------------------------------------
         //     - Renderer and viewport -
         // -----------------------------------------------------------------------------
-        let mut renderer = Renderer::default(context)?;
+        let renderer = Renderer::default(context)?;
         let viewport = viewport(win_size, renderer.pixel_size);
-        let position = viewport.position;
-
-        let size = win_size / renderer.pixel_size;
 
         let texture = Texture::from_disk("border.png")?;
         let vertex_data = vertex_data(&texture, &viewport, renderer.pixel_size);
@@ -150,7 +146,7 @@ impl Border {
 }
 
 impl Listener for Border {
-    fn message(&mut self, message: &Message, _: &Config) -> Message {
+    fn message(&mut self, message: &Message, _: &MessageCtx) -> Message {
         if let Message::Resize(new_size) = message {
             self.viewport = viewport(*new_size, self.renderer.pixel_size);
             self.vertex_data = vertex_data(
@@ -163,12 +159,13 @@ impl Listener for Border {
         Message::Noop
     }
 
-    fn render(&mut self, context: &mut Context) {
+    fn render(&mut self, context: &mut Context) -> Result<()> {
         self.renderer.render(
             &self.texture,
             &self.vertex_data,
             &self.viewport,
             context
-        );
+        )?;
+        Ok(())
     }
 }

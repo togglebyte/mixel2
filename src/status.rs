@@ -1,12 +1,11 @@
 use anyhow::Result;
+use log::error;
 use nightmaregl::text::{Text, WordWrap};
-use nightmaregl::pixels::{Pixel, Pixels};
 use nightmaregl::{
-    Context, Position, Renderer, Size, Texture, VertexData, Viewport,
+    Context as GlContext, Position, Renderer, Size, VertexData, Viewport,
 };
 
-use crate::config::Config;
-use crate::listener::{Listener, Message};
+use crate::listener::{Listener, Message, MessageCtx};
 use crate::application::Mode;
 
 pub struct Status {
@@ -19,7 +18,7 @@ pub struct Status {
 }
 
 impl Status {
-    pub fn new(size: Size<i32>, context: &mut Context) -> Result<Self> {
+    pub fn new(size: Size<i32>, context: &mut GlContext) -> Result<Self> {
         let font_size = 18.0;
         let position = {
             let size = size.cast::<f32>();
@@ -49,33 +48,14 @@ impl Status {
         Ok(inst)
     }
 
-    pub fn set_mode(&mut self, mode: Mode) {
-        if mode != self.mode {
-            self.mode = mode;
-            self.update_text();
-        }
-    }
-
-    pub fn set_cur_pos(&mut self, pos: Position<i32>) {
-        if pos != self.cur_pos {
-            self.cur_pos = pos;
-            self.update_text();
-        }
-    }
-
-    pub fn set_layer(&mut self, layer: usize) {
-        if layer != self.layer {
-            self.layer = layer;
-            self.update_text();
-        }
-    }
-
     fn update_text(&mut self) {
         let text = format!(
             "x: {} y: {} | mode: {:?} | layer: {}",
             self.cur_pos.x, self.cur_pos.y, self.mode, self.layer
         );
-        self.text.set_text(text);
+        if let Err(e) = self.text.set_text(text) {
+            error!("Failed to update text: {:?}", e);
+        }
     }
 }
 
@@ -83,7 +63,7 @@ impl Status {
 //     - Listener -
 // -----------------------------------------------------------------------------
 impl Listener for Status {
-    fn message(&mut self, message: &Message, _: &Config) -> Message {
+    fn message(&mut self, message: &Message, _: &MessageCtx) -> Message {
         match message {
             Message::ModeChanged(mode) => {
                 self.mode = *mode;
@@ -103,12 +83,13 @@ impl Listener for Status {
         Message::Noop
     }
 
-    fn render(&mut self, context: &mut Context) {
+    fn render(&mut self, context: &mut GlContext) -> Result<()> {
         self.renderer.render(
             self.text.texture(),
             &self.text.vertex_data(),
             &self.viewport,
             context,
-        );
+        )?;
+        Ok(())
     }
 }

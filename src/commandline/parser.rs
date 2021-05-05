@@ -1,9 +1,16 @@
-use std::iter::Peekable;
-use std::str::Chars;
-
 use log::info;
+use nightmaregl::{Position, Size};
 
 use super::commands::{Command, Extent};
+
+macro_rules! or_noop {
+    ($e:expr) => {
+        match $e {
+            Some(val) => val,
+            None => return Command::Noop
+        }
+    }
+}
 
 pub struct Parser<'a> {
     command: &'a str,
@@ -20,7 +27,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    pub fn parse(mut self) -> Command {
+    pub fn parse(self) -> Command {
         macro_rules! extend {
             ($dir:ident) => {
                 match self.args.parse::<i32>() {
@@ -39,20 +46,26 @@ impl<'a> Parser<'a> {
             "extendr" => extend!(right),
             "extendu" => extend!(up),
             "extendd" => extend!(down),
-            "put" => {
-                let mut florp = self.args.split_whitespace();
-                let x = florp.next().map(str::parse::<i32>).map(Result::ok).flatten();
-                let y = florp.next().map(str::parse::<i32>).map(Result::ok).flatten();
-
-                match (x, y) {
-                    (Some(x), Some(y)) => Command::Put { x, y },
-                    _ => Command::Noop,
-                }
-                 
-
-            }
+            "put" => Command::Put(or_noop!(self.args_to_pos())),
+            "new" => Command::NewCanvas(or_noop!(self.args_to_size())),
             _ => Command::Noop,
         }
+    }
+
+    fn args_to_pos(&self) -> Option<Position<i32>> {
+        let mut parts = self.args.split_whitespace();
+        let x = parts.next().map(str::parse::<i32>).map(Result::ok).flatten()?;
+        let y = parts.next().map(str::parse::<i32>).map(Result::ok).flatten()?;
+
+        Some(Position::new(x, y))
+    }
+
+    fn args_to_size(&self) -> Option<Size<i32>> {
+        let mut parts = self.args.split_whitespace();
+        let width = parts.next().map(str::parse::<i32>).map(Result::ok).flatten()?;
+        let height = parts.next().map(str::parse::<i32>).map(Result::ok).flatten()?;
+
+        Some(Size::new(width, height))
     }
 }
 

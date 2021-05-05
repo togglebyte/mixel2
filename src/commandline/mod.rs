@@ -4,12 +4,11 @@ use nightmaregl::events::Key;
 use nightmaregl::text::{Text, WordWrap};
 use nightmaregl::pixels::{Pixel, Pixels};
 use nightmaregl::{
-    Context, Position, Renderer, Size, Sprite, Texture, VertexData, Viewport,
+    Context as GlContext, Position, Renderer, Size, Sprite, Texture, VertexData, Viewport,
 };
 
-use crate::config::Config;
 use crate::input::Input;
-use crate::listener::{Listener, Message};
+use crate::listener::{Listener, Message, MessageCtx};
 use crate::application::Mode;
 
 mod commands;
@@ -33,7 +32,7 @@ pub struct CommandLine {
 }
 
 impl CommandLine {
-    pub fn new(size: Size<i32>, context: &mut Context) -> Result<Self> {
+    pub fn new(size: Size<i32>, context: &mut GlContext) -> Result<Self> {
         let text_renderer = Renderer::default_font(context)?;
         let font_size = 18.0;
         let viewport = Viewport::new(Position::new(0, 0), viewport_size(size, font_size));
@@ -59,18 +58,6 @@ impl CommandLine {
         };
 
         Ok(inst)
-    }
-
-    fn render(&mut self, context: &mut Context) {
-    }
-
-    fn resize(&mut self, new_size: Size<i32>) {
-        self.viewport
-            .resize(viewport_size(new_size, self.font_size))
-    }
-
-    fn is_empty(&self) -> bool {
-        self.input_buffer.is_empty()
     }
 
     fn input(&mut self, input: Input) -> Option<Command> {
@@ -132,10 +119,12 @@ impl CommandLine {
 //     - Listener -
 // -----------------------------------------------------------------------------
 impl Listener for CommandLine {
-    fn message(&mut self, message: &Message, _: &Config) -> Message {
+    fn message(&mut self, message: &Message, _: &MessageCtx) -> Message {
         match message {
-            Message::Input(input, modifiers) => return self.input(*input).map(Message::Command).unwrap_or(Message::Noop),
-            Message::Resize(new_size) => self.resize(*new_size),
+            Message::Input(input, _) => return self.input(*input).map(Message::Command).unwrap_or(Message::Noop),
+            Message::Resize(new_size) => {
+                self.viewport.resize(viewport_size(*new_size, self.font_size));
+            }
             Message::ModeChanged(mode) => {
                 self.mode = *mode;
                 self.visible_buffer.clear();
@@ -149,24 +138,21 @@ impl Listener for CommandLine {
         Message::Noop
     }
 
-    fn render(&mut self, context: &mut Context) {
+    fn render(&mut self, context: &mut GlContext) -> Result<()> {
         match self.mode {
             Mode::Command => {}
-            _ => return
+            _ => return Ok(())
         }
 
         let texture = self.text.texture();
         let text_vertex_data = self.text.vertex_data();
 
-        let res = self
+        self
             .text_renderer
-            .render(texture, &text_vertex_data, &self.viewport, context);
+            .render(texture, &text_vertex_data, &self.viewport, context)?;
 
-        if let Err(e) = res {
-            error!("Failed to render text: {:?}", e);
-        }
-
-        self.cursor.render(context, &self.viewport);
+        // self.cursor.render(context, &self.viewport)?;
+        Ok(())
     }
 }
 
@@ -180,7 +166,7 @@ struct Cursor {
 }
 
 impl Cursor {
-    pub fn new(font_size: f32, context: &mut Context) -> Result<Self> {
+    pub fn new(font_size: f32, context: &mut GlContext) -> Result<Self> {
         let renderer = Renderer::default_font(context)?;
 
         let cursor_size = Size::new(font_size, font_size * 2.0);
@@ -199,7 +185,7 @@ impl Cursor {
         Ok(inst)
     }
 
-    fn render(&mut self, context: &mut Context, viewport: &Viewport) {
+    fn render(&mut self, context: &mut GlContext, viewport: &Viewport) {
         let res = self.renderer.render(
             &self.texture,
             &[self.sprite.vertex_data()],

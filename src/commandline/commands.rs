@@ -1,10 +1,13 @@
+use nightmaregl::{Position, Size};
+
 #[derive(Debug)]
 pub enum Command {
     Noop,
     Quit,
     Save { path: String, overwrite: bool },
     Extend(Extent),
-    Put { x: i32, y: i32 }
+    Put(Position<i32>),
+    NewCanvas(Size<i32>),
 }
 
 #[derive(Debug, Default)]

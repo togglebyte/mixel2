@@ -1,13 +1,13 @@
 use anyhow::Result;
 use log::error;
+use nightmaregl::Context;
 use nightmaregl::events::{Event, KeyState, LoopAction, Modifiers};
 use nightmaregl::pixels::Pixel;
-use nightmaregl::Context;
 use pretty_env_logger;
 
-// mod canvas;
 mod application;
 mod border;
+// mod canvas;
 mod commandline;
 mod config;
 mod input;
@@ -71,7 +71,7 @@ fn main() -> Result<()> {
                 app.render(&mut context);
                 context.swap_buffers();
             }
-            Event::Resize(new_size) => app.resize(new_size.cast()),
+            Event::Resize(new_size) => app.resize(new_size.cast(), &mut context),
             _ => {}
         }
 
