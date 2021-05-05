@@ -1,5 +1,5 @@
 use anyhow::Result;
-use nightmaregl::{Position, Size, Context as GlContext};
+use nightmaregl::{Position, Size, Context};
 use nightmaregl::events::Modifiers;
 
 use crate::input::Input;
@@ -12,14 +12,14 @@ pub trait Listener {
         Message::Noop
     }
 
-    fn render(&mut self, _: &mut GlContext) -> Result<()> {
+    fn render(&mut self, _: &mut Context) -> Result<()> {
         Ok(())
     }
 }
 
 pub struct MessageCtx<'a> {
     pub config: &'a Config,
-    pub context: &'a mut GlContext,
+    pub context: &'a mut Context,
 }
 
 pub enum Message {

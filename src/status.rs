@@ -2,7 +2,7 @@ use anyhow::Result;
 use log::error;
 use nightmaregl::text::{Text, WordWrap};
 use nightmaregl::{
-    Context as GlContext, Position, Renderer, Size, VertexData, Viewport,
+    Context, Position, Renderer, Size, VertexData, Viewport,
 };
 
 use crate::listener::{Listener, Message, MessageCtx};
@@ -18,7 +18,7 @@ pub struct Status {
 }
 
 impl Status {
-    pub fn new(size: Size<i32>, context: &mut GlContext) -> Result<Self> {
+    pub fn new(size: Size<i32>, context: &mut Context) -> Result<Self> {
         let font_size = 18.0;
         let position = {
             let size = size.cast::<f32>();
@@ -85,7 +85,7 @@ impl Listener for Status {
         Message::Noop
     }
 
-    fn render(&mut self, context: &mut GlContext) -> Result<()> {
+    fn render(&mut self, context: &mut Context) -> Result<()> {
         self.renderer.render(
             self.text.texture(),
             &self.text.vertex_data(),

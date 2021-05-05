@@ -4,7 +4,7 @@ use nightmaregl::events::Key;
 use nightmaregl::text::{Text, WordWrap};
 use nightmaregl::pixels::{Pixel, Pixels};
 use nightmaregl::{
-    Context as GlContext, Position, Renderer, Size, Sprite, Texture, VertexData, Viewport,
+    Context, Position, Renderer, Size, Sprite, Texture, VertexData, Viewport,
 };
 
 use crate::input::Input;
@@ -32,7 +32,7 @@ pub struct CommandLine {
 }
 
 impl CommandLine {
-    pub fn new(size: Size<i32>, context: &mut GlContext) -> Result<Self> {
+    pub fn new(size: Size<i32>, context: &mut Context) -> Result<Self> {
         let text_renderer = Renderer::default_font(context)?;
         let font_size = 18.0;
         let viewport = Viewport::new(Position::new(0, 0), viewport_size(size, font_size));
@@ -138,7 +138,7 @@ impl Listener for CommandLine {
         Message::Noop
     }
 
-    fn render(&mut self, context: &mut GlContext) -> Result<()> {
+    fn render(&mut self, context: &mut Context) -> Result<()> {
         match self.mode {
             Mode::Command => {}
             _ => return Ok(())
@@ -166,7 +166,7 @@ struct Cursor {
 }
 
 impl Cursor {
-    pub fn new(font_size: f32, context: &mut GlContext) -> Result<Self> {
+    pub fn new(font_size: f32, context: &mut Context) -> Result<Self> {
         let renderer = Renderer::default_font(context)?;
 
         let cursor_size = Size::new(font_size, font_size * 2.0);
@@ -185,7 +185,7 @@ impl Cursor {
         Ok(inst)
     }
 
-    fn render(&mut self, context: &mut GlContext, viewport: &Viewport) {
+    fn render(&mut self, context: &mut Context, viewport: &Viewport) {
         let res = self.renderer.render(
             &self.texture,
             &[self.sprite.vertex_data()],

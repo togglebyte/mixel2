@@ -1,7 +1,7 @@
 use std::collections::VecDeque;
 use anyhow::Result;
 use nightmaregl::events::{Key, Modifiers};
-use nightmaregl::{Context as GlContext, Size};
+use nightmaregl::{Context, Size};
 
 use crate::border::Border;
 use crate::commandline::{Command, CommandLine};
@@ -35,7 +35,7 @@ pub struct App {
 }
 
 impl App {
-    pub fn new(config: Config, window_size: Size<i32>, context: &mut GlContext) -> Result<Self> {
+    pub fn new(config: Config, window_size: Size<i32>, context: &mut Context) -> Result<Self> {
         let mut inst = Self {
             window_size,
             mode: Mode::Normal,
@@ -53,7 +53,7 @@ impl App {
         Ok(inst)
     }
 
-    pub fn resize(&mut self, new_size: Size<i32>, context: &mut GlContext) {
+    pub fn resize(&mut self, new_size: Size<i32>, context: &mut Context) {
         self.window_size = new_size;
         self.handle_messages(Message::Resize(new_size), context);
     }
@@ -62,7 +62,7 @@ impl App {
         &mut self,
         input: Input,
         modifiers: Modifiers,
-        context: &mut GlContext,
+        context: &mut Context,
     ) -> Result<()> {
         let mode = match (self.mode, input) {
             (Mode::Insert,  Input::Key(Key::Escape)) => Some(Mode::Normal),
@@ -114,13 +114,13 @@ impl App {
         Ok(())
     }
 
-    pub fn render(&mut self, context: &mut GlContext) {
+    pub fn render(&mut self, context: &mut Context) {
         self.listeners.iter_mut().for_each(|l| {
             l.render(context);
         });
     }
 
-    fn handle_messages(&mut self, m: Message, context: &mut GlContext) {
+    fn handle_messages(&mut self, m: Message, context: &mut Context) {
         let ctx = MessageCtx { config : &self.config, context };
         let mut messages = VecDeque::new();
         messages.push_back(m);
