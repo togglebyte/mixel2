@@ -36,14 +36,16 @@ impl Status {
 
         let renderer = Renderer::default_font(context)?;
 
-        let inst = Self {
+        let mut inst = Self {
             text,
-            cur_pos: Position::new(-1, -1),
+            cur_pos: Position::new(0, 0),
             mode: Mode::Normal,
             layer: 0,
             viewport: Viewport::new(Position::zero(), size),
             renderer,
         };
+
+        inst.update_text();
 
         Ok(inst)
     }
