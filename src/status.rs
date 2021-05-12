@@ -79,7 +79,6 @@ impl Listener for Status {
             Message::Resize(size) => self.viewport.resize(*size),
             | Message::Input(_, _)
             | Message::Action(_)
-            | Message::Canvas(_)
             | Message::Noop
             | Message::Command(_) => {}
         }

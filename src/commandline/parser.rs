@@ -51,6 +51,7 @@ impl<'a> Parser<'a> {
             "new" => Command::NewCanvas(or_noop!(self.args_to_size())),
             "split" => Command::Split(Direction::Horz),
             "splitv" => Command::Split(Direction::Vert),
+            "close" => Command::CloseSelectedSplit,
             _ => Command::Noop,
         }
     }

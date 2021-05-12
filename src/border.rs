@@ -44,7 +44,7 @@ impl DerefMut for Textures {
 //     - Border -
 // -----------------------------------------------------------------------------
 pub struct Border {
-    border_type: BorderType,
+    pub border_type: BorderType,
     top: Sprite<i32>,
     right: Sprite<i32>,
     bottom: Sprite<i32>,

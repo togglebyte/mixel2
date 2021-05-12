@@ -39,8 +39,6 @@ impl<T> Tree<T> {
         NodeId(0)
     }
 
-    // TODO: do we perhaps want to move the inner value to the parent
-    //       and remove the remaining branch?
     pub fn remove(&mut self, index: NodeId) -> Node<T> {
         if index.0 == 0 {
             panic!("Can not remove the root node");

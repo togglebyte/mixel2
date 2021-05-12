@@ -133,7 +133,6 @@ impl Listener for CommandLine {
             }
             Message::CursorPos(_)
             | Message::Action(_)
-            | Message::Canvas(_)
             | Message::Command(_)
             | Message::Noop => {}
         }

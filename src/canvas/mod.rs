@@ -51,13 +51,15 @@ impl Listener for Canvas {
             Message::Resize(new_size) => {
                 self.viewport.resize(*new_size);
             },
-            Message::Canvas(_) => panic!("oh noes, forgot to do this"),
             Message::Resize(new_size) => {
                 self.viewport.resize(*new_size);
                 self.border.resize(&self.viewport);
             }
             Message::Command(Command::Split(dir)) => {
                 self.containers.split(*dir, ctx);
+            }
+            Message::Command(Command::CloseSelectedSplit) => {
+                // self.containers.remove_selected();
             }
 
             // Unhandled messages

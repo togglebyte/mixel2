@@ -11,6 +11,7 @@ pub enum Command {
     Put(Position<i32>),
     NewCanvas(Size<i32>),
     Split(Direction),
+    CloseSelectedSplit,
 }
 
 #[derive(Debug, Default)]

@@ -13,7 +13,6 @@ pub enum Message {
     ModeChanged(Mode),
     Command(Command),
     Action(Action),
-    Canvas(Canvas),
     Noop,
 }
 
