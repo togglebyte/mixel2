@@ -8,7 +8,8 @@ use nightmaregl::{
 };
 
 use crate::input::Input;
-use crate::listener::{Listener, Message, MessageCtx};
+use crate::listener::{Listener, MessageCtx};
+use crate::message::Message;
 use crate::application::Mode;
 
 mod commands;
@@ -119,7 +120,7 @@ impl CommandLine {
 //     - Listener -
 // -----------------------------------------------------------------------------
 impl Listener for CommandLine {
-    fn message(&mut self, message: &Message, _: &MessageCtx) -> Message {
+    fn message(&mut self, message: &Message, _: &mut MessageCtx) -> Message {
         match message {
             Message::Input(input, _) => return self.input(*input).map(Message::Command).unwrap_or(Message::Noop),
             Message::Resize(new_size) => {
@@ -131,14 +132,16 @@ impl Listener for CommandLine {
                 self.input_buffer.clear();
             }
             Message::CursorPos(_)
-            | Message::Command(_) => { }
-            _ => {}
+            | Message::Action(_)
+            | Message::Canvas(_)
+            | Message::Command(_)
+            | Message::Noop => {}
         }
 
         Message::Noop
     }
 
-    fn render(&mut self, context: &mut Context) -> Result<()> {
+    fn render(&mut self, ctx: &mut MessageCtx) -> Result<()> {
         match self.mode {
             Mode::Command => {}
             _ => return Ok(())
@@ -149,7 +152,7 @@ impl Listener for CommandLine {
 
         self
             .text_renderer
-            .render(texture, &text_vertex_data, &self.viewport, context)?;
+            .render(texture, &text_vertex_data, &self.viewport, ctx.context)?;
 
         // self.cursor.render(context, &self.viewport)?;
         Ok(())

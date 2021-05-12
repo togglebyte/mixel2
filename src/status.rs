@@ -5,7 +5,8 @@ use nightmaregl::{
     Context, Position, Renderer, Size, VertexData, Viewport,
 };
 
-use crate::listener::{Listener, Message, MessageCtx};
+use crate::listener::{Listener, MessageCtx};
+use crate::message::Message;
 use crate::application::Mode;
 
 pub struct Status {
@@ -65,7 +66,7 @@ impl Status {
 //     - Listener -
 // -----------------------------------------------------------------------------
 impl Listener for Status {
-    fn message(&mut self, message: &Message, _: &MessageCtx) -> Message {
+    fn message(&mut self, message: &Message, _: &mut MessageCtx) -> Message {
         match message {
             Message::ModeChanged(mode) => {
                 self.mode = *mode;
@@ -78,6 +79,7 @@ impl Listener for Status {
             Message::Resize(size) => self.viewport.resize(*size),
             | Message::Input(_, _)
             | Message::Action(_)
+            | Message::Canvas(_)
             | Message::Noop
             | Message::Command(_) => {}
         }
@@ -85,12 +87,12 @@ impl Listener for Status {
         Message::Noop
     }
 
-    fn render(&mut self, context: &mut Context) -> Result<()> {
+    fn render(&mut self, ctx: &mut MessageCtx) -> Result<()> {
         self.renderer.render(
             self.text.texture(),
             &self.text.vertex_data(),
             &self.viewport,
-            context,
+            ctx.context,
         )?;
         Ok(())
     }

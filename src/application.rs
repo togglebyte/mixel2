@@ -1,15 +1,23 @@
 use std::collections::VecDeque;
 use anyhow::Result;
 use nightmaregl::events::{Key, Modifiers};
-use nightmaregl::{Context, Size};
+use nightmaregl::{Viewport, RelativeViewport, Context, Size, Position};
+use nightmaregl::texture::Texture;
 
-use crate::border::Border;
 use crate::commandline::{Command, CommandLine};
 use crate::config::Config;
 use crate::input::{InputToAction, Input};
-use crate::listener::{Message, MessageCtx, Listener};
+use crate::listener::{MessageCtx, Listener};
+use crate::message::Message;
 use crate::status::Status;
-// use crate::canvas::Canvas;
+use crate::canvas::Canvas;
+use crate::border::{BorderType, Textures};
+
+const VIEWPORT_PADDING:i32 = 128;
+
+const fn pad_pos() -> Position<i32> {
+    Position::new(VIEWPORT_PADDING, VIEWPORT_PADDING)
+}
 
 // -----------------------------------------------------------------------------
 //     - Mode -
@@ -28,33 +36,73 @@ pub enum Mode {
 pub struct App {
     pub close: bool,
     mode: Mode,
-    window_size: Size<i32>,
+    win_size: Size<i32>,
     config: Config,
-    // action_counter: String,
     listeners: Vec<Box<dyn Listener>>,
+    viewport: Viewport,
+    canvas_viewport: RelativeViewport,
+    textures: Textures,
 }
 
 impl App {
-    pub fn new(config: Config, window_size: Size<i32>, context: &mut Context) -> Result<Self> {
+    pub fn new(config: Config, win_size: Size<i32>, context: &mut Context) -> Result<Self> {
+        let viewport = Viewport::new(
+            Position::zero(),
+            win_size
+        );
+
+        // -----------------------------------------------------------------------------
+        //     - Border textures -
+        // -----------------------------------------------------------------------------
+        let textures = {
+            let mut textures = Textures::new();
+
+            let canvas = Texture::from_disk("border-canvas.png")?;
+            let active = Texture::from_disk("border-active.png")?;
+            let inactive = Texture::from_disk("border-inactive.png")?;
+
+            textures.insert(BorderType::Canvas, canvas);
+            textures.insert(BorderType::Active, active);
+            textures.insert(BorderType::Inactive, inactive);
+
+            textures
+        };
+
+        // -----------------------------------------------------------------------------
+        //     - Canvas viewport -
+        // -----------------------------------------------------------------------------
+        let canvas_viewport = viewport.relative(pad_pos(), pad_pos());
+
         let mut inst = Self {
-            window_size,
+            win_size,
             mode: Mode::Normal,
             close: false,
             config,
-            // action_counter: String::new(),
             listeners: vec![],
+            viewport,
+            canvas_viewport,
+            textures,
         };
 
-        inst.listeners.push(Box::new(Status::new(window_size, context)?));
-        inst.listeners.push(Box::new(CommandLine::new(window_size, context)?));
+        let mut ctx = MessageCtx { 
+            config: &inst.config,
+            viewport: &inst.canvas_viewport.viewport(),
+            textures: &inst.textures,
+            context,
+        };
+
+        inst.listeners.push(Box::new(Status::new(win_size, ctx.context)?));
+        inst.listeners.push(Box::new(CommandLine::new(win_size, ctx.context)?));
         inst.listeners.push(Box::new(InputToAction::new(inst.mode)));
-        inst.listeners.push(Box::new(Border::new(window_size, context)?));
+        inst.listeners.push(Box::new(Canvas::new(*inst.canvas_viewport.viewport(), &mut ctx)?));
 
         Ok(inst)
     }
 
     pub fn resize(&mut self, new_size: Size<i32>, context: &mut Context) {
-        self.window_size = new_size;
+        self.win_size = new_size;
+        self.viewport.resize(new_size);
+        self.canvas_viewport.resize(&self.viewport);
         self.handle_messages(Message::Resize(new_size), context);
     }
 
@@ -90,52 +138,43 @@ impl App {
             _ => {}
         };
 
-        //     _ => {
-        //         match input {
-        //             Input::Key(Key::Escape) => self.action_counter.clear(),
-        //             Input::Char(c @ '0'..='9') => self.action_counter.push(c),
-        //             _ => {
-        //                 let count = self.action_counter.parse::<u16>().unwrap_or(1);
-        //                 self.action_counter.clear();
-
-        //                 // Make input nice again
-        //                 let input = match input {
-        //                     Input::Char(c) if (c as u8) < 26 => Input::Char((c as u8 + 96) as char),
-        //                     _ => input,
-        //                 };
-
-        //                 let action = self.config.key_map(input, modifiers);
-        //                 self.canvas.input(action, count);
-        //             }
-        //         }
-        //     }
-        // }
-
         Ok(())
     }
 
     pub fn render(&mut self, context: &mut Context) {
+        let mut ctx = MessageCtx { 
+            config: &self.config,
+            viewport: &self.canvas_viewport.viewport(),
+            textures: &self.textures,
+            context,
+        };
+
         self.listeners.iter_mut().for_each(|l| {
-            l.render(context);
+            l.render(&mut ctx);
         });
     }
 
     fn handle_messages(&mut self, m: Message, context: &mut Context) {
-        let ctx = MessageCtx { config : &self.config, context };
         let mut messages = VecDeque::new();
         messages.push_back(m);
+
+        let mut ctx = MessageCtx { 
+            config: &self.config,
+            viewport: &self.canvas_viewport.viewport(),
+            textures: &self.textures,
+            context,
+        };
 
         // Quit?
         let close = &mut self.close;
 
         while let Some(m) = messages.pop_front() {
             for l in self.listeners.iter_mut() {
-                match l.message(&m, &ctx) {
+                match l.message(&m, &mut ctx) {
                     Message::Noop => {}
                     Message::Command(Command::Quit) => *close = true,
                     Message::Command(Command::NewCanvas(size)) => {
-                        // TODO: Message to create a new canvas
-                        //       Something needs to track canvasses
+                        // TODO: Issue message to create a new canvas
                     }
                     msg => messages.push_back(msg),
                 }

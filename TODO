@@ -17,3 +17,17 @@ Maaaaaybe?
 # Draw mode
 * Rect / Circle
 * Mirrored mode
+
+
+Viewport malarkey:
+------------------
+
+* Creating a canvas with no pre-existing canvases
+  places the new canvas in the empty viewport
+* Splitting a viewport places the existing canvas 
+  in the new viewport
+* Loading an image will load it into the active
+  viewport.
+* Close a viewport extends existing viewports
+  into the available space
+

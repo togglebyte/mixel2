@@ -1,39 +1,41 @@
 use anyhow::Result;
 use log::error;
 use nightmaregl::Context;
-use nightmaregl::events::{Event, KeyState, LoopAction, Modifiers};
+use nightmaregl::events::{Event, KeyState, LoopAction, Modifiers, EventLoop};
 use nightmaregl::pixels::Pixel;
+use nightmaregl::texture::Texture;
 use pretty_env_logger;
 
 mod application;
+mod binarytree;
 mod border;
-// mod canvas;
+mod canvas;
 mod commandline;
 mod config;
 mod input;
 mod listener;
+mod message;
 mod status;
 
 use application::App;
 use config::Config;
 use input::Input;
+use message::Message;
 
 fn main() -> Result<()> {
     pretty_env_logger::init();
 
     let config = Config::from_path("config")?;
 
-    let (eventloop, mut context) = Context::builder("Mixel: the modal pixel editor")
+    let (el, mut context) = Context::builder("Mixel: the modal pixel editor")
         .vsync(false)
         .build()?;
+
+    let eventloop = EventLoop::new(el);
 
     let window_size = context.window_size();
     let mut app = App::new(config, window_size, &mut context)?;
 
-    // Dealing with horrible input:
-    // * Any char is ignored as a VirtualKeycode
-    // * VirtualKeycodes and chars are stored in one enum
-    // * Struct is passed to `input` functions
     let mut modifiers = Modifiers::empty();
     eventloop.run(move |event| {
         match event {

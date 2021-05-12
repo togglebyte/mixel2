@@ -1,5 +1,7 @@
 use nightmaregl::{Position, Size};
 
+use crate::canvas::Direction;
+
 #[derive(Debug)]
 pub enum Command {
     Noop,
@@ -8,6 +10,7 @@ pub enum Command {
     Extend(Extent),
     Put(Position<i32>),
     NewCanvas(Size<i32>),
+    Split(Direction),
 }
 
 #[derive(Debug, Default)]

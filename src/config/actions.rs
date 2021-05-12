@@ -25,5 +25,8 @@ pub enum Action {
     NextYPixel,
     PrevYPixel,
 
+    SplitViewportVert,
+    SplitViewportHorz,
+
     Noop,
 }

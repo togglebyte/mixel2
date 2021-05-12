@@ -1,18 +1,19 @@
 use anyhow::Result;
-use nightmaregl::{Position, Size, Context};
-use nightmaregl::events::Modifiers;
+use nightmaregl::{Position, Size, Context, Viewport};
 
 use crate::input::Input;
 use crate::application::Mode;
 use crate::commandline::Command;
 use crate::config::{Config, Action};
+use crate::message::Message;
+use crate::border::Textures;
 
 pub trait Listener {
-    fn message(&mut self, _: &Message, _: &MessageCtx) -> Message {
+    fn message(&mut self, _: &Message, _: &mut MessageCtx) -> Message {
         Message::Noop
     }
 
-    fn render(&mut self, _: &mut Context) -> Result<()> {
+    fn render(&mut self, _: &mut MessageCtx) -> Result<()> {
         Ok(())
     }
 }
@@ -20,15 +21,7 @@ pub trait Listener {
 pub struct MessageCtx<'a> {
     pub config: &'a Config,
     pub context: &'a mut Context,
+    pub viewport: &'a Viewport,
+    pub textures: &'a Textures,
 }
 
-pub enum Message {
-    Input(Input, Modifiers),
-    CursorPos(Position<i32>),
-    Resize(Size<i32>),
-    ModeChanged(Mode),
-    Command(Command),
-    Action(Action),
-    // Render(&'a mut Context),
-    Noop,
-}

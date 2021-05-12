@@ -135,6 +135,3 @@ impl Canvas {
         self.draw.cursor.position
     }
 }
-
-impl Listener for Canvas {
-}
