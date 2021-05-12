@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use anyhow::Result;
 use nightmaregl::texture::Texture;
 use nightmaregl::{Context, Position, Renderer, Size, Sprite, VertexData, Viewport};
@@ -6,6 +8,8 @@ use super::layer::Layer;
 use crate::binarytree::{Node, NodeId, Tree};
 use crate::border::{Border, BorderType};
 use crate::listener::MessageCtx;
+
+use super::Image;
 
 #[derive(Debug, Copy, Clone)]
 pub enum Direction {
@@ -21,9 +25,8 @@ pub struct Containers {
     selected: NodeId,
 }
 
-// TODO: Map Container to a specific texture + layers
 impl Containers {
-    pub(crate) fn new(viewport: Viewport, ctx: &mut MessageCtx) -> Result<Self> {
+    pub fn new(viewport: Viewport, ctx: &mut MessageCtx) -> Result<Self> {
         let viewport = Viewport::new(
             viewport.position + Position::new(10, 10),
             *viewport.size() - Size::new(20, 20),
@@ -39,10 +42,18 @@ impl Containers {
         Ok(inst)
     }
 
-    pub(crate) fn split(&mut self, dir: Direction, ctx: &mut MessageCtx) {
+    pub fn add_image(&mut self, image: Image) {
+        self.inner[self.selected].image = Some(Rc::new(image));
+    }
+
+    pub fn split(&mut self, dir: Direction, ctx: &mut MessageCtx) {
         let (size, pos, image) = {
             let selected = &self.inner[self.selected];
-            (selected.viewport.size(), selected.viewport.position, selected.image)
+            let image = match selected.image {
+                Some(ref i) => Some(Rc::clone(i)),
+                None => None,
+            };
+            (selected.viewport.size(), selected.viewport.position, image)
         };
 
         let (left, right) = match dir {
@@ -74,7 +85,7 @@ impl Containers {
             }
         };
 
-        let left = Container::new(left, dir, ctx, image).unwrap();
+        let left = Container::new(left, dir, ctx, image.clone()).unwrap();
         let right = Container::new(right, dir, ctx, image).unwrap();
 
         self.inner.insert_left(self.selected, left);
@@ -83,6 +94,7 @@ impl Containers {
         selected.border.border_type = BorderType::Active;
     }
 
+    // TODO: removing the last container should close the application.
     pub fn remove_container(&mut self, node_id: NodeId) {
         // 1. Remove the node
         // 2. Collpase the parent so the remaning child
@@ -103,13 +115,13 @@ impl Containers {
         }
     }
 
-    pub(crate) fn render(&self, ctx: &mut MessageCtx) -> Result<()> {
-        for node in self
+    pub(crate) fn render(&self, background_texture: &Texture<i32>, ctx: &mut MessageCtx) -> Result<()> {
+        for container in self
             .inner
             .iter()
             .filter(|node| node.left.is_none() && node.right.is_none())
         {
-            node.render(ctx)?;
+            container.render(background_texture, ctx)?;
         }
         Ok(())
     }
@@ -118,16 +130,15 @@ impl Containers {
 // -----------------------------------------------------------------------------
 //     - Container -
 // -----------------------------------------------------------------------------
-#[derive(Debug, Copy, Clone)]
-pub struct Image;
-
 pub(super) struct Container {
     dir: Direction,
     viewport: Viewport,
     renderer: Renderer<VertexData>,
     border: Border,
-    image: Option<Image>,
-    // image: &(Texture<i32>, Vec<Layer>),
+    sprite: Sprite<i32>, // TODO: add the sprite. 
+                         // It needs to live on the container so we can move 
+                         // the sprite around inside the container
+    image: Option<Rc<Image>>,
 }
 
 impl Container {
@@ -135,11 +146,11 @@ impl Container {
         viewport: Viewport,
         dir: Direction,
         ctx: &mut MessageCtx,
-        image: Option<Image>,
+        image: Option<Rc<Image>>,
     ) -> Result<Self> {
         let border_type = BorderType::Inactive;
 
-        let inst = Self {
+        let mut inst = Self {
             border: Border::new(border_type, ctx.textures, &viewport),
             viewport,
             renderer: Renderer::default(ctx.context)?,
@@ -147,12 +158,38 @@ impl Container {
             dir,
         };
 
+        inst.renderer.pixel_size = 8;
+
         Ok(inst)
     }
 
-    fn render(&self, ctx: &mut MessageCtx) -> Result<()> {
+    fn render(&self, background_texture: &Texture<i32> , ctx: &mut MessageCtx) -> Result<()> {
         self.border
-            .render(ctx.textures, &self.viewport, &self.renderer, ctx.context);
+            .render(ctx.textures, &self.viewport, ctx.border_renderer, ctx.context);
+
+        match self.image {
+            Some(ref image) => {
+                let vertex_data = image.vertex_data();
+
+                self.renderer.render(
+                    background_texture,
+                    &vertex_data,
+                    &self.viewport,
+                    ctx.context
+                );
+
+                image.layers.iter().for_each(|layer| {
+                    self.renderer.render(
+                        &layer.texture,
+                        &vertex_data,
+                        &self.viewport,
+                        ctx.context
+                    );
+                });
+            }
+            None => {}
+        }
+
         Ok(())
     }
 }

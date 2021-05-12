@@ -1,7 +1,7 @@
 use std::collections::VecDeque;
 use anyhow::Result;
 use nightmaregl::events::{Key, Modifiers};
-use nightmaregl::{Viewport, RelativeViewport, Context, Size, Position};
+use nightmaregl::{Renderer, VertexData, Viewport, RelativeViewport, Context, Size, Position};
 use nightmaregl::texture::Texture;
 
 use crate::commandline::{Command, CommandLine};
@@ -42,6 +42,7 @@ pub struct App {
     viewport: Viewport,
     canvas_viewport: RelativeViewport,
     textures: Textures,
+    border_renderer: Renderer<VertexData>,
 }
 
 impl App {
@@ -82,12 +83,14 @@ impl App {
             viewport,
             canvas_viewport,
             textures,
+            border_renderer: Renderer::default(context)?,
         };
 
         let mut ctx = MessageCtx { 
             config: &inst.config,
             viewport: &inst.canvas_viewport.viewport(),
             textures: &inst.textures,
+            border_renderer: &inst.border_renderer,
             context,
         };
 
@@ -146,6 +149,7 @@ impl App {
             config: &self.config,
             viewport: &self.canvas_viewport.viewport(),
             textures: &self.textures,
+            border_renderer: &self.border_renderer,
             context,
         };
 
@@ -162,6 +166,7 @@ impl App {
             config: &self.config,
             viewport: &self.canvas_viewport.viewport(),
             textures: &self.textures,
+            border_renderer: &self.border_renderer,
             context,
         };
 
@@ -173,9 +178,6 @@ impl App {
                 match l.message(&m, &mut ctx) {
                     Message::Noop => {}
                     Message::Command(Command::Quit) => *close = true,
-                    Message::Command(Command::NewCanvas(size)) => {
-                        // TODO: Issue message to create a new canvas
-                    }
                     msg => messages.push_back(msg),
                 }
             }

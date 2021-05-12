@@ -1,5 +1,5 @@
 use anyhow::Result;
-use nightmaregl::{Position, Size, Context, Viewport};
+use nightmaregl::{Position, Size, Context, Viewport, Renderer, VertexData,};
 
 use crate::input::Input;
 use crate::application::Mode;
@@ -23,5 +23,6 @@ pub struct MessageCtx<'a> {
     pub context: &'a mut Context,
     pub viewport: &'a Viewport,
     pub textures: &'a Textures,
+    pub border_renderer: &'a Renderer<VertexData>,
 }
 

@@ -13,8 +13,11 @@ use crate::commandline::Command;
 pub mod message;
 mod container;
 mod layer;
+mod image;
 
 use container::Containers;
+pub use image::Image;
+
 pub use container::Direction;
 
 pub struct Canvas {
@@ -58,6 +61,10 @@ impl Listener for Canvas {
             Message::Command(Command::Split(dir)) => {
                 self.containers.split(*dir, ctx);
             }
+            Message::Command(Command::NewImage(size)) => {
+                let image = Image::new(*size);
+                self.containers.add_image(image);
+            }
             Message::Command(Command::CloseSelectedSplit) => {
                 // self.containers.remove_selected();
             }
@@ -81,25 +88,7 @@ impl Listener for Canvas {
             ctx.context,
         );
 
-        // for canvas in self.containers.iter_mut().filter(|c| c.visible) {
-        // }
-
-        self.containers.render(ctx);
-        
-
-        // let pixel_size = self.renderer.pixel_size as f32;
-
-        // // Canvas / Drawable area
-        // let mut vertex_data = self.sprite.vertex_data_scaled(pixel_size);
-
-        // let res = self
-        //     .renderer
-        //     .render(&self.background, &[vertex_data], viewport, context)?;
-
-        // // Decrease the z_index,
-        // vertex_data
-        //     .model
-        //     .append_translation_mut(&Vector3::from([0.0, 0.0, -1.0]));
+        self.containers.render(&self.background, ctx);
 
         Ok(())
     }

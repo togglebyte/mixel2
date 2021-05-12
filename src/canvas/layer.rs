@@ -1,4 +1,4 @@
-use nightmaregl::{Size, Position};
+use nightmaregl::{Sprite, Size, Position};
 use nightmaregl::texture::Texture;
 use nightmaregl::pixels::{Pixel, Pixels};
 

@@ -56,17 +56,21 @@ impl Border {
         let texture = &textures[&border_type];
 
         let mut top = Sprite::new(texture);
+        top.z_index = 9999;
         top.size = Size::new(viewport.size().width, 4);
         top.position.y = viewport.size().height - 4;
 
         let mut right = Sprite::new(texture);
+        right.z_index = 9999;
         right.size = Size::new(4, viewport.size().height);
         right.position.x = viewport.size().width - 4;
 
         let mut bottom = Sprite::new(texture);
+        bottom.z_index = 9999;
         bottom.size = Size::new(viewport.size().width, 4);
 
         let mut left = Sprite::new(texture);
+        left.z_index = 9999;
         left.size = Size::new(4, viewport.size().height);
 
         Self {
@@ -103,7 +107,6 @@ impl Border {
         renderer: &Renderer<VertexData>,
         context: &mut Context,
     ) {
-
         let texture = &textures[&self.border_type];
         let _ = renderer.render(
             texture,

@@ -48,7 +48,7 @@ impl<'a> Parser<'a> {
             "extendu" => extend!(up),
             "extendd" => extend!(down),
             "put" => Command::Put(or_noop!(self.args_to_pos())),
-            "new" => Command::NewCanvas(or_noop!(self.args_to_size())),
+            "new" => Command::NewImage(or_noop!(self.args_to_size())),
             "split" => Command::Split(Direction::Horz),
             "splitv" => Command::Split(Direction::Vert),
             "close" => Command::CloseSelectedSplit,
