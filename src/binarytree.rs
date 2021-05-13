@@ -39,6 +39,13 @@ impl<T> Tree<T> {
         NodeId(0)
     }
 
+    pub fn get(&self, node_id: NodeId) -> Option<&Node<T>> {
+        match self.inner.get(node_id.0) {
+            Some(Entry::Occupied(node)) => Some(node),
+            Some(Entry::Vacant(_)) | None => None
+        }
+    }
+
     pub fn remove(&mut self, index: NodeId) -> Node<T> {
         if index.0 == 0 {
             panic!("Can not remove the root node");
@@ -87,20 +94,6 @@ impl<T> Tree<T> {
         node
     }
 
-    fn push(&mut self, val: T, parent: NodeId) -> NodeId {
-        let index = match self.next {
-            Some(ref id) => *id,
-            None => {
-                let index = self.inner.len();
-                self.inner.push(Entry::Vacant(None));
-                NodeId(index)
-            }
-        };
-
-        self.inner[index.0] = Entry::Occupied(Node::new(val, index, Some(parent)));
-        index
-    }
-
     pub fn insert_left(&mut self, parent_id: NodeId, val: T) -> NodeId {
         let id = self.push(val, parent_id);
         if let Entry::Occupied(ref mut parent) = self.inner[parent_id.0] {
@@ -122,6 +115,20 @@ impl<T> Tree<T> {
             index: 0,
             tree: self
         }
+    }
+
+    fn push(&mut self, val: T, parent: NodeId) -> NodeId {
+        let index = match self.next {
+            Some(ref id) => *id,
+            None => {
+                let index = self.inner.len();
+                self.inner.push(Entry::Vacant(None));
+                NodeId(index)
+            }
+        };
+
+        self.inner[index.0] = Entry::Occupied(Node::new(val, index, Some(parent)));
+        index
     }
 }
 

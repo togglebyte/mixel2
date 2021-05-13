@@ -16,7 +16,7 @@ mod layer;
 mod image;
 
 use container::Containers;
-pub use image::Image;
+pub use image::{Images, Image};
 
 pub use container::Direction;
 
@@ -63,9 +63,13 @@ impl Listener for Canvas {
             }
             Message::Command(Command::NewImage(size)) => {
                 let image = Image::new(*size);
-                self.containers.add_image(image);
+                self.containers.add_image(*size, image);
             }
             Message::Command(Command::CloseSelectedSplit) => {
+                // self.containers.remove_selected();
+            }
+            Message::Command(Command::Put(pos)) => {
+                self.containers.draw(*pos);
                 // self.containers.remove_selected();
             }
 

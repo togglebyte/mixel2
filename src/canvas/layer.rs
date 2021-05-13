@@ -27,7 +27,8 @@ impl Layer {
         panic!("oh no you don't!");
     }
 
-    fn draw_to_texture(&mut self) {
+    // TODO: only draw the dirty region
+    pub fn draw_to_texture(&mut self) {
         self.texture.write_region(
             Position::zero(),
             self.buffer.size().cast(),
