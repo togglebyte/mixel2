@@ -23,6 +23,10 @@ impl Layer {
         self.dirty = true;
     }
 
+    pub fn resize(&mut self, new_size: Size<i32>) {
+        panic!("oh no you don't!");
+    }
+
     fn draw_to_texture(&mut self) {
         self.texture.write_region(
             Position::zero(),

@@ -6,7 +6,7 @@ use nightmaregl::{Position, Size, Sprite, VertexData};
 use super::layer::Layer;
 
 pub struct Image {
-    sprite: Sprite<i32>,
+    sprite: Sprite<i32>, // TODO: remove this once it's on the Container
     pub layers: Vec<Layer>,
 }
 

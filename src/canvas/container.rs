@@ -21,7 +21,9 @@ pub enum Direction {
 //     - Containers -
 // -----------------------------------------------------------------------------
 pub struct Containers {
+    /// All containers
     inner: Tree<Container>,
+    /// Selected container id
     selected: NodeId,
 }
 
@@ -43,14 +45,30 @@ impl Containers {
     }
 
     pub fn add_image(&mut self, image: Image) {
-        self.inner[self.selected].image = Some(Rc::new(image));
+        let mut selected = &mut self.inner[self.selected];
+        let sprite = Sprite::from_size(Size::new(32, 32)); //TODO NO!
+        selected.image = Some((Rc::new(image), sprite));
+    }
+
+    // TODO: when you set the anchor point, don't set it to the centre
+    //       of the sprite. I know this seems like a good idea, but it will
+    //       look naff when you move the texture around
+    pub fn resize(&mut self, new_size: Size<i32>) {
+        let mut selected = &mut self.inner[self.selected];
+        match selected.image {
+            Some((ref mut image, ref mut sprite)) => {
+                // image.layers.iter_mut().for_each(|layer| layer.resize(new_size));
+                // sprite.size = new_size;
+            },
+            None => {}
+        }
     }
 
     pub fn split(&mut self, dir: Direction, ctx: &mut MessageCtx) {
         let (size, pos, image) = {
             let selected = &self.inner[self.selected];
             let image = match selected.image {
-                Some(ref i) => Some(Rc::clone(i)),
+                Some((ref img, ref sprite)) => Some((Rc::clone(img), *sprite)),
                 None => None,
             };
             (selected.viewport.size(), selected.viewport.position, image)
@@ -135,10 +153,7 @@ pub(super) struct Container {
     viewport: Viewport,
     renderer: Renderer<VertexData>,
     border: Border,
-    sprite: Sprite<i32>, // TODO: add the sprite. 
-                         // It needs to live on the container so we can move 
-                         // the sprite around inside the container
-    image: Option<Rc<Image>>,
+    image: Option<(Rc<Image>, Sprite<i32>)>,
 }
 
 impl Container {
@@ -146,7 +161,7 @@ impl Container {
         viewport: Viewport,
         dir: Direction,
         ctx: &mut MessageCtx,
-        image: Option<Rc<Image>>,
+        image: Option<(Rc<Image>, Sprite<i32>)>,
     ) -> Result<Self> {
         let border_type = BorderType::Inactive;
 
@@ -168,20 +183,22 @@ impl Container {
             .render(ctx.textures, &self.viewport, ctx.border_renderer, ctx.context);
 
         match self.image {
-            Some(ref image) => {
-                let vertex_data = image.vertex_data();
+            Some((ref image, ref sprite)) => {
+                let vertex_data = sprite.vertex_data();
 
+                // Render the "transparent" background texture
                 self.renderer.render(
                     background_texture,
-                    &vertex_data,
+                    &[vertex_data],
                     &self.viewport,
                     ctx.context
                 );
 
+                // Render all layers
                 image.layers.iter().for_each(|layer| {
                     self.renderer.render(
                         &layer.texture,
-                        &vertex_data,
+                        &[vertex_data],
                         &self.viewport,
                         ctx.context
                     );
