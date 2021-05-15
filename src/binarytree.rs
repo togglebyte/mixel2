@@ -1,11 +1,11 @@
-use std::mem;
-use std::ptr::NonNull;
 use std::fmt;
-use std::ops::{Index, IndexMut, Deref, DerefMut};
+use std::mem;
+use std::ops::{Deref, DerefMut, Index, IndexMut};
+use std::ptr::NonNull;
 
-use nightmaregl::pixels::{Pixels, Pixel};
+use nightmaregl::pixels::{Pixel, Pixels};
 use nightmaregl::texture::{Format, Texture};
-use nightmaregl::{ Position, Size, Sprite };
+use nightmaregl::{Position, Size, Sprite};
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
 pub struct NodeId(usize);
@@ -13,6 +13,7 @@ pub struct NodeId(usize);
 // -----------------------------------------------------------------------------
 //     - Tree entry -
 // -----------------------------------------------------------------------------
+#[derive(Debug)]
 enum Entry<T> {
     Occupied(Node<T>),
     Vacant(Option<NodeId>),
@@ -21,12 +22,21 @@ enum Entry<T> {
 // -----------------------------------------------------------------------------
 //     - Tree -
 // -----------------------------------------------------------------------------
+#[derive(Debug)]
 pub struct Tree<T> {
     inner: Vec<Entry<T>>,
     next: Option<NodeId>,
 }
 
 impl<T> Tree<T> {
+    // TODO: remove this
+    pub fn len(&self) -> usize {
+        self.inner.iter().filter_map(|entry| match entry {
+            Entry::Occupied(_) => Some(()),
+            _ => None
+        }).count()
+    }
+
     pub fn new(root: T) -> Self {
         let root_node = Node::new(root, NodeId(0), None);
         Self {
@@ -39,13 +49,28 @@ impl<T> Tree<T> {
         NodeId(0)
     }
 
-    pub fn get(&self, node_id: NodeId) -> Option<&Node<T>> {
-        match self.inner.get(node_id.0) {
-            Some(Entry::Occupied(node)) => Some(node),
-            Some(Entry::Vacant(_)) | None => None
+    pub fn sibling(&self, node: NodeId) -> Option<NodeId> {
+        let parent = self[node].parent?;
+        match self[parent].left {
+            Some(left) if left == node => self[parent].right,
+            _ => self[parent].left
         }
     }
 
+    pub fn get(&self, node_id: NodeId) -> Option<&Node<T>> {
+        match self.inner.get(node_id.0) {
+            Some(Entry::Occupied(node)) => Some(node),
+            Some(Entry::Vacant(_)) | None => None,
+        }
+    }
+
+    /// Remove the specific node.
+    /// This will panic if either the root node is removed
+    /// or a vacant entry is removed.
+    ///
+    /// This will return the removed node,
+    /// however all the children will be removed and
+    /// won't be returned.
     pub fn remove(&mut self, index: NodeId) -> Node<T> {
         if index.0 == 0 {
             panic!("Can not remove the root node");
@@ -88,10 +113,57 @@ impl<T> Tree<T> {
             if parent.right == Some(node.id) {
                 parent.right = None;
             }
-
         }
 
         node
+    }
+
+    pub fn collapse_into_parent(&mut self, node_id: NodeId) {
+        // Get the parent and the grand parent id
+        let (parent_id, grand_parent_id) = {
+            match *&self[node_id].parent {
+                Some(p) => {
+                    {
+                        // Remove children from parent
+                        let p = &mut self[p];
+                        p.left = None;
+                        p.right = None;
+                    }
+                    match *&self[p].parent {
+                        Some(grandpa) => (p, grandpa),
+                        None => return,
+                    }
+                }
+                None => return,
+            }
+        };
+
+        // Remove the old parent...
+        self.remove(parent_id);
+        // ... and set the grand parent as the parent
+        self[node_id].parent = Some(grand_parent_id);
+
+        // Replace the old parent as a child of the grand parent
+        // with the node id
+        let mut grandpa = &mut self[grand_parent_id];
+
+        match (grandpa.left, grandpa.right) {
+            (Some(ref mut left), _) if *left == parent_id => {
+                *left = node_id;
+            }
+            (_, Some(ref mut right)) if *right == parent_id => {
+                *right = node_id;
+            }
+            (None, _) => {
+                grandpa.left = Some(node_id);
+            }
+            (_, None) => {
+                grandpa.right = Some(node_id);
+            }
+            _ => { 
+                eprintln!("gramps be all like: {:?}", grandpa.id);
+            }
+        }
     }
 
     pub fn insert_left(&mut self, parent_id: NodeId, val: T) -> NodeId {
@@ -113,7 +185,7 @@ impl<T> Tree<T> {
     pub fn iter(&self) -> TreeIter<T> {
         TreeIter {
             index: 0,
-            tree: self
+            tree: self,
         }
     }
 
@@ -143,7 +215,7 @@ impl<'a, T> Iterator for TreeIter<'a, T> {
     fn next(&mut self) -> Option<Self::Item> {
         let ret = match self.tree.inner.get(self.index) {
             Some(Entry::Occupied(node)) => Some(node),
-            _ => None
+            _ => None,
         };
         self.index += 1;
         ret
@@ -202,7 +274,6 @@ impl<T> Deref for Node<T> {
     fn deref(&self) -> &Self::Target {
         &self.inner
     }
-
 }
 
 impl<T> DerefMut for Node<T> {
@@ -214,6 +285,10 @@ impl<T> DerefMut for Node<T> {
 impl<T: fmt::Debug> fmt::Debug for Node<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "<Node id: {} val: {:?}", self.id.0, self.inner)?;
+        if let Some(parent) = self.parent {
+            write!(f, " parent: {:?}", parent.0)?;
+        }
+
         if let Some(left) = self.left {
             write!(f, " left: {:?}", left.0)?;
         }
@@ -223,5 +298,45 @@ impl<T: fmt::Debug> fmt::Debug for Node<T> {
         }
 
         write!(f, " />")
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn make_sure_its_removed() {
+        let mut tree = Tree::new(1u32);
+        let root = tree.root_id();
+        tree.insert_left(root, 2);
+        let right = tree.insert_right(root, 3);
+
+        let actual = tree.len();
+        let expected = 3;
+        assert_eq!(expected, actual);
+
+        tree.remove(right);
+
+        let actual = tree.len();
+        let expected = 2;
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn collapse() {
+        let mut tree = Tree::new(1u32);
+        let root = tree.root_id();
+            let left = tree.insert_left(root, 2);
+            let right = tree.insert_right(root, 3);
+                let right_left = tree.insert_left(right, 4); // remove this guy
+                let right_right = tree.insert_right(right, 5); // this becomes `right`
+
+        tree.remove(right_left);
+        tree.collapse_into_parent(right_right);
+        eprintln!("{:#?}", tree);
+
+        tree.remove(left);
+        tree.collapse_into_parent(right);
     }
 }

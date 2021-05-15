@@ -9,6 +9,7 @@ use crate::Message;
 use crate::border::{Textures, Border, BorderType};
 use crate::binarytree::{Tree, Node};
 use crate::commandline::Command;
+use crate::input::Input;
 
 pub mod message;
 mod container;
@@ -66,11 +67,13 @@ impl Listener for Canvas {
                 self.containers.add_image(*size, image);
             }
             Message::Command(Command::CloseSelectedSplit) => {
-                // self.containers.remove_selected();
+                self.containers.close_selected();
             }
             Message::Command(Command::Put(pos)) => {
                 self.containers.draw(*pos);
-                // self.containers.remove_selected();
+            }
+            Message::Input(Input::Char('p'), _) => {
+                self.containers.print_tree();
             }
 
             // Unhandled messages

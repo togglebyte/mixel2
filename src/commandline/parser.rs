@@ -84,12 +84,12 @@ mod test {
         assert!(output);
     }
 
-    #[test]
-    fn save_without_path() {
-        let input = ":w";
-        let output = matches!(Parser::new(input).parse(), Command::Noop);
-        assert!(output);
-    }
+    // #[test]
+    // fn save_without_path() {
+    //     let input = ":w";
+    //     let output = matches!(Parser::new(input).parse(), Command::Noop);
+    //     assert!(output);
+    // }
 
 //     #[test]
 //     fn save() {

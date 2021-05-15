@@ -1,4 +1,5 @@
 use std::rc::Rc;
+use std::fmt;
 
 use anyhow::Result;
 use nightmaregl::texture::Texture;
@@ -39,6 +40,13 @@ pub struct Containers {
 }
 
 impl Containers {
+    // TODO: remove this
+    pub(super) fn print_tree(&self) {
+        eprintln!("{:#?}", self.inner);
+        eprintln!("selected: {:?}", self.selected);
+        eprintln!("{:?}", "--------------");
+    }
+
     /// Create a new instance of a container.
     /// The container holds the drawable area of the screen.
     /// A container can be split into multiple containers.
@@ -155,23 +163,12 @@ impl Containers {
     }
 
     // TODO: removing the last container should close the application.
-    pub fn remove_container(&mut self, node_id: NodeId) {
-        // 1. Remove the node
-        // 2. Collpase the parent so the remaning child
-        //    becomes the parent
-
-        let node = self.inner.remove(node_id);
-
-        if let Some(parent_id) = self.inner[node.id].parent {
-            let parent = &self.inner[parent_id];
-
-            if let Some(left) = parent.left {
-                // swap the left value with the parent
-            }
-
-            if let Some(right) = parent.right {
-                // swap the right value with the parent
-            }
+    pub fn close_selected(&mut self) {
+        let selected = self.inner.sibling(self.selected);
+        self.inner.remove(self.selected);
+        if let Some(selected) = selected {
+            self.inner.collapse_into_parent(selected);
+            self.selected = selected;
         }
     }
 
@@ -212,6 +209,13 @@ impl Containers {
 // -----------------------------------------------------------------------------
 //     - Container -
 // -----------------------------------------------------------------------------
+// TODO: delete the debug impl
+impl fmt::Debug for Container {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "")
+    }
+}
+
 pub(super) struct Container {
     dir: Direction,
     viewport: Viewport,
