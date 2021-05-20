@@ -7,7 +7,6 @@ use nightmaregl::texture::Texture;
 use pretty_env_logger;
 
 mod application;
-mod binarytree;
 mod border;
 mod canvas;
 mod commandline;

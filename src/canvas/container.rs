@@ -7,11 +7,10 @@ use nightmaregl::{Context, Position, Renderer, Size, Sprite, VertexData, Viewpor
 use nightmaregl::pixels::Pixel;
 
 use super::layer::Layer;
-use crate::binarytree::{Node, NodeId, Tree};
 use crate::border::{Border, BorderType};
 use crate::listener::MessageCtx;
 
-use super::{Image, Images};
+use super::{Cursor, Image};
 
 // -----------------------------------------------------------------------------
 //     - Direction -
@@ -23,30 +22,21 @@ pub enum Direction {
 }
 
 // -----------------------------------------------------------------------------
-//     - Images -
-// -----------------------------------------------------------------------------
-
-// -----------------------------------------------------------------------------
 //     - Containers -
 // -----------------------------------------------------------------------------
 pub struct Containers {
     /// All containers
-    inner: Tree<Container>,
+    inner: Vec<Container>,
     /// Selected container id
-    selected: NodeId,
-    /// A collection of images and the nodes
-    /// that are currently drawing them.
-    images: Images,
+    selected: usize,
+    /// List of images to draw and render.
+    /// An image can be rendererd in multiple containers
+    /// which is why the container has an `image_id` rather than owning 
+    /// an image.
+    images: Vec<Image>
 }
 
 impl Containers {
-    // TODO: remove this
-    pub(super) fn print_tree(&self) {
-        eprintln!("{:#?}", self.inner);
-        eprintln!("selected: {:?}", self.selected);
-        eprintln!("{:?}", "--------------");
-    }
-
     /// Create a new instance of a container.
     /// The container holds the drawable area of the screen.
     /// A container can be split into multiple containers.
@@ -62,23 +52,27 @@ impl Containers {
             ctx,
             Sprite::from_size(Size::new(32, 32)),
         )?;
-        let tree = Tree::new(container);
 
         let inst = Self {
-            selected: tree.root_id(),
-            inner: tree,
-            images: Images::new(),
+            selected: 0,
+            inner: vec![container],
+            images: Vec::new(),
         };
 
         Ok(inst)
     }
 
     /// Add a new image to the current container
+    /// TODO: can't delete an image now because of how stupid this is
     pub fn add_image(&mut self, size: Size<i32>, image: Image) {
-        self.images.push(image, self.selected);
+        let image_id = self.images.len();
+        self.images.push(image);
+
+        self.inner[self.selected].image_id = Some(image_id);
         let mut selected = &mut self.inner[self.selected];
-        selected.sprite = Sprite::from_size(size);
-        let pos = (*selected.viewport.size() / 2 - selected.sprite.size) / selected.renderer.pixel_size;
+        let sprite = Sprite::from_size(size);
+        let pos = (*selected.viewport.size() / 2 - sprite.size) / selected.renderer.pixel_size;
+        selected.sprite = sprite;
         selected.sprite.position = pos.to_vector();
     }
 
@@ -98,78 +92,80 @@ impl Containers {
     }
 
     pub fn split(&mut self, dir: Direction, ctx: &mut MessageCtx) {
-        // Get the current size, position and sprite as
-        // well as the image id for the selected container.
-        // Use these to construct the children.
-        let (size, pos, sprite, image_id) = {
-            let selected = &self.inner[self.selected];
-            let image_id = self.images.get_id_by_node(self.selected);
-            (
-                selected.viewport.size(),
-                selected.viewport.position,
-                selected.sprite,
-                image_id,
-            )
-        };
+        // TODO: put this back in once the bin tree is done.
+        // // Get the current size, position and sprite as
+        // // well as the image id for the selected container.
+        // // Use these to construct the children.
+        // let (size, pos, sprite, image_id) = {
+        //     let selected = &self.inner[self.selected];
+        //     let image_id = self.images.get_id_by_node(self.selected);
+        //     (
+        //         selected.viewport.size(),
+        //         selected.viewport.position,
+        //         selected.sprite,
+        //         image_id,
+        //     )
+        // };
 
-        let (left, right) = match dir {
-            Direction::Horz => {
-                let right = Viewport::new(
-                    pos,
-                    Size::new(size.width, size.height / 2), // - Size::new(10, 10)
-                );
+        // let (left, right) = match dir {
+        //     Direction::Horz => {
+        //         let right = Viewport::new(
+        //             pos,
+        //             Size::new(size.width, size.height / 2), // - Size::new(10, 10)
+        //         );
 
-                let left = Viewport::new(
-                    Position::new(pos.x, pos.y + size.height / 2 /* + 10*/),
-                    Size::new(size.width, size.height / 2), // - Size::new(10, 10)
-                );
+        //         let left = Viewport::new(
+        //             Position::new(pos.x, pos.y + size.height / 2 /* + 10*/),
+        //             Size::new(size.width, size.height / 2), // - Size::new(10, 10)
+        //         );
 
-                (left, right)
-            }
-            Direction::Vert => {
-                let left = Viewport::new(
-                    pos,
-                    Size::new(size.width / 2, size.height), // - Size::new(10, 10)
-                );
+        //         (left, right)
+        //     }
+        //     Direction::Vert => {
+        //         let left = Viewport::new(
+        //             pos,
+        //             Size::new(size.width / 2, size.height), // - Size::new(10, 10)
+        //         );
 
-                let right = Viewport::new(
-                    Position::new(pos.x + size.width / 2 /*+ 10*/, pos.y),
-                    Size::new(size.width / 2, size.height), // - Size::new(10, 10)
-                );
+        //         let right = Viewport::new(
+        //             Position::new(pos.x + size.width / 2 /*+ 10*/, pos.y),
+        //             Size::new(size.width / 2, size.height), // - Size::new(10, 10)
+        //         );
 
-                (left, right)
-            }
-        };
+        //         (left, right)
+        //     }
+        // };
 
-        // Create child containers
-        let left = Container::new(left, dir, ctx, sprite).unwrap();
-        let right = Container::new(right, dir, ctx, sprite).unwrap();
+        // // Create child containers
+        // let left = Container::new(left, dir, ctx, sprite).unwrap();
+        // let right = Container::new(right, dir, ctx, sprite).unwrap();
 
-        let left_id = self.inner.insert_left(self.selected, left);
-        let right_id = self.inner.insert_right(self.selected, right);
-        self.selected = right_id;
+        // let left_id = self.inner.insert_left(self.selected, left);
+        // let right_id = self.inner.insert_right(self.selected, right);
+        // self.selected = right_id;
 
-        // Assign the image to the newly created container
-        if let Some(image_id) = image_id {
-            self.images.attach(image_id, left_id);
-            self.images.attach(image_id, right_id);
-        }
+        // // Assign the image to the newly created container
+        // if let Some(image_id) = image_id {
+        //     self.images.attach(image_id, left_id);
+        //     self.images.attach(image_id, right_id);
+        // }
 
-        // Set the active border.
-        // Ignore the previous active border as that
-        // is not rendered since it now has children.
-        let mut selected = &mut self.inner[self.selected];
-        selected.border.border_type = BorderType::Active;
+        // // Set the active border.
+        // // Ignore the previous active border as that
+        // // is not rendered since it now has children.
+        // let mut selected = &mut self.inner[self.selected];
+        // selected.border.border_type = BorderType::Active;
     }
 
     // TODO: removing the last container should close the application.
     pub fn close_selected(&mut self) {
-        let selected = self.inner.sibling(self.selected);
-        self.inner.remove(self.selected);
-        if let Some(selected) = selected {
-            self.inner.collapse_into_parent(selected);
-            self.selected = selected;
-        }
+        // TODO: put this back in once we can merge nodes in the bin tree.
+        // let selected = self.inner.sibling(self.selected);
+        // self.inner.remove(self.selected);
+        // if let Some(selected) = selected {
+        //     self.inner.collapse_into_parent(selected);
+        //     self.selected = selected;
+        // }
     }
 
     pub(crate) fn render(
@@ -178,50 +174,41 @@ impl Containers {
         ctx: &mut MessageCtx,
     ) -> Result<()> {
 
-        self.images
-            .images()
-            .into_iter()
-            .map(|(image, nodes)| {
-                let nodes = nodes.into_iter()
-                    .filter_map(|id| self.inner.get(*id))
-                    .filter(|node| node.left.is_none() && node.right.is_none());
+        for container in &self.inner {
+            let image = match container.image_id {
+                Some(id) => &self.images[id],
+                None => continue,
+            };
 
-                (image, nodes)
-            })
-            .for_each(|(image, nodes)| {
-                nodes.into_iter().for_each(|node| {
-                    node.render(background, ctx, image);
-                });
-            });
+            container.render(background, ctx, image);
+        }
 
         Ok(())
     }
 
     pub fn draw(&mut self, pos: Position<i32>) {
         let pixel = Pixel::black();
-        if let Some(image) = self.images.get_by_node_mut(self.selected) {
-            image.put_pixel(pixel, pos);
-        }
-        // let mut selected = &mut self.inner[self.selected];
+        let container = &mut self.inner[self.selected];
+        let mut image = match container.image_id {
+            Some(id) => &mut self.images[id],
+            None => return,
+        };
+
+        image.put_pixel(pixel, pos);
     }
 }
 
 // -----------------------------------------------------------------------------
 //     - Container -
 // -----------------------------------------------------------------------------
-// TODO: delete the debug impl
-impl fmt::Debug for Container {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "")
-    }
-}
-
 pub(super) struct Container {
     dir: Direction,
     viewport: Viewport,
     renderer: Renderer<VertexData>,
     border: Border,
     sprite: Sprite<i32>,
+    image_id: Option<usize>,
+    cursor: Cursor,
 }
 
 impl Container {
@@ -239,6 +226,8 @@ impl Container {
             renderer: Renderer::default(ctx.context)?,
             sprite,
             dir,
+            image_id: None,
+            cursor: Cursor::new(Position::zero()),
         };
 
         inst.renderer.pixel_size = 8;
@@ -258,6 +247,7 @@ impl Container {
         ctx: &mut MessageCtx,
         image: &Image,
     ) -> Result<()> {
+        // Border
         self.border.render(
             ctx.textures,
             &self.viewport,
@@ -265,6 +255,15 @@ impl Container {
             ctx.context,
         );
 
+        // Cursor
+        self.renderer.render(
+            &self.cursor.texture,
+            &[self.cursor.sprite.vertex_data()],
+            &self.viewport,
+            ctx.context,
+        );
+
+        // Images
         let vertex_data = self.sprite.vertex_data();
 
         // Render all layers

@@ -1,3 +1,5 @@
+//! This works as a thin layer for the `Containers`,
+//! as containers does not implement `Listener`.
 use anyhow::Result;
 use nightmaregl::{
     Context, FillMode, Position, Rect, Renderer, Size, Sprite, VertexData, Viewport, RelativeViewport
@@ -7,7 +9,6 @@ use nightmaregl::texture::Texture;
 use crate::listener::{MessageCtx, Listener};
 use crate::Message;
 use crate::border::{Textures, Border, BorderType};
-use crate::binarytree::{Tree, Node};
 use crate::commandline::Command;
 use crate::input::Input;
 
@@ -15,9 +16,11 @@ pub mod message;
 mod container;
 mod layer;
 mod image;
+mod cursor;
 
 use container::Containers;
-pub use image::{Images, Image};
+pub use image::Image;
+pub use cursor::Cursor;
 
 pub use container::Direction;
 
@@ -71,9 +74,6 @@ impl Listener for Canvas {
             }
             Message::Command(Command::Put(pos)) => {
                 self.containers.draw(*pos);
-            }
-            Message::Input(Input::Char('p'), _) => {
-                self.containers.print_tree();
             }
 
             // Unhandled messages
