@@ -14,12 +14,14 @@ mod config;
 mod input;
 mod listener;
 mod message;
+mod node;
 mod status;
 
 use application::App;
 use config::Config;
 use input::Input;
 use message::Message;
+pub use node::Node;
 
 fn main() -> Result<()> {
     pretty_env_logger::init();

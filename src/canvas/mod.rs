@@ -2,7 +2,7 @@
 //! as containers does not implement `Listener`.
 use anyhow::Result;
 use nightmaregl::{
-    Context, FillMode, Position, Rect, Renderer, Size, Sprite, VertexData, Viewport, RelativeViewport
+    Context, FillMode, Position, Rect, Renderer, Size, Sprite, VertexData, Viewport, RelativeViewport, Transform
 };
 use nightmaregl::texture::Texture;
 
@@ -88,7 +88,9 @@ impl Listener for Canvas {
     }
 
     fn render(&mut self, ctx: &mut MessageCtx) -> Result<()> {
+        let parent_transform = Transform::new();
         self.border.render(
+            &parent_transform,
             ctx.textures,
             &self.viewport,
             &self.renderer,

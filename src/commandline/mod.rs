@@ -7,10 +7,11 @@ use nightmaregl::{
     Context, Position, Renderer, Size, Sprite, Texture, VertexData, Viewport,
 };
 
+use crate::Node;
+use crate::application::Mode;
 use crate::input::Input;
 use crate::listener::{Listener, MessageCtx};
 use crate::message::Message;
-use crate::application::Mode;
 
 mod commands;
 mod parser;
@@ -100,7 +101,7 @@ impl CommandLine {
             error!("Failed to set text: {:?}", e);
         }
 
-        while self.text.caret().x + self.cursor.sprite.size.width
+        while self.text.caret().x + self.cursor.node.sprite.size.width
             > self.viewport.size().width as f32
         {
             if self.visible_buffer.is_empty() {
@@ -112,7 +113,7 @@ impl CommandLine {
             }
         }
 
-        self.cursor.sprite.position = Position::new(self.text.caret().x, self.font_size / 3.0);
+        self.cursor.node.transform.translate_mut(Position::new(self.text.caret().x, self.font_size / 3.0));
     }
 }
 
@@ -164,7 +165,8 @@ impl Listener for CommandLine {
 struct Cursor {
     renderer: Renderer<VertexData>,
     texture: Texture<f32>,
-    sprite: Sprite<f32>,
+    // sprite: Sprite<f32>,
+    node: Node<f32>,
 }
 
 impl Cursor {
@@ -175,13 +177,13 @@ impl Cursor {
         let cursor_pixels = Pixels::from_pixel(Pixel::white(), Size::new(1, 1));
 
         let texture = Texture::default_with_data(Size::new(1.0, 1.0), cursor_pixels.as_bytes());
-        let mut sprite = Sprite::new(&texture);
-        sprite.size = cursor_size;
+        let mut node = Node::new(&texture);
+        node.sprite.size = cursor_size;
 
         let inst = Self {
             renderer,
             texture,
-            sprite,
+            node,
         };
 
         Ok(inst)
@@ -190,7 +192,7 @@ impl Cursor {
     fn render(&mut self, context: &mut Context, viewport: &Viewport) {
         let res = self.renderer.render(
             &self.texture,
-            &[self.sprite.vertex_data()],
+            &[self.node.vertex_data()],
             viewport,
             context,
         );

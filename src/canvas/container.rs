@@ -3,13 +3,14 @@ use std::fmt;
 
 use anyhow::Result;
 use nightmaregl::texture::Texture;
-use nightmaregl::{Context, Position, Renderer, Size, Sprite, VertexData, Viewport};
+use nightmaregl::{Context, Position, Renderer, Size, Sprite, VertexData, Viewport, Transform};
 use nightmaregl::pixels::Pixel;
 
 use super::layer::Layer;
 use crate::border::{Border, BorderType};
 use crate::listener::MessageCtx;
 
+use crate::Node;
 use super::{Cursor, Image};
 
 // -----------------------------------------------------------------------------
@@ -51,6 +52,7 @@ impl Containers {
             Direction::Horz,
             ctx,
             Sprite::from_size(Size::new(32, 32)),
+            Transform::default(),
         )?;
 
         let inst = Self {
@@ -63,7 +65,9 @@ impl Containers {
     }
 
     /// Add a new image to the current container
-    /// TODO: can't delete an image now because of how stupid this is
+    /// TODO: can't delete an image now because of how stupid this is.
+    ///       Deleting an image would offset every image after it in 
+    ///       the vector.
     pub fn add_image(&mut self, size: Size<i32>, image: Image) {
         let image_id = self.images.len();
         self.images.push(image);
@@ -71,9 +75,9 @@ impl Containers {
         self.inner[self.selected].image_id = Some(image_id);
         let mut selected = &mut self.inner[self.selected];
         let sprite = Sprite::from_size(size);
-        let pos = (*selected.viewport.size() / 2 - sprite.size) / selected.renderer.pixel_size;
-        selected.sprite = sprite;
-        selected.sprite.position = pos.to_vector();
+        let pos = (*selected.viewport.size() / 2 / selected.renderer.pixel_size).to_vector();
+        selected.node.sprite = sprite;
+        selected.node.transform.translate_mut(pos);
     }
 
     // TODO: when you set the anchor point, don't set it to the centre
@@ -169,12 +173,12 @@ impl Containers {
     }
 
     pub(crate) fn render(
-        &self,
+        &mut self,
         background: &Texture<i32>,
         ctx: &mut MessageCtx,
     ) -> Result<()> {
 
-        for container in &self.inner {
+        for container in &mut self.inner {
             let image = match container.image_id {
                 Some(id) => &self.images[id],
                 None => continue,
@@ -206,7 +210,9 @@ pub(super) struct Container {
     viewport: Viewport,
     renderer: Renderer<VertexData>,
     border: Border,
-    sprite: Sprite<i32>,
+    // sprite: Sprite<i32>,
+    // transform: Transform<i32>,
+    node: Node<i32>,
     image_id: Option<usize>,
     cursor: Cursor,
 }
@@ -217,6 +223,7 @@ impl Container {
         dir: Direction,
         ctx: &mut MessageCtx,
         mut sprite: Sprite<i32>,
+        transform: Transform<i32>,
     ) -> Result<Self> {
         let border_type = BorderType::Inactive;
 
@@ -224,7 +231,9 @@ impl Container {
             border: Border::new(border_type, ctx.textures, &viewport),
             viewport,
             renderer: Renderer::default(ctx.context)?,
-            sprite,
+            node: Node::from_sprite(sprite),
+            // sprite,
+            // transform,
             dir,
             image_id: None,
             cursor: Cursor::new(Position::zero()),
@@ -235,10 +244,15 @@ impl Container {
         // Centre the sprite
         // TODO: it doesn't quite look like it is in the centre
         //       is it the border? is it the viewport?
-        let position = (*inst.viewport.size() / 2 / inst.renderer.pixel_size) - inst.sprite.size / 2;
-        inst.sprite.position = position.to_vector();
+        let position = (*inst.viewport.size() / 2 / inst.renderer.pixel_size).to_vector();
+        inst.node.transform.translate_mut(position);
 
         Ok(inst)
+    }
+
+    pub fn move_cursor(&mut self, pos: Position<i32>) {
+        todo!();
+        // self.cursor.transform.translate_mut(pos);
     }
 
     fn render(
@@ -249,6 +263,7 @@ impl Container {
     ) -> Result<()> {
         // Border
         self.border.render(
+            &self.node.transform,
             ctx.textures,
             &self.viewport,
             ctx.border_renderer,
@@ -258,13 +273,13 @@ impl Container {
         // Cursor
         self.renderer.render(
             &self.cursor.texture,
-            &[self.cursor.sprite.vertex_data()],
+            &[self.cursor.node.relative_vertex_data(&self.node.transform)],
             &self.viewport,
             ctx.context,
         );
 
         // Images
-        let vertex_data = self.sprite.vertex_data();
+        let vertex_data = self.node.vertex_data();
 
         // Render all layers
         image.layers.iter().for_each(|layer| {
