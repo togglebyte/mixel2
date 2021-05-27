@@ -25,7 +25,7 @@ use parser::Parser;
 pub struct CommandLine {
     text_renderer: Renderer<VertexData>,
     font_size: f32,
-    cursor: Cursor,
+    caret: Caret,
     viewport: Viewport,
     text: Text,
     input_buffer: String,
@@ -51,7 +51,7 @@ impl CommandLine {
         let inst = Self {
             text_renderer,
             font_size,
-            cursor: Cursor::new(font_size, context)?,
+            caret: Caret::new(font_size, context)?,
             viewport,
             text,
             input_buffer: String::new(),
@@ -101,7 +101,7 @@ impl CommandLine {
             error!("Failed to set text: {:?}", e);
         }
 
-        while self.text.caret().x + self.cursor.node.sprite.size.width
+        while self.text.caret().x + self.caret.node.sprite.size.width
             > self.viewport.size().width as f32
         {
             if self.visible_buffer.is_empty() {
@@ -113,7 +113,7 @@ impl CommandLine {
             }
         }
 
-        self.cursor.node.transform.translate_mut(Position::new(self.text.caret().x, self.font_size / 3.0));
+        self.caret.node.transform.translate_mut(Position::new(self.text.caret().x, self.font_size / 3.0));
     }
 }
 
@@ -154,31 +154,31 @@ impl Listener for CommandLine {
             .text_renderer
             .render(texture, &text_vertex_data, &self.viewport, ctx.context)?;
 
-        // self.cursor.render(context, &self.viewport)?;
+        // self.caret.render(context, &self.viewport)?;
         Ok(())
     }
 }
 
 // -----------------------------------------------------------------------------
-//     - Cursor -
+//     - Caret -
 // -----------------------------------------------------------------------------
-struct Cursor {
+struct Caret {
     renderer: Renderer<VertexData>,
     texture: Texture<f32>,
     // sprite: Sprite<f32>,
     node: Node<f32>,
 }
 
-impl Cursor {
+impl Caret {
     pub fn new(font_size: f32, context: &mut Context) -> Result<Self> {
         let renderer = Renderer::default_font(context)?;
 
-        let cursor_size = Size::new(font_size, font_size * 2.0);
-        let cursor_pixels = Pixels::from_pixel(Pixel::white(), Size::new(1, 1));
+        let caret_size = Size::new(font_size, font_size * 2.0);
+        let caret_pixels = Pixels::from_pixel(Pixel::white(), Size::new(1, 1));
 
-        let texture = Texture::default_with_data(Size::new(1.0, 1.0), cursor_pixels.as_bytes());
+        let texture = Texture::default_with_data(Size::new(1.0, 1.0), caret_pixels.as_bytes());
         let mut node = Node::new(&texture);
-        node.sprite.size = cursor_size;
+        node.sprite.size = caret_size;
 
         let inst = Self {
             renderer,
@@ -198,7 +198,7 @@ impl Cursor {
         );
 
         if let Err(e) = res {
-            error!("cursor renderer failed: {:?}", e);
+            error!("caret renderer failed: {:?}", e);
         }
     }
 }
