@@ -3,7 +3,6 @@ use log::error;
 use nightmaregl::Context;
 use nightmaregl::events::{Event, KeyState, LoopAction, Modifiers, EventLoop};
 use nightmaregl::pixels::Pixel;
-use nightmaregl::texture::Texture;
 use pretty_env_logger;
 
 mod application;

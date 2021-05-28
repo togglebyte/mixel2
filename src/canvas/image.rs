@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use anyhow::Result;
-use nightmaregl::{Position, Size, Sprite, VertexData};
+use nightmaregl::{Position, Size};
 use nightmaregl::pixels::Pixel;
 
 use super::layer::Layer;

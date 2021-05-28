@@ -1,28 +1,25 @@
 //! This works as a thin layer for the `Containers`,
 //! as containers does not implement `Listener`.
 use anyhow::Result;
-use nightmaregl::{
-    Context, FillMode, Position, Rect, Renderer, Size, Sprite, VertexData, Viewport, RelativeViewport, Transform
-};
+use nightmaregl::{ Renderer, VertexData, Viewport, Transform };
 use nightmaregl::texture::Texture;
 
 use crate::listener::{MessageCtx, Listener};
 use crate::Message;
-use crate::border::{Textures, Border, BorderType};
+use crate::border::{Border, BorderType};
 use crate::commandline::Command;
-use crate::input::Input;
 
 pub mod message;
-mod container;
+mod containers;
 mod layer;
 mod image;
 mod cursor;
+mod container;
 
-use container::Containers;
+pub use containers::{Direction, Containers};
 pub use image::Image;
 pub use cursor::Cursor;
-
-pub use container::Direction;
+pub use container::Container;
 
 pub struct Canvas {
     /// All container viewports should be relative 
@@ -57,9 +54,6 @@ impl Listener for Canvas {
         match message {
             Message::Resize(new_size) => {
                 self.viewport.resize(*new_size);
-            },
-            Message::Resize(new_size) => {
-                self.viewport.resize(*new_size);
                 self.border.resize(&self.viewport);
             }
             Message::Command(Command::Split(dir)) => {
@@ -75,13 +69,15 @@ impl Listener for Canvas {
             Message::Command(Command::Put(pos)) => {
                 self.containers.draw(*pos);
             }
+            Message::Action(action) => {
+                eprintln!("{:?}", action);
+            }
 
             // Unhandled messages
             Message::Input(_, _)
             | Message::CursorPos(_)
             | Message::ModeChanged(_)
             | Message::Command(_)
-            | Message::Action(_)
             | Message::Noop => {}
         }
         Message::Noop

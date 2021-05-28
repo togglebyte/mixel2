@@ -1,12 +1,9 @@
 use anyhow::Result;
-use nightmaregl::{Position, Size, Context, Viewport, Renderer, VertexData,};
+use nightmaregl::{Context, Renderer, VertexData, Viewport};
 
-use crate::input::Input;
-use crate::application::Mode;
-use crate::commandline::Command;
-use crate::config::{Config, Action};
-use crate::message::Message;
 use crate::border::Textures;
+use crate::config::Config;
+use crate::message::Message;
 
 pub trait Listener {
     fn message(&mut self, _: &Message, _: &mut MessageCtx) -> Message {
@@ -25,4 +22,3 @@ pub struct MessageCtx<'a> {
     pub textures: &'a Textures,
     pub border_renderer: &'a Renderer<VertexData>,
 }
-

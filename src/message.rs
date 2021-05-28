@@ -3,7 +3,6 @@ use crate::application::Mode;
 use crate::commandline::Command;
 use crate::input::Input;
 use crate::config::Action;
-use crate::canvas::message::Canvas;
 use nightmaregl::events::Modifiers;
 
 pub enum Message {

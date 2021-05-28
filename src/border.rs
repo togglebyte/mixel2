@@ -1,9 +1,8 @@
 use std::collections::HashMap;
 use std::ops::{Deref, DerefMut};
 
-use nightmaregl::pixels::{Pixel, Pixels};
-use nightmaregl::texture::{Format, Texture};
-use nightmaregl::{Rect, Size, Sprite, Viewport, Renderer, VertexData, Context, Transform};
+use nightmaregl::texture::Texture;
+use nightmaregl::{Size, Viewport, Renderer, VertexData, Context, Transform};
 
 use crate::Node;
 

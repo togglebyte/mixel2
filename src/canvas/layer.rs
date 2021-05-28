@@ -1,4 +1,4 @@
-use nightmaregl::{Sprite, Size, Position};
+use nightmaregl::{Size, Position};
 use nightmaregl::texture::Texture;
 use nightmaregl::pixels::{Pixel, Pixels};
 
@@ -23,7 +23,7 @@ impl Layer {
         self.dirty = true;
     }
 
-    pub fn resize(&mut self, new_size: Size<i32>) {
+    pub fn resize(&mut self, _new_size: Size<i32>) {
         panic!("oh no you don't!");
     }
 

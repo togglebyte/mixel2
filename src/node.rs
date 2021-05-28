@@ -1,7 +1,7 @@
 use std::ops::{Div, MulAssign};
 
-use nightmaregl::{Point, Position, Rect, Rotation, Size, VertexData, Sprite, Transform, Texture};
-use nalgebra::{Matrix4, Point3, Scalar, Vector};
+use nightmaregl::{VertexData, Sprite, Transform, Texture};
+use nalgebra::Scalar;
 use num_traits::cast::NumCast;
 use num_traits::{One, Zero};
 

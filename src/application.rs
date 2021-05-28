@@ -1,7 +1,7 @@
 use std::collections::VecDeque;
 use anyhow::Result;
 use nightmaregl::events::{Key, Modifiers};
-use nightmaregl::{Renderer, VertexData, Viewport, RelativeViewport, Context, Size, Position};
+use nightmaregl::{Renderer, VertexData, Viewport, Context, Size, Position};
 use nightmaregl::texture::Texture;
 
 use crate::commandline::{Command, CommandLine};
@@ -15,8 +15,12 @@ use crate::border::{BorderType, Textures};
 
 const VIEWPORT_PADDING:i32 = 128;
 
-const fn pad_pos() -> Position<i32> {
-    Position::new(VIEWPORT_PADDING, VIEWPORT_PADDING)
+fn canvas_viewport(viewport: &Viewport) -> Viewport {
+    let pad = VIEWPORT_PADDING;
+    Viewport::new(
+        Position::new(pad, pad),
+        *viewport.size() - Size::new(pad * 2, pad * 2),
+    )
 }
 
 // -----------------------------------------------------------------------------
@@ -40,7 +44,7 @@ pub struct App {
     config: Config,
     listeners: Vec<Box<dyn Listener>>,
     viewport: Viewport,
-    canvas_viewport: RelativeViewport,
+    canvas_viewport: Viewport,
     textures: Textures,
     border_renderer: Renderer<VertexData>,
 }
@@ -51,6 +55,7 @@ impl App {
             Position::zero(),
             win_size
         );
+
 
         // -----------------------------------------------------------------------------
         //     - Border textures -
@@ -72,7 +77,7 @@ impl App {
         // -----------------------------------------------------------------------------
         //     - Canvas viewport -
         // -----------------------------------------------------------------------------
-        let canvas_viewport = viewport.relative(pad_pos(), pad_pos());
+        let canvas_viewport = canvas_viewport(&viewport);
 
         let mut inst = Self {
             win_size,
@@ -88,7 +93,7 @@ impl App {
 
         let mut ctx = MessageCtx { 
             config: &inst.config,
-            viewport: &inst.canvas_viewport.viewport(),
+            viewport: &inst.canvas_viewport,
             textures: &inst.textures,
             border_renderer: &inst.border_renderer,
             context,
@@ -97,7 +102,7 @@ impl App {
         inst.listeners.push(Box::new(Status::new(win_size, ctx.context)?));
         inst.listeners.push(Box::new(CommandLine::new(win_size, ctx.context)?));
         inst.listeners.push(Box::new(InputToAction::new(inst.mode)));
-        inst.listeners.push(Box::new(Canvas::new(*inst.canvas_viewport.viewport(), &mut ctx)?));
+        inst.listeners.push(Box::new(Canvas::new(inst.canvas_viewport, &mut ctx)?));
 
         Ok(inst)
     }
@@ -105,7 +110,7 @@ impl App {
     pub fn resize(&mut self, new_size: Size<i32>, context: &mut Context) {
         self.win_size = new_size;
         self.viewport.resize(new_size);
-        self.canvas_viewport.resize(&self.viewport);
+        self.canvas_viewport = canvas_viewport(&self.viewport);
         self.handle_messages(Message::Resize(new_size), context);
     }
 
@@ -147,7 +152,7 @@ impl App {
     pub fn render(&mut self, context: &mut Context) {
         let mut ctx = MessageCtx { 
             config: &self.config,
-            viewport: &self.canvas_viewport.viewport(),
+            viewport: &self.canvas_viewport,
             textures: &self.textures,
             border_renderer: &self.border_renderer,
             context,
@@ -164,7 +169,7 @@ impl App {
 
         let mut ctx = MessageCtx { 
             config: &self.config,
-            viewport: &self.canvas_viewport.viewport(),
+            viewport: &self.canvas_viewport,
             textures: &self.textures,
             border_renderer: &self.border_renderer,
             context,

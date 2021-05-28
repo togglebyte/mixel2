@@ -4,7 +4,7 @@ use nightmaregl::events::Key;
 use nightmaregl::text::{Text, WordWrap};
 use nightmaregl::pixels::{Pixel, Pixels};
 use nightmaregl::{
-    Context, Position, Renderer, Size, Sprite, Texture, VertexData, Viewport,
+    Context, Position, Renderer, Size, Texture, VertexData, Viewport,
 };
 
 use crate::Node;
@@ -154,7 +154,7 @@ impl Listener for CommandLine {
             .text_renderer
             .render(texture, &text_vertex_data, &self.viewport, ctx.context)?;
 
-        // self.caret.render(context, &self.viewport)?;
+        self.caret.render(ctx.context, &self.viewport);
         Ok(())
     }
 }
@@ -165,7 +165,6 @@ impl Listener for CommandLine {
 struct Caret {
     renderer: Renderer<VertexData>,
     texture: Texture<f32>,
-    // sprite: Sprite<f32>,
     node: Node<f32>,
 }
 

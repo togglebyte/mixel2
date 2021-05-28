@@ -1,4 +1,4 @@
-use nightmaregl::{Size, Sprite, Texture, Position, Transform};
+use nightmaregl::{Size, Texture, Position};
 use nightmaregl::pixels::{Pixels, Pixel};
 
 use crate::Node;
