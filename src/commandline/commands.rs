@@ -1,6 +1,6 @@
 use nightmaregl::{Position, Size};
 
-use crate::canvas::Direction;
+use crate::canvas::Orientation;
 
 #[derive(Debug)]
 pub enum Command {
@@ -10,7 +10,7 @@ pub enum Command {
     Extend(Extent),
     Put(Position<i32>),
     NewImage(Size<i32>),
-    Split(Direction),
+    Split(Orientation),
     CloseSelectedSplit,
 }
 

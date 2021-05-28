@@ -1,18 +1,18 @@
 use anyhow::Result;
 use nightmaregl::texture::Texture;
-use nightmaregl::{Position, Renderer, Sprite, VertexData, Viewport, Transform};
+use nightmaregl::{Position, Renderer, Sprite, Transform, VertexData, Viewport};
 
 use crate::border::{Border, BorderType};
 use crate::listener::MessageCtx;
 
+use super::{Cursor, Orientation, Image};
 use crate::Node;
-use super::{Direction, Cursor, Image};
 
 // -----------------------------------------------------------------------------
 //     - Container -
 // -----------------------------------------------------------------------------
 pub struct Container {
-    dir: Direction,
+    dir: Orientation,
     pub viewport: Viewport,
     pub renderer: Renderer<VertexData>,
     border: Border,
@@ -24,7 +24,7 @@ pub struct Container {
 impl Container {
     pub fn new(
         viewport: Viewport,
-        dir: Direction,
+        dir: Orientation,
         ctx: &mut MessageCtx,
         sprite: Sprite<i32>,
         transform: Transform<i32>,
@@ -53,7 +53,9 @@ impl Container {
     }
 
     pub fn move_cursor(&mut self, pos: Position<i32>) {
-        self.cursor.node.transform.translate_mut(pos);
+        let transform = &mut self.cursor.node.transform;
+        let pos = transform.translation + pos;
+        transform.translate_mut(pos);
     }
 
     pub fn render(
@@ -61,6 +63,7 @@ impl Container {
         background_texture: &Texture<i32>,
         ctx: &mut MessageCtx,
         image: &Image,
+        render_cursor: bool,
     ) -> Result<()> {
         // Border
         self.border.render(
@@ -72,21 +75,27 @@ impl Container {
         );
 
         // Cursor
-        self.renderer.render(
-            &self.cursor.texture,
-            &[self.cursor.node.relative_vertex_data(&self.node.transform)],
-            &self.viewport,
-            ctx.context,
-        );
+        if render_cursor {
+            self.renderer.render(
+                &self.cursor.texture,
+                &[self.cursor.node.relative_vertex_data(&self.node.transform)],
+                &self.viewport,
+                ctx.context,
+            )?;
+        }
 
         // Images
         let vertex_data = self.node.vertex_data();
 
         // Render all layers
-        image.layers.iter().for_each(|layer| {
-            self.renderer
-                .render(&layer.texture, &[vertex_data], &self.viewport, ctx.context);
-        });
+        for layer in &image.layers {
+            self.renderer.render(
+                &layer.texture,
+                &[vertex_data], 
+                &self.viewport, 
+                ctx.context
+            )?;
+        }
 
         // Render the "transparent" background texture
         self.renderer.render(

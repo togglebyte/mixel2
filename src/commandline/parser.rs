@@ -2,7 +2,7 @@ use log::info;
 use nightmaregl::{Position, Size};
 
 use super::commands::{Command, Extent};
-use crate::canvas::Direction;
+use crate::canvas::Orientation;
 
 macro_rules! or_noop {
     ($e:expr) => {
@@ -49,8 +49,8 @@ impl<'a> Parser<'a> {
             "extendd" => extend!(down),
             "put" => Command::Put(or_noop!(self.args_to_pos())),
             "new" => Command::NewImage(or_noop!(self.args_to_size())),
-            "split" => Command::Split(Direction::Horz),
-            "splitv" => Command::Split(Direction::Vert),
+            "split" => Command::Split(Orientation::Horz),
+            "splitv" => Command::Split(Orientation::Vert),
             "close" => Command::CloseSelectedSplit,
             _ => Command::Noop,
         }

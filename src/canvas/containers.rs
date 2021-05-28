@@ -4,14 +4,15 @@ use nightmaregl::{Position, Size, Sprite, Viewport, Transform};
 use nightmaregl::pixels::Pixel;
 
 use crate::listener::MessageCtx;
+use crate::config::Action;
 
 use super::{Image, Container};
 
 // -----------------------------------------------------------------------------
-//     - Direction -
+//     - Orientation -
 // -----------------------------------------------------------------------------
 #[derive(Debug, Copy, Clone)]
-pub enum Direction {
+pub enum Orientation {
     Horz,
     Vert,
 }
@@ -43,7 +44,7 @@ impl Containers {
 
         let container = Container::new(
             viewport,
-            Direction::Horz,
+            Orientation::Horz,
             ctx,
             Sprite::from_size(Size::new(32, 32)),
             Transform::default(),
@@ -89,7 +90,7 @@ impl Containers {
     //     // }
     // }
 
-    pub fn split(&mut self, _dir: Direction, _ctx: &mut MessageCtx) {
+    pub fn split(&mut self, _dir: Orientation, _ctx: &mut MessageCtx) {
     //     // TODO: put this back in once the bin tree is done.
     //     // // Get the current size, position and sprite as
     //     // // well as the image id for the selected container.
@@ -106,7 +107,7 @@ impl Containers {
     //     // };
 
     //     // let (left, right) = match dir {
-    //     //     Direction::Horz => {
+    //     //     Orientation::Horz => {
     //     //         let right = Viewport::new(
     //     //             pos,
     //     //             Size::new(size.width, size.height / 2), // - Size::new(10, 10)
@@ -119,7 +120,7 @@ impl Containers {
 
     //     //         (left, right)
     //     //     }
-    //     //     Direction::Vert => {
+    //     //     Orientation::Vert => {
     //     //         let left = Viewport::new(
     //     //             pos,
     //     //             Size::new(size.width / 2, size.height), // - Size::new(10, 10)
@@ -166,19 +167,20 @@ impl Containers {
         // }
     }
 
-    pub(crate) fn render(
+    pub fn render(
         &mut self,
         background: &Texture<i32>,
         ctx: &mut MessageCtx,
     ) -> Result<()> {
 
-        for container in &mut self.inner {
+        for (id, container) in self.inner.iter_mut().enumerate() {
             let image = match container.image_id {
                 Some(id) => &self.images[id],
                 None => continue,
             };
 
-            container.render(background, ctx, image);
+            let render_cursor = self.selected == id;
+            container.render(background, ctx, image, render_cursor)?;
         }
 
         Ok(())
@@ -193,5 +195,21 @@ impl Containers {
         };
 
         image.put_pixel(pixel, pos);
+    }
+
+    pub fn action(&mut self, action: Action) {
+        use Action::*;
+        match action {
+            Left => self.selected().move_cursor(Position::new(-1, 0)),
+            Right => self.selected().move_cursor(Position::new(1, 0)),
+            Up => self.selected().move_cursor(Position::new(0, 1)),
+            Down => self.selected().move_cursor(Position::new(0, -1)),
+            _ => {}
+
+        }
+    }
+
+    fn selected(&mut self) -> &mut Container {
+        &mut self.inner[self.selected]
     }
 }

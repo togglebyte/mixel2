@@ -16,7 +16,7 @@ mod image;
 mod cursor;
 mod container;
 
-pub use containers::{Direction, Containers};
+pub use containers::{Orientation, Containers};
 pub use image::Image;
 pub use cursor::Cursor;
 pub use container::Container;
@@ -70,7 +70,7 @@ impl Listener for Canvas {
                 self.containers.draw(*pos);
             }
             Message::Action(action) => {
-                eprintln!("{:?}", action);
+                self.containers.action(*action);
             }
 
             // Unhandled messages
