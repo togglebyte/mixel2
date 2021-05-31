@@ -48,6 +48,7 @@ impl<'a> Parser<'a> {
             "extendu" => extend!(up),
             "extendd" => extend!(down),
             "put" => Command::Put(or_noop!(self.args_to_pos())),
+            "clear" => Command::Clear(or_noop!(self.args_to_pos())),
             "new" => Command::NewImage(or_noop!(self.args_to_size())),
             "split" => Command::Split(Orientation::Horz),
             "splitv" => Command::Split(Orientation::Vert),

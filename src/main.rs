@@ -1,8 +1,8 @@
 use anyhow::Result;
 use log::error;
-use nightmaregl::{Context, Size, Position};
-use nightmaregl::events::{Event, ButtonState, LoopAction, Modifiers, EventLoop};
+use nightmaregl::events::{ButtonState, Event, EventLoop, LoopAction, Modifiers, MouseButton};
 use nightmaregl::pixels::Pixel;
+use nightmaregl::{Context, Position, Size};
 use pretty_env_logger;
 
 mod application;
@@ -22,6 +22,23 @@ use input::Input;
 use message::Message;
 pub use node::Node;
 
+#[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
+pub struct Mouse {
+    state: ButtonState,
+    button: Option<MouseButton>,
+    pos: Position<i32>,
+}
+
+impl Mouse {
+    pub fn new() -> Self {
+        Self {
+            state: ButtonState::Released,
+            button: None,
+            pos: Position::zero(),
+        }
+    }
+}
+
 fn main() -> Result<()> {
     pretty_env_logger::init();
 
@@ -38,11 +55,22 @@ fn main() -> Result<()> {
     let window_size = context.window_size();
     let mut app = App::new(config, window_size, &mut context)?;
 
+    // Input specifics
     let mut modifiers = Modifiers::empty();
+    let mut mouse = Mouse::new();
+
+    // Event loop
     eventloop.run(move |event| {
         match event {
             Event::MouseMoved { x, y } => {
-                app.input(Input::mouse(x, y), modifiers, &mut context);
+                mouse.pos.x = x as i32;
+                mouse.pos.y = y as i32;
+                app.input(Input::mouse(mouse), modifiers, &mut context);
+            }
+            Event::MouseButton { button, state } => {
+                mouse.button = Some(button);
+                mouse.state = state;
+                app.input(Input::mouse(mouse), modifiers, &mut context);
             }
             Event::Modifier(m) => modifiers = m,
             Event::Char(c) => {

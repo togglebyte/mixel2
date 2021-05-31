@@ -69,11 +69,14 @@ impl Listener for Canvas {
             Message::Command(Command::Put(pos)) => {
                 self.containers.draw(*pos);
             }
+            Message::Command(Command::Clear(pos)) => {
+                self.containers.clear_pixel(*pos);
+            }
             Message::Action(action) => {
                 self.containers.action(*action);
             }
-            Message::MouseMove(pos) => {
-                let pos = self.containers.mouse_move(*pos, ctx);
+            Message::Mouse(mouse) => {
+                let pos = self.containers.mouse_input(*mouse, ctx);
                 return Message::TranslatedMouse(pos);
             }
 

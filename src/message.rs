@@ -3,7 +3,8 @@ use crate::application::Mode;
 use crate::commandline::Command;
 use crate::input::Input;
 use crate::config::Action;
-use nightmaregl::events::Modifiers;
+use crate::Mouse;
+use nightmaregl::events::{MouseButton, ButtonState, Modifiers};
 
 pub enum Message {
     Input(Input, Modifiers),
@@ -12,7 +13,7 @@ pub enum Message {
     ModeChanged(Mode),
     Command(Command),
     Action(Action),
-    MouseMove(Position<i32>),
+    Mouse(Mouse),
     TranslatedMouse(Position<i32>),
     Noop,
 }

@@ -1,15 +1,16 @@
-use nightmaregl::events::Key;
+use nightmaregl::events::{ButtonState, MouseButton, Key};
 use nightmaregl::Position;
 
 use crate::application::Mode;
 use crate::listener::{Listener, MessageCtx};
 use crate::message::Message;
+use crate::Mouse;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum Input {
     Char(char),
     Key(Key),
-    MouseMove(Position<i32>),
+    Mouse(Mouse),
 }
 
 impl Input {
@@ -34,8 +35,8 @@ impl Input {
         }
     }
 
-    pub fn mouse(x: f32, y: f32) -> Input {
-        Input::MouseMove(Position::new(x as i32, y as i32))
+    pub fn mouse(mouse: Mouse) -> Input {
+        Input::Mouse(mouse)
     }
 }
 

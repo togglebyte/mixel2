@@ -41,7 +41,7 @@ impl Container {
             cursor: Cursor::new(Position::zero()),
         };
 
-        inst.renderer.pixel_size = 8;
+        inst.renderer.pixel_size = 8 * 3;
 
         // Centre the sprite
         // TODO: it doesn't quite look like it is in the centre
@@ -109,7 +109,11 @@ impl Container {
     }
 
     pub fn translate_mouse(&self, mouse_pos: Position<i32>, ctx: &MessageCtx) -> Position<i32> {
-        self.node.transform.translation * self.renderer.pixel_size
+        let pos: Position<f32> = (mouse_pos.cast::<f32>() - ctx.viewport.position.cast()) / self.renderer.pixel_size as f32;
+        let pos = pos - Position::new(0.5, 0.5);
+        pos.floor().cast()
+
+        // self.node.transform.translation * self.renderer.pixel_size
             // + mouse_pos
     }
 }

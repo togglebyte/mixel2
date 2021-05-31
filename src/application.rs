@@ -131,8 +131,12 @@ impl App {
             _ => None
         };
 
-        if let Input::MouseMove(pos) = input {
-            self.handle_messages(Message::MouseMove(pos), context);
+        if let Input::Mouse(mut mouse) = input {
+            // TODO: don't flip the mouse coords here
+            //       once canvas translations are done
+            let max_y = self.viewport.size().height;
+            mouse.pos.y = max_y - mouse.pos.y;
+            self.handle_messages(Message::Mouse(mouse), context);
         }
 
         if let Some(mode) = mode {

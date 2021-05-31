@@ -24,7 +24,7 @@ impl Layer {
     }
 
     pub fn resize(&mut self, _new_size: Size<i32>) {
-        panic!("oh no you don't!");
+        todo!("oh no you don't!");
     }
 
     // TODO: only draw the dirty region

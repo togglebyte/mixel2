@@ -32,4 +32,9 @@ impl Image {
         self.layers[self.selected_layer].push_pixel(pixel, pos);
         self.layers[self.selected_layer].draw_to_texture();
     }
+
+    pub(super) fn clear_pixel(&mut self, pos: Position<i32>) {
+        self.layers[self.selected_layer].push_pixel(Pixel::transparent(), pos);
+        self.layers[self.selected_layer].draw_to_texture();
+    }
 }

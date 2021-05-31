@@ -9,6 +9,7 @@ pub enum Command {
     Save { path: String, overwrite: bool },
     Extend(Extent),
     Put(Position<i32>),
+    Clear(Position<i32>),
     NewImage(Size<i32>),
     Split(Orientation),
     CloseSelectedSplit,

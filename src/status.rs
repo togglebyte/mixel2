@@ -73,7 +73,7 @@ impl Status {
 //     - Listener -
 // -----------------------------------------------------------------------------
 impl Listener for Status {
-    fn message(&mut self, message: &Message, _: &mut MessageCtx) -> Message {
+    fn message(&mut self, message: &Message, ctx: &mut MessageCtx) -> Message {
         match message {
             Message::ModeChanged(mode) => {
                 self.mode = *mode;
@@ -88,11 +88,10 @@ impl Listener for Status {
                 self.translated_mouse = *pos;
                 self.dirty = true
             }
-            Message::MouseMove(pos) => {
-                self.raw_mouse = *pos;
+            Message::Mouse(mouse) => {
+                self.raw_mouse = mouse.pos;
                 self.dirty = true
             }
-
             | Message::Input(_, _)
             | Message::Action(_)
             | Message::Command(_)
