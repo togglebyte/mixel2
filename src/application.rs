@@ -131,6 +131,10 @@ impl App {
             _ => None
         };
 
+        if let Input::MouseMove(pos) = input {
+            self.handle_messages(Message::MouseMove(pos), context);
+        }
+
         if let Some(mode) = mode {
             self.mode = mode;
             self.handle_messages(Message::ModeChanged(mode), context);

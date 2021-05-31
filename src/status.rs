@@ -10,9 +10,12 @@ use crate::message::Message;
 use crate::application::Mode;
 
 pub struct Status {
+    dirty: bool,
     text: Text,
     mode: Mode,
     cur_pos: Position<i32>,
+    raw_mouse: Position<i32>,
+    translated_mouse: Position<i32>,
     layer: usize,
     renderer: Renderer<VertexData>,
     viewport: Viewport,
@@ -38,23 +41,27 @@ impl Status {
         let renderer = Renderer::default_font(context)?;
 
         let mut inst = Self {
+            dirty: true,
             text,
             cur_pos: Position::new(0, 0),
+            raw_mouse: Position::new(0, 0),
+            translated_mouse: Position::new(0, 0),
             mode: Mode::Normal,
             layer: 0,
             viewport: Viewport::new(Position::zero(), size),
             renderer,
         };
 
-        inst.update_text();
-
         Ok(inst)
     }
 
     fn update_text(&mut self) {
         let text = format!(
-            "x: {} y: {} | mode: {:?} | layer: {}",
-            self.cur_pos.x, self.cur_pos.y, self.mode, self.layer
+            "x: {} y: {} | mode: {:?} | layer: {} | mouse x: {} y: {} (raw) mouse x: {} y: {}",
+            self.cur_pos.x, self.cur_pos.y, 
+            self.mode, self.layer, 
+            self.translated_mouse.x, self.translated_mouse.y,
+            self.raw_mouse.x, self.raw_mouse.y
         );
         if let Err(e) = self.text.set_text(text) {
             error!("Failed to update text: {:?}", e);
@@ -70,23 +77,36 @@ impl Listener for Status {
         match message {
             Message::ModeChanged(mode) => {
                 self.mode = *mode;
-                self.update_text();
+                self.dirty = true
             }
             Message::CursorPos(pos) => {
                 self.cur_pos = *pos;
-                self.update_text();
+                self.dirty = true
             }
             Message::Resize(size) => self.viewport.resize(*size),
+            Message::TranslatedMouse(pos) => {
+                self.translated_mouse = *pos;
+                self.dirty = true
+            }
+            Message::MouseMove(pos) => {
+                self.raw_mouse = *pos;
+                self.dirty = true
+            }
+
             | Message::Input(_, _)
             | Message::Action(_)
-            | Message::Noop
-            | Message::Command(_) => {}
+            | Message::Command(_)
+            | Message::Noop => {}
         }
 
         Message::Noop
     }
 
     fn render(&mut self, ctx: &mut MessageCtx) -> Result<()> {
+        if self.dirty {
+            self.dirty = false;
+            self.update_text();
+        }
         self.renderer.render(
             self.text.texture(),
             &self.text.vertex_data(),

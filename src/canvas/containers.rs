@@ -50,11 +50,15 @@ impl Containers {
             Transform::default(),
         )?;
 
-        let inst = Self {
+        let mut inst = Self {
             selected: 0,
             inner: vec![container],
             images: Vec::new(),
         };
+
+        let size = Size::new(32, 32);
+        let image = Image::new(size);
+        inst.add_image(size, image);
 
         Ok(inst)
     }
@@ -70,9 +74,9 @@ impl Containers {
         self.inner[self.selected].image_id = Some(image_id);
         let mut selected = &mut self.inner[self.selected];
         let sprite = Sprite::from_size(size);
-        let pos = (*selected.viewport.size() / 2 / selected.renderer.pixel_size).to_vector();
-        selected.node.sprite = sprite;
-        selected.node.transform.translate_mut(pos);
+        // let pos = (*selected.viewport.size() / 2 / selected.renderer.pixel_size).to_vector();
+        // selected.node.sprite = sprite;
+        // selected.node.transform.translate_mut(pos);
     }
 
     // // TODO: when you set the anchor point, don't set it to the centre
@@ -204,9 +208,15 @@ impl Containers {
             Right => self.selected().move_cursor(Position::new(1, 0)),
             Up => self.selected().move_cursor(Position::new(0, 1)),
             Down => self.selected().move_cursor(Position::new(0, -1)),
+            CanvasZoomIn => self.selected().renderer.pixel_size += 1,
+            CanvasZoomOut => self.selected().renderer.pixel_size -= 1,
             _ => {}
 
         }
+    }
+
+    pub fn mouse_move(&mut self, pos: Position<i32>, ctx: &MessageCtx) -> Position<i32> {
+        self.selected().translate_mouse(pos, ctx)
     }
 
     fn selected(&mut self) -> &mut Container {

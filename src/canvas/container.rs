@@ -46,8 +46,8 @@ impl Container {
         // Centre the sprite
         // TODO: it doesn't quite look like it is in the centre
         //       is it the border? is it the viewport?
-        let position = (*inst.viewport.size() / 2 / inst.renderer.pixel_size).to_vector();
-        inst.node.transform.translate_mut(position);
+        // let position = (*inst.viewport.size() / 2 / inst.renderer.pixel_size).to_vector();
+        // inst.node.transform.translate_mut(position);
 
         Ok(inst)
     }
@@ -106,5 +106,10 @@ impl Container {
         );
 
         Ok(())
+    }
+
+    pub fn translate_mouse(&self, mouse_pos: Position<i32>, ctx: &MessageCtx) -> Position<i32> {
+        self.node.transform.translation * self.renderer.pixel_size
+            // + mouse_pos
     }
 }

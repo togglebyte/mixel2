@@ -5,8 +5,6 @@ use nalgebra::Scalar;
 use num_traits::cast::NumCast;
 use num_traits::{One, Zero};
 
-
-
 /// Node to keep track of sprites and transforms.
 pub struct Node<T: Copy + NumCast + Zero + MulAssign + Default + Scalar + Div<Output = T>> {
     pub sprite: Sprite<T>,
@@ -16,6 +14,7 @@ pub struct Node<T: Copy + NumCast + Zero + MulAssign + Default + Scalar + Div<Ou
 impl<T> Node<T>
     where T: Copy + NumCast + Zero + One + MulAssign + Default + Scalar + Div<Output = T>
 {
+    /// Creata `Node` from a texture
     pub fn new(texture: &Texture<T>) -> Self {
         let sprite = Sprite::new(texture);
         let transform = Transform::default();
@@ -26,6 +25,7 @@ impl<T> Node<T>
         }
     }
 
+    /// Create a `Node` from a sprite
     pub fn from_sprite(sprite: Sprite<T>) -> Self {
         Self {
             sprite,
@@ -33,6 +33,7 @@ impl<T> Node<T>
         }
     }
 
+    /// Get vertex data
     pub fn vertex_data(&self) -> VertexData {
         VertexData::new(&self.sprite, &self.transform)
     }

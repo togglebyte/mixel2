@@ -1,4 +1,5 @@
 use nightmaregl::events::Key;
+use nightmaregl::Position;
 
 use crate::application::Mode;
 use crate::listener::{Listener, MessageCtx};
@@ -8,6 +9,7 @@ use crate::message::Message;
 pub enum Input {
     Char(char),
     Key(Key),
+    MouseMove(Position<i32>),
 }
 
 impl Input {
@@ -30,6 +32,10 @@ impl Input {
             Key::Return => Some(Input::Key(k)),
             _ => None,
         }
+    }
+
+    pub fn mouse(x: f32, y: f32) -> Input {
+        Input::MouseMove(Position::new(x as i32, y as i32))
     }
 }
 

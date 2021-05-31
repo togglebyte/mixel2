@@ -12,6 +12,8 @@ pub enum Message {
     ModeChanged(Mode),
     Command(Command),
     Action(Action),
+    MouseMove(Position<i32>),
+    TranslatedMouse(Position<i32>),
     Noop,
 }
 

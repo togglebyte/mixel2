@@ -72,12 +72,17 @@ impl Listener for Canvas {
             Message::Action(action) => {
                 self.containers.action(*action);
             }
+            Message::MouseMove(pos) => {
+                let pos = self.containers.mouse_move(*pos, ctx);
+                return Message::TranslatedMouse(pos);
+            }
 
             // Unhandled messages
             Message::Input(_, _)
             | Message::CursorPos(_)
             | Message::ModeChanged(_)
             | Message::Command(_)
+            | Message::TranslatedMouse(_)
             | Message::Noop => {}
         }
         Message::Noop

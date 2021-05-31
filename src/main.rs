@@ -1,7 +1,7 @@
 use anyhow::Result;
 use log::error;
-use nightmaregl::Context;
-use nightmaregl::events::{Event, KeyState, LoopAction, Modifiers, EventLoop};
+use nightmaregl::{Context, Size, Position};
+use nightmaregl::events::{Event, ButtonState, LoopAction, Modifiers, EventLoop};
 use nightmaregl::pixels::Pixel;
 use pretty_env_logger;
 
@@ -29,6 +29,8 @@ fn main() -> Result<()> {
 
     let (el, mut context) = Context::builder("Mixel: the modal pixel editor")
         .vsync(false)
+        .resizable(false)
+        .with_size(Size::new(1880, 1024))
         .build()?;
 
     let eventloop = EventLoop::new(el);
@@ -39,6 +41,9 @@ fn main() -> Result<()> {
     let mut modifiers = Modifiers::empty();
     eventloop.run(move |event| {
         match event {
+            Event::MouseMoved { x, y } => {
+                app.input(Input::mouse(x, y), modifiers, &mut context);
+            }
             Event::Modifier(m) => modifiers = m,
             Event::Char(c) => {
                 if let Err(e) = app.input(Input::from_char(c), modifiers, &mut context) {
@@ -47,7 +52,7 @@ fn main() -> Result<()> {
             }
             Event::Key {
                 key,
-                state: KeyState::Pressed,
+                state: ButtonState::Pressed,
             } => {
                 if let Some(input) = Input::from_key(key) {
                     if let Err(e) = app.input(input, modifiers, &mut context) {

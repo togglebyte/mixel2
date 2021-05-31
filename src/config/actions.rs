@@ -19,6 +19,9 @@ pub enum Action {
     CanvasRight,
     CanvasUp,
     CanvasDown,
+    
+    CanvasZoomIn,
+    CanvasZoomOut,
 
     NextXPixel,
     PrevXPixel,

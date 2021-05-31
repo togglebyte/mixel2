@@ -69,6 +69,9 @@ impl ConfigSrc {
         parse!(next_y_pixel, NextYPixel);
         parse!(prev_y_pixel, PrevYPixel);
 
+        parse!(zoom_in, CanvasZoomIn);
+        parse!(zoom_out, CanvasZoomOut);
+
         Config {
             actions,
         }
@@ -94,6 +97,9 @@ pub struct Commands {
     canvas_right: String,
     canvas_up: String,
     canvas_down: String,
+
+    zoom_in: String,
+    zoom_out: String,
 
     next_x_pixel: String,
     next_y_pixel: String,

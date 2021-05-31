@@ -91,6 +91,7 @@ impl CommandLine {
                 }
                 _ => {}
             },
+            Input::MouseMove { .. } => {}
         }
 
         None
@@ -135,6 +136,8 @@ impl Listener for CommandLine {
             Message::CursorPos(_)
             | Message::Action(_)
             | Message::Command(_)
+            | Message::MouseMove { .. }
+            | Message::TranslatedMouse(_)
             | Message::Noop => {}
         }
 
