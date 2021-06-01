@@ -225,6 +225,7 @@ impl Containers {
     pub fn mouse_input(&mut self, mouse: Mouse, ctx: &MessageCtx) -> Position<i32> {
         let container = self.selected();
         let pos = container.translate_mouse(mouse.pos, ctx);
+        container.move_cursor(pos);
 
         if let ButtonState::Pressed = mouse.state {
             let size = container.node.sprite.size;
@@ -233,6 +234,8 @@ impl Containers {
                 return pos;
             }
 
+            let pos = Position::new(pos.x, size.height - pos.y - 1);
+            // pos.y = height - pos.y + 1.0;
             if let Some(MouseButton::Left) = mouse.button {
                 self.draw(pos);
             }

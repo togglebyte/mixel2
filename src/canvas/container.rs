@@ -53,9 +53,10 @@ impl Container {
     }
 
     pub fn move_cursor(&mut self, pos: Position<i32>) {
-        let transform = &mut self.cursor.node.transform;
-        let pos = transform.translation + pos;
-        transform.translate_mut(pos);
+        self.cursor.node.transform.translate_mut(pos);
+        // let transform = &mut self.cursor.node.transform;
+        // let pos = transform.translation + pos;
+        // transform.translate_mut(pos);
     }
 
     pub fn render(
@@ -110,7 +111,7 @@ impl Container {
         let pos = mouse_pos.cast() - viewport_pos;
         let mut pos = (pos.cast::<f32>() / pixel_size);
         let height = self.node.sprite.size.height as f32;
-        pos.y = height - pos.y + 1.0;
+        // pos.y = height - pos.y + 1.0;
         pos -= Position::new(0.5, 0.5);
         pos.floor().cast() 
     }

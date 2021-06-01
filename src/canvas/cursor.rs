@@ -25,7 +25,7 @@ impl Cursor {
             node,
             color: pixel,
             position,
-            visible: false,
+            visible: true,
         }
     }
 }
