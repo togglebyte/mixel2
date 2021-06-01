@@ -12,6 +12,7 @@ use crate::message::Message;
 use crate::status::Status;
 use crate::canvas::Canvas;
 use crate::border::{BorderType, Textures};
+use crate::mouse::MouseCursor;
 
 const VIEWPORT_PADDING:i32 = 128;
 
@@ -43,7 +44,7 @@ pub struct App {
     win_size: Size<i32>,
     config: Config,
     listeners: Vec<Box<dyn Listener>>,
-    viewport: Viewport,
+    app_viewport: Viewport,
     canvas_viewport: Viewport,
     textures: Textures,
     border_renderer: Renderer<VertexData>,
@@ -51,11 +52,10 @@ pub struct App {
 
 impl App {
     pub fn new(config: Config, win_size: Size<i32>, context: &mut Context) -> Result<Self> {
-        let viewport = Viewport::new(
+        let app_viewport = Viewport::new(
             Position::zero(),
             win_size
         );
-
 
         // -----------------------------------------------------------------------------
         //     - Border textures -
@@ -77,7 +77,7 @@ impl App {
         // -----------------------------------------------------------------------------
         //     - Canvas viewport -
         // -----------------------------------------------------------------------------
-        let canvas_viewport = canvas_viewport(&viewport);
+        let canvas_viewport = canvas_viewport(&app_viewport);
 
         let mut inst = Self {
             win_size,
@@ -85,7 +85,7 @@ impl App {
             close: false,
             config,
             listeners: vec![],
-            viewport,
+            app_viewport,
             canvas_viewport,
             textures,
             border_renderer: Renderer::default(context)?,
@@ -93,7 +93,8 @@ impl App {
 
         let mut ctx = MessageCtx { 
             config: &inst.config,
-            viewport: &inst.canvas_viewport,
+            canvas_viewport: &inst.canvas_viewport,
+            app_viewport: &inst.app_viewport,
             textures: &inst.textures,
             border_renderer: &inst.border_renderer,
             context,
@@ -103,14 +104,15 @@ impl App {
         inst.listeners.push(Box::new(CommandLine::new(win_size, ctx.context)?));
         inst.listeners.push(Box::new(InputToAction::new(inst.mode)));
         inst.listeners.push(Box::new(Canvas::new(inst.canvas_viewport, &mut ctx)?));
+        inst.listeners.push(Box::new(MouseCursor::new(&mut ctx)?));
 
         Ok(inst)
     }
 
     pub fn resize(&mut self, new_size: Size<i32>, context: &mut Context) {
         self.win_size = new_size;
-        self.viewport.resize(new_size);
-        self.canvas_viewport = canvas_viewport(&self.viewport);
+        self.app_viewport.resize(new_size);
+        self.canvas_viewport = canvas_viewport(&self.app_viewport);
         self.handle_messages(Message::Resize(new_size), context);
     }
 
@@ -132,9 +134,8 @@ impl App {
         };
 
         if let Input::Mouse(mut mouse) = input {
-            // TODO: don't flip the mouse coords here
-            //       once canvas translations are done
-            let max_y = self.viewport.size().height;
+            // Flip the y coords
+            let max_y = self.app_viewport.size().height;
             mouse.pos.y = max_y - mouse.pos.y;
             self.handle_messages(Message::Mouse(mouse), context);
         }
@@ -160,7 +161,8 @@ impl App {
     pub fn render(&mut self, context: &mut Context) {
         let mut ctx = MessageCtx { 
             config: &self.config,
-            viewport: &self.canvas_viewport,
+            canvas_viewport: &self.canvas_viewport,
+            app_viewport: &self.app_viewport,
             textures: &self.textures,
             border_renderer: &self.border_renderer,
             context,
@@ -177,7 +179,8 @@ impl App {
 
         let mut ctx = MessageCtx { 
             config: &self.config,
-            viewport: &self.canvas_viewport,
+            canvas_viewport: &self.canvas_viewport,
+            app_viewport: &self.app_viewport,
             textures: &self.textures,
             border_renderer: &self.border_renderer,
             context,

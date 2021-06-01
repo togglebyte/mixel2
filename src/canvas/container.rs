@@ -5,7 +5,7 @@ use nightmaregl::{Position, Renderer, Sprite, Transform, VertexData, Viewport};
 use crate::border::{Border, BorderType};
 use crate::listener::MessageCtx;
 
-use super::{Cursor, Orientation, Image};
+use super::{Cursor, Image, Orientation};
 use crate::Node;
 
 // -----------------------------------------------------------------------------
@@ -41,7 +41,7 @@ impl Container {
             cursor: Cursor::new(Position::zero()),
         };
 
-        inst.renderer.pixel_size = 8 * 3;
+        inst.renderer.pixel_size = 7 * 3;
 
         // Centre the sprite
         // TODO: it doesn't quite look like it is in the centre
@@ -75,7 +75,7 @@ impl Container {
         );
 
         // Cursor
-        if render_cursor {
+        if render_cursor && self.cursor.visible {
             self.renderer.render(
                 &self.cursor.texture,
                 &[self.cursor.node.relative_vertex_data(&self.node.transform)],
@@ -89,12 +89,8 @@ impl Container {
 
         // Render all layers
         for layer in &image.layers {
-            self.renderer.render(
-                &layer.texture,
-                &[vertex_data], 
-                &self.viewport, 
-                ctx.context
-            )?;
+            self.renderer
+                .render(&layer.texture, &[vertex_data], &self.viewport, ctx.context)?;
         }
 
         // Render the "transparent" background texture
@@ -109,11 +105,13 @@ impl Container {
     }
 
     pub fn translate_mouse(&self, mouse_pos: Position<i32>, ctx: &MessageCtx) -> Position<i32> {
-        let pos: Position<f32> = (mouse_pos.cast::<f32>() - ctx.viewport.position.cast()) / self.renderer.pixel_size as f32;
-        let pos = pos - Position::new(0.5, 0.5);
-        pos.floor().cast()
-
-        // self.node.transform.translation * self.renderer.pixel_size
-            // + mouse_pos
+        let pixel_size = self.renderer.pixel_size as f32;
+        let viewport_pos = ctx.canvas_viewport.position.cast::<f32>();
+        let pos = mouse_pos.cast() - viewport_pos;
+        let mut pos = (pos.cast::<f32>() / pixel_size);
+        let height = self.node.sprite.size.height as f32;
+        pos.y = height - pos.y + 1.0;
+        pos -= Position::new(0.5, 0.5);
+        pos.floor().cast() 
     }
 }

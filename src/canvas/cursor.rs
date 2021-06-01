@@ -8,6 +8,7 @@ pub struct Cursor {
     pub texture: Texture<i32>,
     pub color: Pixel,
     pub position: Position<i32>,
+    pub visible: bool,
 }
 
 impl Cursor {
@@ -24,6 +25,7 @@ impl Cursor {
             node,
             color: pixel,
             position,
+            visible: false,
         }
     }
 }

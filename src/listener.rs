@@ -18,7 +18,8 @@ pub trait Listener {
 pub struct MessageCtx<'a> {
     pub config: &'a Config,
     pub context: &'a mut Context,
-    pub viewport: &'a Viewport,
+    pub canvas_viewport: &'a Viewport,
+    pub app_viewport: &'a Viewport,
     pub textures: &'a Textures,
     pub border_renderer: &'a Renderer<VertexData>,
 }

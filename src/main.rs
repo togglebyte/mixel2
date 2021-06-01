@@ -15,29 +15,14 @@ mod listener;
 mod message;
 mod node;
 mod status;
+mod mouse;
 
 use application::App;
 use config::Config;
 use input::Input;
 use message::Message;
 pub use node::Node;
-
-#[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
-pub struct Mouse {
-    state: ButtonState,
-    button: Option<MouseButton>,
-    pos: Position<i32>,
-}
-
-impl Mouse {
-    pub fn new() -> Self {
-        Self {
-            state: ButtonState::Released,
-            button: None,
-            pos: Position::zero(),
-        }
-    }
-}
+pub use mouse::Mouse;
 
 fn main() -> Result<()> {
     pretty_env_logger::init();
@@ -49,6 +34,8 @@ fn main() -> Result<()> {
         .resizable(false)
         .with_size(Size::new(1880, 1024))
         .build()?;
+
+    context.window().set_cursor_visible(false);
 
     let eventloop = EventLoop::new(el);
 

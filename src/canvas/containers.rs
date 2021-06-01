@@ -2,7 +2,7 @@ use anyhow::Result;
 use nightmaregl::events::{ButtonState, MouseButton};
 use nightmaregl::pixels::Pixel;
 use nightmaregl::texture::Texture;
-use nightmaregl::{Position, Size, Sprite, Transform, Viewport};
+use nightmaregl::{Position, Point, Size, Sprite, Transform, Viewport, Rect};
 
 use crate::config::Action;
 use crate::listener::MessageCtx;
@@ -223,27 +223,22 @@ impl Containers {
     }
 
     pub fn mouse_input(&mut self, mouse: Mouse, ctx: &MessageCtx) -> Position<i32> {
-        let pos = self.selected().translate_mouse(mouse.pos, ctx);
+        let container = self.selected();
+        let pos = container.translate_mouse(mouse.pos, ctx);
 
         if let ButtonState::Pressed = mouse.state {
-            // TODO: Once the mouse coords are sorted,
-            // don't 
-            let image = self.selected();
-            let height = image.node.sprite.size.height;
-            let mut new_pos = pos;
-            new_pos.y = height - new_pos.y;
-
-            // Clamp the pos
-            new_pos.x = new_pos.x.clamp(0, height - 1);
-            new_pos.y = new_pos.y.clamp(0, height - 1);
-
+            let size = container.node.sprite.size;
+            let bounding_box = Rect::new(Point::zero(), size);
+            if !bounding_box.contains(pos.to_point()) {
+                return pos;
+            }
 
             if let Some(MouseButton::Left) = mouse.button {
-                eprintln!("{:?}", new_pos);
-                self.draw(new_pos);
+                self.draw(pos);
             }
+
             if let Some(MouseButton::Right) = mouse.button {
-                self.clear_pixel(new_pos);
+                self.clear_pixel(pos);
             }
         }
 

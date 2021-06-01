@@ -88,6 +88,7 @@ impl Listener for Canvas {
             | Message::TranslatedMouse(_)
             | Message::Noop => {}
         }
+
         Message::Noop
     }
 
