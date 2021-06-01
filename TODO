@@ -1,12 +1,10 @@
+* Colours
 * Split `Message` into sub types (Canvas messages)
 * Config should live in another struct (MessageCtx)
 * Context / or Appy whatever should hold the canvas size
 * Appliaction should update MessageCtx on resize
 
 * Change savebuffer.rs to handle save and load
-* Cursor should have its own render function
-* Cursor should have an update function that can be called once the
-  cursor moves. Push pixels to the texture when the cursor moves?
 
 # Layers
 * Fill entire layer
@@ -18,16 +16,4 @@ Maaaaaybe?
 * Rect / Circle
 * Mirrored mode
 
-
-Viewport malarkey:
-------------------
-
-* Creating a canvas with no pre-existing canvases
-  places the new canvas in the empty viewport
-* Splitting a viewport places the existing canvas 
-  in the new viewport
-* Loading an image will load it into the active
-  viewport.
-* Close a viewport extends existing viewports
-  into the available space
 

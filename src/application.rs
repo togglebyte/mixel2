@@ -3,6 +3,7 @@ use anyhow::Result;
 use nightmaregl::events::{Key, Modifiers};
 use nightmaregl::{Renderer, VertexData, Viewport, Context, Size, Position};
 use nightmaregl::texture::Texture;
+use nightmaregl::pixels::Pixel;
 
 use crate::commandline::{Command, CommandLine};
 use crate::config::Config;

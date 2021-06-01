@@ -1,5 +1,6 @@
 use log::info;
 use nightmaregl::{Position, Size};
+use nightmaregl::pixels::Pixel;
 
 use super::commands::{Command, Extent};
 use crate::canvas::Orientation;
@@ -53,8 +54,20 @@ impl<'a> Parser<'a> {
             "split" => Command::Split(Orientation::Horz),
             "splitv" => Command::Split(Orientation::Vert),
             "close" => Command::CloseSelectedSplit,
+            "colour" | "color" => Command::SetColour(or_noop!(self.args_to_rgb())),
             _ => Command::Noop,
         }
+    }
+
+    fn args_to_rgb(&self) -> Option<Pixel> {
+        let mut parts = self.args.split_whitespace();
+        let r = parts.next().map(str::parse::<u8>).map(Result::ok).flatten()?;
+        let g = parts.next().map(str::parse::<u8>).map(Result::ok).flatten()?;
+        let b = parts.next().map(str::parse::<u8>).map(Result::ok).flatten()?;
+
+        let pixel = Pixel { r, g, b, a: 255, };
+
+        Some(pixel)
     }
 
     fn args_to_pos(&self) -> Option<Position<i32>> {

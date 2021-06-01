@@ -72,6 +72,9 @@ impl Listener for Canvas {
             Message::Command(Command::Clear(pos)) => {
                 self.containers.clear_pixel(*pos);
             }
+            Message::Command(Command::SetColour(colour)) => {
+                self.containers.set_colour(*colour);
+            }
             Message::Action(action) => {
                 self.containers.action(*action);
             }

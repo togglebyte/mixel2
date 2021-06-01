@@ -6,9 +6,9 @@ use crate::Node;
 pub struct Cursor {
     pub node: Node<i32>,
     pub texture: Texture<i32>,
-    pub color: Pixel,
     pub position: Position<i32>,
     pub visible: bool,
+    colour: Pixel,
 }
 
 impl Cursor {
@@ -23,9 +23,14 @@ impl Cursor {
         Self {
             texture,
             node,
-            color: pixel,
+            colour: pixel,
             position,
             visible: true,
         }
+    }
+
+    pub fn set_colour(&mut self, colour: Pixel) {
+        let size = Size::new(1usize, 1);
+        self.texture.write_region(Position::zero(), size.cast(), Pixels::from_pixel(colour, size).as_bytes());
     }
 }

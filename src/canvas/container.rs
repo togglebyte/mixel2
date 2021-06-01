@@ -1,6 +1,7 @@
 use anyhow::Result;
 use nightmaregl::texture::Texture;
 use nightmaregl::{Position, Renderer, Sprite, Transform, VertexData, Viewport};
+use nightmaregl::pixels::Pixel;
 
 use crate::border::{Border, BorderType};
 use crate::listener::MessageCtx;
@@ -19,6 +20,7 @@ pub struct Container {
     pub node: Node<i32>,
     pub image_id: Option<usize>,
     cursor: Cursor,
+    pub colour: Pixel,
 }
 
 impl Container {
@@ -39,6 +41,7 @@ impl Container {
             dir,
             image_id: None,
             cursor: Cursor::new(Position::zero()),
+            colour: Pixel::black(),
         };
 
         inst.renderer.pixel_size = 7 * 3;
@@ -117,4 +120,10 @@ impl Container {
         pos -= Position::new(0.5, 0.5);
         pos.floor().cast() 
     }
+
+    pub fn set_colour(&mut self, colour: Pixel) {
+        self.colour = colour;
+        self.cursor.set_colour(colour);
+    }
+
 }

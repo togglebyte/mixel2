@@ -188,14 +188,13 @@ impl Containers {
     }
 
     pub fn draw(&mut self, pos: Position<i32>) {
-        let pixel = Pixel::black();
         let container = &mut self.inner[self.selected];
         let image = match container.image_id {
             Some(id) => &mut self.images[id],
             None => return,
         };
 
-        image.put_pixel(pixel, pos);
+        image.put_pixel(container.colour, pos);
     }
 
     pub fn clear_pixel(&mut self, pos: Position<i32>) {
@@ -235,7 +234,7 @@ impl Containers {
             }
 
             let pos = Position::new(pos.x, size.height - pos.y - 1);
-            // pos.y = height - pos.y + 1.0;
+
             if let Some(MouseButton::Left) = mouse.button {
                 self.draw(pos);
             }
@@ -246,6 +245,11 @@ impl Containers {
         }
 
         pos
+    }
+
+    pub fn set_colour(&mut self, colour: Pixel) {
+        let container = self.selected();
+        container.set_colour(colour);
     }
 
     fn selected(&mut self) -> &mut Container {

@@ -1,4 +1,5 @@
 use nightmaregl::{Position, Size};
+use nightmaregl::pixels::Pixel;
 
 use crate::canvas::Orientation;
 
@@ -9,6 +10,7 @@ pub enum Command {
     Save { path: String, overwrite: bool },
     Extend(Extent),
     Put(Position<i32>),
+    SetColour(Pixel),
     Clear(Position<i32>),
     NewImage(Size<i32>),
     Split(Orientation),
