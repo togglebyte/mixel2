@@ -52,11 +52,13 @@ impl Container {
         Ok(inst)
     }
 
+    pub fn move_cursor_by(&mut self, pos: Position<i32>) {
+        let new_pos = self.cursor.node.transform.translation + pos;
+        self.cursor.node.transform.translate_mut(new_pos);
+    }
+
     pub fn move_cursor(&mut self, pos: Position<i32>) {
         self.cursor.node.transform.translate_mut(pos);
-        // let transform = &mut self.cursor.node.transform;
-        // let pos = transform.translation + pos;
-        // transform.translate_mut(pos);
     }
 
     pub fn render(

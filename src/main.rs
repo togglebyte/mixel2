@@ -13,9 +13,9 @@ mod config;
 mod input;
 mod listener;
 mod message;
+mod mouse;
 mod node;
 mod status;
-mod mouse;
 
 use application::App;
 use config::Config;

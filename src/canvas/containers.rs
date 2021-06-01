@@ -212,10 +212,10 @@ impl Containers {
     pub fn action(&mut self, action: Action) {
         use Action::*;
         match action {
-            Left => self.selected().move_cursor(Position::new(-1, 0)),
-            Right => self.selected().move_cursor(Position::new(1, 0)),
-            Up => self.selected().move_cursor(Position::new(0, 1)),
-            Down => self.selected().move_cursor(Position::new(0, -1)),
+            Left => self.selected().move_cursor_by(Position::new(-1, 0)),
+            Right => self.selected().move_cursor_by(Position::new(1, 0)),
+            Up => self.selected().move_cursor_by(Position::new(0, 1)),
+            Down => self.selected().move_cursor_by(Position::new(0, -1)),
             CanvasZoomIn => self.selected().renderer.pixel_size += 1,
             CanvasZoomOut => self.selected().renderer.pixel_size -= 1,
             _ => {}
