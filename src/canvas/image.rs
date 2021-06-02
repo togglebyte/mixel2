@@ -44,6 +44,7 @@ impl Image {
     pub(super) fn new_layer(&mut self, size: Size<i32>) -> (LayerId, usize) {
         let new_layer_id = LayerId::from_index(self.layers.len());
         self.layers.push(Layer::new(size));
+        self.layer_id = new_layer_id;
         (new_layer_id, self.layers.len())
     }
 
@@ -93,7 +94,7 @@ impl Image {
         context: &mut Context
     ) -> Result<()> {
 
-        for layer in &self.layers {
+        for layer in self.layers.iter().rev() {
             renderer
                 .render(&layer.texture, vertex_data, viewport, context)?;
         }

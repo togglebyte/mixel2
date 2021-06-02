@@ -56,6 +56,7 @@ impl<'a> Parser<'a> {
             "splitv" => Command::Split(Orientation::Vert),
             "close" => Command::CloseSelectedSplit,
             "colour" | "color" => Command::SetColour(or_noop!(self.args_to_rgb())),
+            "alpha" => Command::SetAlpha(or_noop!(self.args_to_usize())),
             "layer" => Command::ChangeLayer(LayerId::from_display(or_noop!(self.args_to_usize()))),
             "newlayer" => Command::NewLayer,
             "removelayer" => Command::RemoveLayer,

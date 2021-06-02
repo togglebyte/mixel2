@@ -1,3 +1,5 @@
+use std::convert::TryInto;
+
 use anyhow::Result;
 use nightmaregl::texture::Texture;
 use nightmaregl::{Position, Renderer, Sprite, Transform, VertexData, Viewport};
@@ -113,7 +115,6 @@ impl Container {
         let pos = mouse_pos.cast() - viewport_pos;
         let mut pos = (pos.cast::<f32>() / pixel_size);
         let height = self.node.sprite.size.height as f32;
-        // pos.y = height - pos.y + 1.0;
         pos -= Position::new(0.5, 0.5);
         pos.floor().cast() 
     }
@@ -121,5 +122,16 @@ impl Container {
     pub fn set_colour(&mut self, colour: Pixel) {
         self.colour = colour;
         self.cursor.set_colour(colour);
+    }
+
+    pub fn set_alpha(&mut self, alpha: usize) {
+        match alpha.try_into() {
+            Ok(a) => {
+                self.colour.a = a;
+                eprintln!("{:?}", self.colour);
+                self.set_colour(self.colour);
+            }
+            Err(_) => {}
+        }
     }
 }

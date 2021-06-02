@@ -12,6 +12,7 @@ pub enum Command {
     Extend(Extent),
     Put(Position<i32>),
     SetColour(Pixel),
+    SetAlpha(usize),
     Clear(Position<i32>),
     NewImage(Size<i32>),
     Split(Orientation),

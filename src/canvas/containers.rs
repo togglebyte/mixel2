@@ -2,14 +2,14 @@ use anyhow::Result;
 use nightmaregl::events::{ButtonState, MouseButton};
 use nightmaregl::pixels::Pixel;
 use nightmaregl::texture::Texture;
-use nightmaregl::{Position, Point, Size, Sprite, Transform, Viewport, Rect};
+use nightmaregl::{Position, Point, Size, Sprite, Transform, Viewport, Rect, Context};
 
 use crate::config::Action;
 use crate::listener::MessageCtx;
 use crate::canvas::LayerId;
 use crate::Mouse;
 
-use super::{Container, Image};
+use super::{Container, Image, SaveBuffer};
 
 // -----------------------------------------------------------------------------
 //     - Orientation -
@@ -257,6 +257,11 @@ impl Containers {
         container.set_colour(colour);
     }
 
+    pub fn set_alpha(&mut self, alpha: usize) {
+        let container = self.selected();
+        container.set_alpha(alpha);
+    }
+
     pub(super) fn selected(&mut self) -> &mut Container {
         &mut self.inner[self.selected]
     }
@@ -281,5 +286,12 @@ impl Containers {
 
     pub(super) fn remove_layer(&mut self) -> Option<(LayerId, usize)> {
         self.selected_image().and_then(Image::remove_layer)
+    }
+
+    pub(super) fn save_current(&mut self, path: &str, context: &mut Context) {
+        let size = self.selected().node.sprite.size.clone();
+        let image = self.selected_image().unwrap();
+        let mut save_buf = SaveBuffer::new(context, size).unwrap();
+        save_buf.save(path, image, size, context);
     }
 }
