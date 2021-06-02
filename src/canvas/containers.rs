@@ -6,6 +6,7 @@ use nightmaregl::{Position, Point, Size, Sprite, Transform, Viewport, Rect};
 
 use crate::config::Action;
 use crate::listener::MessageCtx;
+use crate::canvas::LayerId;
 use crate::Mouse;
 
 use super::{Container, Image};
@@ -176,9 +177,13 @@ impl Containers {
     pub fn render(&mut self, background: &Texture<i32>, ctx: &mut MessageCtx) -> Result<()> {
         for (id, container) in self.inner.iter_mut().enumerate() {
             let image = match container.image_id {
-                Some(id) => &self.images[id],
+                Some(id) => &mut self.images[id],
                 None => continue,
             };
+
+            if image.dirty {
+                image.redraw_layers();
+            }
 
             let render_cursor = self.selected == id;
             container.render(background, ctx, image, render_cursor)?;
@@ -252,7 +257,29 @@ impl Containers {
         container.set_colour(colour);
     }
 
-    fn selected(&mut self) -> &mut Container {
+    pub(super) fn selected(&mut self) -> &mut Container {
         &mut self.inner[self.selected]
+    }
+
+    pub(super) fn selected_image(&mut self) -> Option<&mut Image> {
+        let id = self.inner[self.selected].image_id?;
+        self.images.get_mut(id)
+    }
+
+    pub(super) fn new_layer(&mut self) -> Option<(LayerId, usize)> {
+        let size = self.selected().node.sprite.size;
+        self.selected_image().map(|image| image.new_layer(size))
+    }
+
+    pub(super) fn set_layer(&mut self, mut layer_id: LayerId) -> Option<(LayerId, usize)> {
+        if layer_id.as_display() == 0 {
+            return None;
+        }
+
+        self.selected_image().map(|image| image.set_layer(layer_id))
+    }
+
+    pub(super) fn remove_layer(&mut self) -> Option<(LayerId, usize)> {
+        self.selected_image().and_then(Image::remove_layer)
     }
 }

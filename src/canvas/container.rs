@@ -94,10 +94,7 @@ impl Container {
         let vertex_data = self.node.vertex_data();
 
         // Render all layers
-        for layer in &image.layers {
-            self.renderer
-                .render(&layer.texture, &[vertex_data], &self.viewport, ctx.context)?;
-        }
+        image.render(&self.renderer, &[vertex_data], &self.viewport, ctx.context)?;
 
         // Render the "transparent" background texture
         self.renderer.render(
@@ -125,5 +122,4 @@ impl Container {
         self.colour = colour;
         self.cursor.set_colour(colour);
     }
-
 }

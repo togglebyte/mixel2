@@ -5,9 +5,11 @@ use nightmaregl::{
     Context, Position, Renderer, Size, VertexData, Viewport,
 };
 
+use crate::application::Mode;
+use crate::canvas::LayerId;
+use crate::commandline::Command;
 use crate::listener::{Listener, MessageCtx};
 use crate::message::Message;
-use crate::application::Mode;
 
 pub struct Status {
     dirty: bool,
@@ -16,7 +18,8 @@ pub struct Status {
     cur_pos: Position<i32>,
     raw_mouse: Position<i32>,
     translated_mouse: Position<i32>,
-    layer: usize,
+    layer: LayerId,
+    total_layers: usize,
     renderer: Renderer<VertexData>,
     viewport: Viewport,
 }
@@ -47,7 +50,8 @@ impl Status {
             raw_mouse: Position::new(0, 0),
             translated_mouse: Position::new(0, 0),
             mode: Mode::Normal,
-            layer: 0,
+            layer: LayerId::from_display(1),
+            total_layers: 1,
             viewport: Viewport::new(Position::zero(), size),
             renderer,
         };
@@ -57,12 +61,13 @@ impl Status {
 
     fn update_text(&mut self) {
         let text = format!(
-            "x: {} y: {} | mode: {:?} | layer: {} | mouse x: {} y: {} (raw) mouse x: {} y: {}",
+            "x: {} y: {} | mode: {:?} | layer: {}/{} | mouse x: {} y: {}",
             self.cur_pos.x, self.cur_pos.y, 
-            self.mode, self.layer, 
+            self.mode, 
+            self.layer.as_display(), self.total_layers,
             self.translated_mouse.x, self.translated_mouse.y,
-            self.raw_mouse.x, self.raw_mouse.y
         );
+
         if let Err(e) = self.text.set_text(text) {
             error!("Failed to update text: {:?}", e);
         }
@@ -91,6 +96,11 @@ impl Listener for Status {
             Message::Mouse(mouse) => {
                 self.raw_mouse = mouse.pos;
                 self.dirty = true
+            }
+            Message::LayerChanged { layer, total_layers } => {
+                self.layer = *layer;
+                self.total_layers = *total_layers;
+                self.dirty = true;
             }
             | Message::Input(_, _)
             | Message::Action(_)

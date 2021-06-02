@@ -3,12 +3,42 @@ use nightmaregl::texture::Texture;
 use nightmaregl::pixels::{Pixel, Pixels};
 
 // -----------------------------------------------------------------------------
+//     - Layer id -
+// -----------------------------------------------------------------------------
+/// LayerId wraps an index.
+/// Index 0 is displayed as 1
+#[derive(Debug, Copy, Clone)]
+pub struct LayerId(usize);
+
+impl LayerId {
+    pub fn display(&self) -> usize {
+        self.0 + 1
+    }
+
+    pub fn from_display(id: usize) -> Self {
+        Self(id - 1)
+    }
+
+    pub fn from_index(id: usize) -> Self  {
+        Self(id)
+    }
+
+    pub fn as_index(&self) -> usize {
+        self.0
+    }
+
+    pub fn as_display(&self) -> usize {
+        self.0 + 1
+    }
+}
+
+// -----------------------------------------------------------------------------
 //     - Layers -
 // -----------------------------------------------------------------------------
 pub struct Layer {
     pub texture: Texture<i32>,
     pub buffer: Pixels<Pixel>,
-    dirty: bool,
+    pub(super) dirty: bool,
 }
 
 impl Layer {
@@ -23,8 +53,13 @@ impl Layer {
         self.dirty = true;
     }
 
-    pub fn resize(&mut self, _new_size: Size<i32>) {
-        todo!("oh no you don't!");
+    // pub fn resize(&mut self, _new_size: Size<i32>) {
+    //     todo!("oh no you don't!");
+    // }
+
+    pub fn clear(&mut self) {
+        self.buffer.iter_mut().for_each(|p| *p = Pixel::transparent());
+        self.dirty = true;
     }
 
     // TODO: only draw the dirty region

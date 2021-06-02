@@ -20,6 +20,7 @@ pub use containers::{Orientation, Containers};
 pub use image::Image;
 pub use cursor::Cursor;
 pub use container::Container;
+pub use layer::LayerId;
 
 pub struct Canvas {
     /// All container viewports should be relative 
@@ -75,6 +76,25 @@ impl Listener for Canvas {
             Message::Command(Command::SetColour(colour)) => {
                 self.containers.set_colour(*colour);
             }
+            Message::Command(Command::NewLayer) => {
+                match self.containers.new_layer() {
+                    Some((layer, total_layers)) => return Message::LayerChanged { layer, total_layers },
+                    None => {}
+                }
+            }
+            Message::Command(Command::RemoveLayer) => {
+                match self.containers.remove_layer() {
+                    Some((layer, total_layers)) => return Message::LayerChanged { layer, total_layers },
+                    None => {}
+                }
+            }
+            Message::Command(Command::ChangeLayer(layer)) => {
+                match self.containers.set_layer(*layer) {
+                    Some((layer, total_layers)) => return Message::LayerChanged { layer, total_layers },
+                    None => {}
+                }
+                
+            }
             Message::Action(action) => {
                 self.containers.action(*action);
             }
@@ -89,6 +109,7 @@ impl Listener for Canvas {
             | Message::ModeChanged(_)
             | Message::Command(_)
             | Message::TranslatedMouse(_)
+            | Message::LayerChanged { .. }
             | Message::Noop => {}
         }
 

@@ -4,6 +4,7 @@ use nightmaregl::pixels::Pixel;
 
 use super::commands::{Command, Extent};
 use crate::canvas::Orientation;
+use crate::canvas::LayerId;
 
 macro_rules! or_noop {
     ($e:expr) => {
@@ -55,8 +56,15 @@ impl<'a> Parser<'a> {
             "splitv" => Command::Split(Orientation::Vert),
             "close" => Command::CloseSelectedSplit,
             "colour" | "color" => Command::SetColour(or_noop!(self.args_to_rgb())),
+            "layer" => Command::ChangeLayer(LayerId::from_display(or_noop!(self.args_to_usize()))),
+            "newlayer" => Command::NewLayer,
+            "removelayer" => Command::RemoveLayer,
             _ => Command::Noop,
         }
+    }
+
+    fn args_to_usize(&self) -> Option<usize> {
+        self.args.parse::<usize>().ok()
     }
 
     fn args_to_rgb(&self) -> Option<Pixel> {
