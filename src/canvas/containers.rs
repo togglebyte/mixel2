@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use anyhow::Result;
 use nightmaregl::events::{ButtonState, MouseButton};
 use nightmaregl::pixels::Pixel;
@@ -288,7 +290,10 @@ impl Containers {
         self.selected_image().and_then(Image::remove_layer)
     }
 
-    pub(super) fn save_current(&mut self, path: &str, context: &mut Context) {
+    pub(super) fn save_current(&mut self, path: impl AsRef<Path>, overwrite: bool, context: &mut Context) {
+        if !overwrite && path.as_ref().exists() {
+            return
+        }
         let size = self.selected().node.sprite.size.clone();
         let image = self.selected_image().unwrap();
         let mut save_buf = SaveBuffer::new(context, size).unwrap();

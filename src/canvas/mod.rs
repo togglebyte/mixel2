@@ -101,7 +101,7 @@ impl Listener for Canvas {
                 
             }
             Message::Command(Command::Save { path, overwrite }) => {
-                self.containers.save_current(path, ctx.context);
+                self.containers.save_current(path, *overwrite, ctx.context);
             }
             Message::Action(action) => {
                 self.containers.action(*action);
