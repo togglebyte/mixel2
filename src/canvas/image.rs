@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use anyhow::Result;
-use nightmaregl::{Position, Size, VertexData, Context, Viewport, Renderer};
+use nightmaregl::{Position, Size, VertexData, Context, Viewport, Renderer, Transform, Sprite};
 use nightmaregl::pixels::Pixel;
 use nightmaregl::texture::Texture;
 
@@ -89,14 +89,21 @@ impl Image {
     pub fn render(
         &self,
         renderer: &Renderer<VertexData>, 
-        vertex_data: &[VertexData],
+        // mut vertex_data: VertexData,
+        mut sprite: Sprite<i32>,
+        transform: &Transform<i32>,
         viewport: &Viewport,
         context: &mut Context
     ) -> Result<()> {
 
-        for layer in self.layers.iter().rev() {
+        const SPRITE_Z: i32 = 150;
+
+        // Do NOT reverse these AGAIN!
+        for (mut z_index, layer) in self.layers.iter().enumerate() {
+            sprite.z_index = SPRITE_Z - z_index as i32;
+            let vertex_data = VertexData::new(&sprite, transform);
             renderer
-                .render(&layer.texture, vertex_data, viewport, context)?;
+                .render(&layer.texture, &[vertex_data], viewport, context)?;
         }
 
         Ok(())

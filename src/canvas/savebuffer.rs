@@ -47,12 +47,10 @@ impl SaveBuffer {
 
         let sprite = Sprite::from_size(size);
 
-        let transform = Transform::default();
-        let vertex_data = [VertexData::new(&sprite, &transform)];
-
         image.render(
             &self.renderer, 
-            &vertex_data,
+            sprite,
+            &Transform::default(),
             &self.viewport,
             context
         )?;

@@ -125,14 +125,14 @@ impl Listener for Canvas {
     }
 
     fn render(&mut self, ctx: &mut MessageCtx) -> Result<()> {
-        let parent_transform = Transform::new();
-        self.border.render(
-            &parent_transform,
-            ctx.textures,
-            &self.viewport,
-            &self.renderer,
-            ctx.context,
-        );
+        // let parent_transform = Transform::new();
+        // self.border.render(
+        //     &parent_transform,
+        //     ctx.textures,
+        //     &self.viewport,
+        //     &self.renderer,
+        //     ctx.context,
+        // );
 
         self.containers.render(&self.background, ctx);
 

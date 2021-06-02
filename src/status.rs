@@ -40,6 +40,7 @@ impl Status {
         )?;
 
         text.position(position.cast());
+        text.z_index(9999);
 
         let renderer = Renderer::default_font(context)?;
 

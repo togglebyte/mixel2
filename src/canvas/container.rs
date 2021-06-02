@@ -74,13 +74,30 @@ impl Container {
         render_cursor: bool,
     ) -> Result<()> {
         // Border
-        self.border.render(
-            &self.node.transform,
-            ctx.textures,
+        // self.border.render(
+        //     &self.node.transform,
+        //     ctx.textures,
+        //     &self.viewport,
+        //     ctx.border_renderer,
+        //     ctx.context,
+        // );
+
+        let mut sprite = self.node.sprite;
+        sprite.z_index = 999;
+        let transform = &self.node.transform;
+        let vertex_data = VertexData::new(&sprite, transform);
+
+        // Render the "transparent" background texture
+        self.renderer.render(
+            background_texture,
+            &[vertex_data],
             &self.viewport,
-            ctx.border_renderer,
             ctx.context,
         );
+
+
+        // Render all layers
+        image.render(&self.renderer, sprite.clone(), transform, &self.viewport, ctx.context)?;
 
         // Cursor
         if render_cursor && self.cursor.visible {
@@ -92,19 +109,6 @@ impl Container {
             )?;
         }
 
-        // Images
-        let vertex_data = self.node.vertex_data();
-
-        // Render all layers
-        image.render(&self.renderer, &[vertex_data], &self.viewport, ctx.context)?;
-
-        // Render the "transparent" background texture
-        self.renderer.render(
-            background_texture,
-            &[vertex_data],
-            &self.viewport,
-            ctx.context,
-        );
 
         Ok(())
     }

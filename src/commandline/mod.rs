@@ -47,6 +47,7 @@ impl CommandLine {
         )?;
 
         text.position(Position::new(0.0, font_size / 1.7));
+        text.z_index(9999);
 
         let inst = Self {
             text_renderer,

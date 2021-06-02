@@ -101,10 +101,10 @@ impl App {
             context,
         };
 
+        inst.listeners.push(Box::new(Canvas::new(inst.canvas_viewport, &mut ctx)?));
         inst.listeners.push(Box::new(Status::new(win_size, ctx.context)?));
         inst.listeners.push(Box::new(CommandLine::new(win_size, ctx.context)?));
         inst.listeners.push(Box::new(InputToAction::new(inst.mode)));
-        inst.listeners.push(Box::new(Canvas::new(inst.canvas_viewport, &mut ctx)?));
         inst.listeners.push(Box::new(MouseCursor::new(&mut ctx)?));
 
         Ok(inst)
