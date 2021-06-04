@@ -83,20 +83,20 @@ impl Listener for Status {
         match message {
             Message::ModeChanged(mode) => {
                 self.mode = *mode;
-                self.dirty = true
+                self.dirty = true;
             }
             Message::CursorPos(pos) => {
                 self.cur_pos = *pos;
-                self.dirty = true
+                self.dirty = true;
             }
             Message::Resize(size) => self.viewport.resize(*size),
             Message::TranslatedMouse(pos) => {
                 self.translated_mouse = *pos;
-                self.dirty = true
+                self.dirty = true;
             }
             Message::Mouse(mouse) => {
                 self.raw_mouse = mouse.pos;
-                self.dirty = true
+                self.dirty = true;
             }
             Message::LayerChanged { layer, total_layers } => {
                 self.layer = *layer;
