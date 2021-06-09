@@ -155,9 +155,12 @@ impl Listener for CommandLine {
         let texture = self.text.texture();
         let text_vertex_data = self.text.vertex_data();
 
-        self
-            .text_renderer
-            .render(texture, &text_vertex_data, &self.viewport, ctx.context)?;
+        self.text_renderer.render(
+            texture, 
+            &text_vertex_data,
+            &self.viewport,
+            ctx.context
+        )?;
 
         self.caret.render(ctx.context, &self.viewport);
         Ok(())
