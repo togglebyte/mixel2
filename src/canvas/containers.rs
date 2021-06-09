@@ -10,22 +10,16 @@ use crate::config::Action;
 use crate::listener::MessageCtx;
 use crate::canvas::LayerId;
 use crate::Mouse;
+use crate::binarytree::{Split, Node};
 
 use super::{Container, Image, SaveBuffer};
-
-// -----------------------------------------------------------------------------
-//     - Orientation -
-// -----------------------------------------------------------------------------
-#[derive(Debug, Copy, Clone)]
-pub enum Orientation {
-    Horz,
-    Vert,
-}
 
 // -----------------------------------------------------------------------------
 //     - Containers -
 // -----------------------------------------------------------------------------
 pub struct Containers {
+    /// Layout
+    layout: Node,
     /// All containers
     inner: Vec<Container>,
     /// Selected container id
@@ -49,13 +43,14 @@ impl Containers {
 
         let container = Container::new(
             viewport,
-            Orientation::Horz,
+            Split::Horz,
             ctx,
             Sprite::from_size(Size::new(32, 32)),
             Transform::default(),
         )?;
 
         let mut inst = Self {
+            layout: Node::Leaf { id: 0, size: *viewport.size(), pos: viewport.position },
             selected: 0,
             inner: vec![container],
             images: Vec::new(),
@@ -99,7 +94,35 @@ impl Containers {
     //     // }
     // }
 
-    pub fn split(&mut self, _dir: Orientation, _ctx: &mut MessageCtx) {
+    pub fn split(&mut self, dir: Split, ctx: &mut MessageCtx) -> Result<()> {
+        let new_id = self.inner.len();
+        self.layout.split(self.selected, new_id, dir);
+
+        let selected = self.selected();
+        let viewport = selected.viewport.clone();
+        let sprite = selected.node.sprite.clone();
+
+        let mut container = Container::new(
+            viewport,
+            Split::Horz,
+            ctx,
+            sprite,
+            Transform::default(),
+        )?;
+
+        container.image_id = selected.image_id;
+        self.inner.push(container);
+
+        let data = self.layout.layout();
+
+        for (id, size, pos) in data {
+            let mut vp = &mut self.inner[id].viewport;
+            vp.position = pos;
+            vp.resize(size);
+        }
+
+        Ok(())
+
         //     // TODO: put this back in once the bin tree is done.
         //     // // Get the current size, position and sprite as
         //     // // well as the image id for the selected container.

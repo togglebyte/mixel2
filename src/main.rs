@@ -32,8 +32,8 @@ fn main() -> Result<()> {
 
     let (el, mut context) = Context::builder("Mixel: the modal pixel editor")
         .vsync(false)
-        .resizable(false)
-        .with_size(Size::new(1880, 1024))
+        // .resizable(false)
+        // .with_size(Size::new(1880, 1024))
         .build()?;
 
     context.window().set_cursor_visible(false);

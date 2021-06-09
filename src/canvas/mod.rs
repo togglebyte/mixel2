@@ -17,10 +17,10 @@ mod cursor;
 mod container;
 mod savebuffer;
 
-pub use containers::{Orientation, Containers};
-pub use image::Image;
-pub use cursor::Cursor;
 pub use container::Container;
+pub use containers::Containers;
+pub use cursor::Cursor;
+pub use image::Image;
 pub use layer::LayerId;
 pub use savebuffer::SaveBuffer;
 
@@ -68,6 +68,9 @@ impl Listener for Canvas {
             }
             Message::Command(Command::CloseSelectedSplit) => {
                 self.containers.close_selected();
+            }
+            Message::Command(Command::Split(split)) => {
+                self.containers.split(*split, ctx);
             }
             Message::Command(Command::Put(pos)) => {
                 self.containers.draw(*pos);

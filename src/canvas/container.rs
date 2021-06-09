@@ -8,14 +8,15 @@ use nightmaregl::pixels::Pixel;
 use crate::border::{Border, BorderType};
 use crate::listener::MessageCtx;
 
-use super::{Cursor, Image, Orientation};
+use super::{Cursor, Image};
 use crate::Node;
+use crate::binarytree::{Node as TreeNode, Split};
 
 // -----------------------------------------------------------------------------
 //     - Container -
 // -----------------------------------------------------------------------------
 pub struct Container {
-    dir: Orientation,
+    dir: Split,
     pub viewport: Viewport,
     pub renderer: Renderer<VertexData>,
     border: Border,
@@ -28,7 +29,7 @@ pub struct Container {
 impl Container {
     pub fn new(
         viewport: Viewport,
-        dir: Orientation,
+        dir: Split,
         ctx: &mut MessageCtx,
         sprite: Sprite<i32>,
         transform: Transform<i32>,

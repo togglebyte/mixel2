@@ -6,6 +6,7 @@ use num_traits::cast::NumCast;
 use num_traits::{One, Zero};
 
 /// Node to keep track of sprites and transforms.
+#[derive(Debug, Copy, Clone)]
 pub struct Node<T: Copy + NumCast + Zero + MulAssign + Default + Scalar + Div<Output = T>> {
     pub sprite: Sprite<T>,
     pub transform: Transform<T>,

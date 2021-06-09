@@ -3,6 +3,7 @@ use std::fmt;
 
 use nightmaregl::{Position, Size, Rect, Point};
 
+#[derive(Debug, Copy, Clone)]
 pub enum Split {
     Horz,
     Vert,
@@ -170,12 +171,12 @@ impl Node {
         self.set_size(size);
     }
 
-    pub fn data(&self) -> Vec<(usize, Size<i32>, Position<i32>)> {
+    pub fn layout(&self) -> Vec<(usize, Size<i32>, Position<i32>)> {
         match self {
             Node::Leaf { id, size, pos } => vec![(*id, *size, *pos)],
             Node::Branch { left, right, .. } => {
-                let mut ids = left.data();
-                ids.append(&mut right.data());
+                let mut ids = left.layout();
+                ids.append(&mut right.layout());
                 ids
             }
         }
@@ -237,12 +238,12 @@ mod test {
 
         // Left branch
         let expected = (0, Size::new(20, 5), Position::zero());
-        let actual = tree.data()[0];
+        let actual = tree.layout()[0];
         assert_eq!(expected, actual);
 
         // Right branch
         let expected = (100, Size::new(20, 15), Position::new(0, 5));
-        let actual = tree.data()[1];
+        let actual = tree.layout()[1];
         assert_eq!(expected, actual);
     }
 
@@ -253,9 +254,9 @@ mod test {
         tree.split(100, 200, Split::Vert);
         tree.resize(100, Size::new(3, 10));
 
-        let data = tree.data();
+        let layout = tree.layout();
         let expected = (200, Size::new(17, 10), Position::new(3, 10));
-        let actual = data[2];
+        let actual = layout[2];
         assert_eq!(expected, actual);
     }
 }

@@ -2,9 +2,9 @@ use log::info;
 use nightmaregl::{Position, Size};
 use nightmaregl::pixels::Pixel;
 
-use super::commands::{Command, Extent};
-use crate::canvas::Orientation;
+use crate::binarytree::Split;
 use crate::canvas::LayerId;
+use super::commands::{Command, Extent};
 
 macro_rules! or_noop {
     ($e:expr) => {
@@ -52,8 +52,8 @@ impl<'a> Parser<'a> {
             "put" => Command::Put(or_noop!(self.args_to_pos())),
             "clear" => Command::Clear(or_noop!(self.args_to_pos())),
             "new" => Command::NewImage(or_noop!(self.args_to_size())),
-            "split" => Command::Split(Orientation::Horz),
-            "splitv" => Command::Split(Orientation::Vert),
+            "split" => Command::Split(Split::Horz),
+            "splitv" => Command::Split(Split::Vert),
             "close" => Command::CloseSelectedSplit,
             "colour" | "color" => Command::SetColour(or_noop!(self.args_to_rgb())),
             "alpha" => Command::SetAlpha(or_noop!(self.args_to_usize())),

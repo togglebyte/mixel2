@@ -1,7 +1,7 @@
 use nightmaregl::{Position, Size};
 use nightmaregl::pixels::Pixel;
 
-use crate::canvas::Orientation;
+use crate::binarytree::Split;
 use crate::canvas::LayerId;
 
 #[derive(Debug)]
@@ -15,7 +15,7 @@ pub enum Command {
     SetAlpha(usize),
     Clear(Position<i32>),
     NewImage(Size<i32>),
-    Split(Orientation),
+    Split(Split),
     CloseSelectedSplit,
     NewLayer,
     RemoveLayer,
