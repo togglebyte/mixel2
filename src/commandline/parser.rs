@@ -2,7 +2,7 @@ use log::info;
 use nightmaregl::{Position, Size};
 use nightmaregl::pixels::Pixel;
 
-use crate::binarytree::Split;
+use crate::layout::Split;
 use crate::canvas::LayerId;
 use super::commands::{Command, Extent};
 

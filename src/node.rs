@@ -39,6 +39,15 @@ impl<T> Node<T>
         VertexData::new(&self.sprite, &self.transform)
     }
 
+    // /// Update the cursors transform based on the 
+    // /// currently selected container.
+    // pub fn update_transform(&self, parent_transform: &Transform) {
+    //     let mut vd = self.vertex_data();
+    //     let parent = transform.matrix();
+    //     vd.model = parent * vd.model;
+    //     self.vertex_data = vd;
+    // }
+
     /// Pass in the parent nodes transform
     pub fn relative_vertex_data(&self, transform: &Transform<T>) -> VertexData {
         let mut vd = self.vertex_data();

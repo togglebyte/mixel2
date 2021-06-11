@@ -1,3 +1,5 @@
+//! Shows and renders all containers.
+//! A `Container` holds the viewport
 use std::path::Path;
 
 use anyhow::Result;
@@ -6,11 +8,13 @@ use nightmaregl::pixels::Pixel;
 use nightmaregl::texture::Texture;
 use nightmaregl::{Position, Point, Size, Sprite, Transform, Viewport, Rect, Context};
 
-use crate::config::Action;
-use crate::listener::MessageCtx;
-use crate::canvas::LayerId;
 use crate::Mouse;
-use crate::binarytree::{Split, Node};
+use crate::border::BorderType;
+use crate::canvas::LayerId;
+use crate::config::Action;
+use crate::layout::{Split, Layout};
+use crate::listener::MessageCtx;
+use crate::message::Message;
 
 use super::{Container, Image, SaveBuffer};
 
@@ -18,8 +22,11 @@ use super::{Container, Image, SaveBuffer};
 //     - Containers -
 // -----------------------------------------------------------------------------
 pub struct Containers {
+    /// All container viewports should be relative 
+    /// to this one.
+    pub(super) viewport: Viewport,
     /// Layout
-    layout: Node,
+    layout: Layout,
     /// All containers
     inner: Vec<Container>,
     /// Selected container id
@@ -36,24 +43,20 @@ impl Containers {
     /// The container holds the drawable area of the screen.
     /// A container can be split into multiple containers.
     pub fn new(viewport: Viewport, ctx: &mut MessageCtx) -> Result<Self> {
-        let viewport = Viewport::new(
-            viewport.position + Position::new(10, 10),
-            *viewport.size() - Size::new(20, 20),
-        );
-
         let container = Container::new(
-            viewport,
+            viewport.clone(),
             Split::Horz,
             ctx,
             Sprite::from_size(Size::new(32, 32)),
-            Transform::default(),
+            // Transform::new(Position::new(10, 10)),
         )?;
 
         let mut inst = Self {
-            layout: Node::Leaf { id: 0, size: *viewport.size(), pos: viewport.position },
+            layout: Layout::Leaf { id: 0, size: *viewport.size(), pos: container.viewport.position },
             selected: 0,
             inner: vec![container],
             images: Vec::new(),
+            viewport,
         };
 
         let size = Size::new(32, 32);
@@ -79,21 +82,24 @@ impl Containers {
         // selected.node.transform.translate_mut(pos);
     }
 
-    // // TODO: when you set the anchor point, don't set it to the centre
-    // //       of the sprite. I know this seems like a good idea, but it will
-    // //       look naff when you move the texture around
-    // pub fn resize(&mut self, new_size: Size<i32>) {
-    //     panic!("Resize ALL sprites that reference the same image");
-    //     let mut selected = &mut self.inner[self.selected];
-    //     // match selected.image {
-    //     //     Some((ref mut image, ref mut sprite)) => {
-    //     //         // image.layers.iter_mut().for_each(|layer| layer.resize(new_size));
-    //     //         // sprite.size = new_size;
-    //     //     },
-    //     //     None => {}
-    //     // }
-    // }
+    pub fn resize(&mut self, mut new_size: Size<i32>) {
+        // HACK! remove this dirt
+        // Do this because of the padding
+        new_size.width -= 128 * 2;
+        new_size.height -= 128 * 2;
+        // End of hack
 
+        self.layout.set_size(new_size);
+        self.layout.rebuild();
+        self.layout.layout(&mut self.inner);
+        self.inner.iter_mut().for_each(Container::resize);
+    }
+
+    // This is horrid: 
+    // TODO: removing a split will ruin everything,
+    // because of the indexing.
+    //
+    // But rather than using an arena we can just rebuild it
     pub fn split(&mut self, dir: Split, ctx: &mut MessageCtx) -> Result<()> {
         let new_id = self.inner.len();
         self.layout.split(self.selected, new_id, dir);
@@ -107,85 +113,31 @@ impl Containers {
             Split::Horz,
             ctx,
             sprite,
-            Transform::default(),
         )?;
 
         container.image_id = selected.image_id;
         self.inner.push(container);
 
-        let data = self.layout.layout();
+        self.layout.layout(&mut self.inner);
+        self.inner
+            .iter_mut()
+            .for_each(|cont| {
+                cont.border.resize(&cont.viewport);
+                let mut cur_pos = cont.node.transform.translation;
+                match dir {
+                    Split::Horz => cur_pos.y /= 2,
+                    Split::Vert => cur_pos.x /= 2,
+                };
+                cont.node.transform.translate_mut(cur_pos);
+            });
 
-        for (id, size, pos) in data {
-            let mut vp = &mut self.inner[id].viewport;
-            vp.position = pos;
-            vp.resize(size);
-        }
+        // Set the active border.
+        // Ignore the previous active border as that
+        // is not rendered since it now has children.
+        let mut selected = &mut self.inner[self.selected];
+        selected.border.border_type = BorderType::Active;
 
         Ok(())
-
-        //     // TODO: put this back in once the bin tree is done.
-        //     // // Get the current size, position and sprite as
-        //     // // well as the image id for the selected container.
-        //     // // Use these to construct the children.
-        //     // let (size, pos, sprite, image_id) = {
-        //     //     let selected = &self.inner[self.selected];
-        //     //     let image_id = self.images.get_id_by_node(self.selected);
-        //     //     (
-        //     //         selected.viewport.size(),
-        //     //         selected.viewport.position,
-        //     //         selected.sprite,
-        //     //         image_id,
-        //     //     )
-        //     // };
-
-        //     // let (left, right) = match dir {
-        //     //     Orientation::Horz => {
-        //     //         let right = Viewport::new(
-        //     //             pos,
-        //     //             Size::new(size.width, size.height / 2), // - Size::new(10, 10)
-        //     //         );
-
-        //     //         let left = Viewport::new(
-        //     //             Position::new(pos.x, pos.y + size.height / 2 /* + 10*/),
-        //     //             Size::new(size.width, size.height / 2), // - Size::new(10, 10)
-        //     //         );
-
-        //     //         (left, right)
-        //     //     }
-        //     //     Orientation::Vert => {
-        //     //         let left = Viewport::new(
-        //     //             pos,
-        //     //             Size::new(size.width / 2, size.height), // - Size::new(10, 10)
-        //     //         );
-
-        //     //         let right = Viewport::new(
-        //     //             Position::new(pos.x + size.width / 2 /*+ 10*/, pos.y),
-        //     //             Size::new(size.width / 2, size.height), // - Size::new(10, 10)
-        //     //         );
-
-        //     //         (left, right)
-        //     //     }
-        //     // };
-
-        //     // // Create child containers
-        //     // let left = Container::new(left, dir, ctx, sprite).unwrap();
-        //     // let right = Container::new(right, dir, ctx, sprite).unwrap();
-
-        //     // let left_id = self.inner.insert_left(self.selected, left);
-        //     // let right_id = self.inner.insert_right(self.selected, right);
-        //     // self.selected = right_id;
-
-        //     // // Assign the image to the newly created container
-        //     // if let Some(image_id) = image_id {
-        //     //     self.images.attach(image_id, left_id);
-        //     //     self.images.attach(image_id, right_id);
-        //     // }
-
-        //     // // Set the active border.
-        //     // // Ignore the previous active border as that
-        //     // // is not rendered since it now has children.
-        //     // let mut selected = &mut self.inner[self.selected];
-        //     // selected.border.border_type = BorderType::Active;
     }
 
     // TODO: removing the last container should close the application.
@@ -210,8 +162,7 @@ impl Containers {
                 image.redraw_layers();
             }
 
-            let render_cursor = self.selected == id;
-            container.render(background, ctx, image, render_cursor)?;
+            container.render(background, ctx, image)?;
         }
 
         Ok(())
@@ -238,32 +189,61 @@ impl Containers {
         image.clear_pixel(pos);
     }
 
-    pub fn action(&mut self, action: Action) {
+    pub fn action(&mut self, action: Action) -> Message {
         use Action::*;
         match action {
-            Left => self.selected().move_cursor_by(Position::new(-1, 0)),
-            Right => self.selected().move_cursor_by(Position::new(1, 0)),
-            Up => self.selected().move_cursor_by(Position::new(0, 1)),
-            Down => self.selected().move_cursor_by(Position::new(0, -1)),
+            Left => {
+                let pos = self.selected().move_cursor_by(Position::new(-1, 0));
+                self.update_positions(pos);
+                return Message::TranslatedCursor(pos);
+            }
+            Right => {
+                let pos = self.selected().move_cursor_by(Position::new(1, 0));
+                self.update_positions(pos);
+                return Message::TranslatedCursor(pos);
+            }
+            Up => {
+                let pos = self.selected().move_cursor_by(Position::new(0, 1));
+                self.update_positions(pos);
+                return Message::TranslatedCursor(pos);
+            }
+            Down => {
+                let pos = self.selected().move_cursor_by(Position::new(0, -1));
+                self.update_positions(pos);
+                return Message::TranslatedCursor(pos);
+            }
             CanvasZoomIn => self.selected().renderer.pixel_size += 1,
             CanvasZoomOut => self.selected().renderer.pixel_size -= 1,
             _ => {}
         }
+
+        Message::Noop
+    }
+
+    fn update_positions(&mut self, pos: Position<i32>) {
+        let image_id = self.selected().image_id;
+        let selected = self.selected;
+        self.inner
+            .iter_mut()
+            .enumerate()
+            .filter(|(i, cont)| cont.image_id == image_id && *i != selected) 
+            .for_each(|(_, cont)| cont.move_cursor(pos));
     }
 
     pub fn mouse_input(&mut self, mouse: Mouse, ctx: &MessageCtx) -> Position<i32> {
-        let container = self.selected();
-        let pos = container.translate_mouse(mouse.pos, ctx);
-        container.move_cursor(pos);
+        let pos = self.selected().translate_mouse(mouse.pos, ctx);
+        self.selected().move_cursor(pos);
+        self.update_positions(pos);
+
+        let size = self.selected().node.sprite.size;
+        let pos = Position::new(pos.x, size.height - pos.y - 1);
 
         if let ButtonState::Pressed = mouse.state {
-            let size = container.node.sprite.size;
             let bounding_box = Rect::new(Point::zero(), size);
             if !bounding_box.contains(pos.to_point()) {
                 return pos;
             }
 
-            let pos = Position::new(pos.x, size.height - pos.y - 1);
 
             if let Some(MouseButton::Left) = mouse.button {
                 self.draw(pos);
@@ -321,5 +301,10 @@ impl Containers {
         let image = self.selected_image().unwrap();
         let mut save_buf = SaveBuffer::new(context, size).unwrap();
         save_buf.save(path, image, size, context);
+    }
+
+    pub(super) fn change_pixel_size(&mut self, offset: i32) {
+        eprintln!("{:?}", offset);
+        self.selected().renderer.pixel_size += offset;
     }
 }

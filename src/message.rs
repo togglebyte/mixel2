@@ -8,6 +8,7 @@ use crate::commandline::Command;
 use crate::config::Action;
 use crate::input::Input;
 
+#[derive(Debug)]
 pub enum Message {
     Input(Input, Modifiers),
     CursorPos(Position<i32>),
@@ -16,7 +17,7 @@ pub enum Message {
     Command(Command),
     Action(Action),
     Mouse(Mouse),
-    TranslatedMouse(Position<i32>),
+    TranslatedCursor(Position<i32>),
     LayerChanged { layer: LayerId, total_layers: usize },
     Noop,
 }

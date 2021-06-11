@@ -16,8 +16,6 @@ pub struct Status {
     text: Text,
     mode: Mode,
     cur_pos: Position<i32>,
-    raw_mouse: Position<i32>,
-    translated_mouse: Position<i32>,
     layer: LayerId,
     total_layers: usize,
     renderer: Renderer<VertexData>,
@@ -48,8 +46,6 @@ impl Status {
             dirty: true,
             text,
             cur_pos: Position::new(0, 0),
-            raw_mouse: Position::new(0, 0),
-            translated_mouse: Position::new(0, 0),
             mode: Mode::Normal,
             layer: LayerId::from_display(1),
             total_layers: 1,
@@ -62,11 +58,10 @@ impl Status {
 
     fn update_text(&mut self) {
         let text = format!(
-            "x: {} y: {} | mode: {:?} | layer: {}/{} | mouse x: {} y: {}",
+            "x: {} y: {} | mode: {:?} | layer: {}/{}",
             self.cur_pos.x, self.cur_pos.y, 
             self.mode, 
             self.layer.as_display(), self.total_layers,
-            self.translated_mouse.x, self.translated_mouse.y,
         );
 
         if let Err(e) = self.text.set_text(text) {
@@ -85,17 +80,9 @@ impl Listener for Status {
                 self.mode = *mode;
                 self.dirty = true;
             }
-            Message::CursorPos(pos) => {
-                self.cur_pos = *pos;
-                self.dirty = true;
-            }
             Message::Resize(size) => self.viewport.resize(*size),
-            Message::TranslatedMouse(pos) => {
-                self.translated_mouse = *pos;
-                self.dirty = true;
-            }
-            Message::Mouse(mouse) => {
-                self.raw_mouse = mouse.pos;
+            Message::TranslatedCursor(pos) => {
+                self.cur_pos = *pos;
                 self.dirty = true;
             }
             Message::LayerChanged { layer, total_layers } => {
@@ -104,6 +91,8 @@ impl Listener for Status {
                 self.dirty = true;
             }
             | Message::Input(_, _)
+            | Message::Mouse(_)
+            | Message::CursorPos(_)
             | Message::Action(_)
             | Message::Command(_)
             | Message::Noop => {}

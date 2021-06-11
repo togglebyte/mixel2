@@ -11,6 +11,7 @@ pub enum Input {
     Char(char),
     Key(Key),
     Mouse(Mouse),
+    Scroll(i32),
 }
 
 impl Input {

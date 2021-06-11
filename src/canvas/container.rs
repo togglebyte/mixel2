@@ -1,3 +1,9 @@
+//! A container wraps the image being drawn.
+//! It holds:
+//! * viewport
+//! * border
+//! * position
+//! * cursor
 use std::convert::TryInto;
 
 use anyhow::Result;
@@ -10,7 +16,7 @@ use crate::listener::MessageCtx;
 
 use super::{Cursor, Image};
 use crate::Node;
-use crate::binarytree::{Node as TreeNode, Split};
+use crate::layout::Split;
 
 // -----------------------------------------------------------------------------
 //     - Container -
@@ -19,7 +25,7 @@ pub struct Container {
     dir: Split,
     pub viewport: Viewport,
     pub renderer: Renderer<VertexData>,
-    border: Border,
+    pub(super) border: Border,
     pub node: Node<i32>,
     pub image_id: Option<usize>,
     cursor: Cursor,
@@ -32,7 +38,6 @@ impl Container {
         dir: Split,
         ctx: &mut MessageCtx,
         sprite: Sprite<i32>,
-        transform: Transform<i32>,
     ) -> Result<Self> {
         let border_type = BorderType::Inactive;
 
@@ -47,20 +52,27 @@ impl Container {
             colour: Pixel::black(),
         };
 
-        inst.renderer.pixel_size = 7 * 3;
+        inst.renderer.pixel_size = 8 * 2;
+
+        // Centre the canvas.
+        let pos = (*inst.viewport.size() / inst.renderer.pixel_size) / 2 - inst.node.sprite.size / 2;
+        let transform = Transform::new(pos.to_vector());
+        inst.node.transform = transform;
 
         // Centre the sprite
         // TODO: it doesn't quite look like it is in the centre
         //       is it the border? is it the viewport?
         // let position = (*inst.viewport.size() / 2 / inst.renderer.pixel_size).to_vector();
+        // let position = Position::new(150, 150);
         // inst.node.transform.translate_mut(position);
 
         Ok(inst)
     }
 
-    pub fn move_cursor_by(&mut self, pos: Position<i32>) {
+    pub fn move_cursor_by(&mut self, pos: Position<i32>) -> Position<i32> {
         let new_pos = self.cursor.node.transform.translation + pos;
         self.cursor.node.transform.translate_mut(new_pos);
+        new_pos
     }
 
     pub fn move_cursor(&mut self, pos: Position<i32>) {
@@ -72,16 +84,15 @@ impl Container {
         background_texture: &Texture<i32>,
         ctx: &mut MessageCtx,
         image: &Image,
-        render_cursor: bool,
     ) -> Result<()> {
         // Border
-        // self.border.render(
-        //     &self.node.transform,
-        //     ctx.textures,
-        //     &self.viewport,
-        //     ctx.border_renderer,
-        //     ctx.context,
-        // );
+        self.border.render(
+            &Transform::default(),
+            ctx.textures,
+            &self.viewport,
+            ctx.border_renderer,
+            ctx.context,
+        )?;
 
         let mut sprite = self.node.sprite;
         sprite.z_index = 999;
@@ -101,7 +112,7 @@ impl Container {
         image.render(&self.renderer, sprite.clone(), transform, &self.viewport, ctx.context)?;
 
         // Cursor
-        if render_cursor && self.cursor.visible {
+        if self.cursor.visible {
             self.renderer.render(
                 &self.cursor.texture,
                 &[self.cursor.node.relative_vertex_data(&self.node.transform)],
@@ -114,13 +125,18 @@ impl Container {
         Ok(())
     }
 
+    pub fn resize(&mut self) {
+        self.border.resize(&self.viewport);
+    }
+
     pub fn translate_mouse(&self, mouse_pos: Position<i32>, ctx: &MessageCtx) -> Position<i32> {
         let pixel_size = self.renderer.pixel_size as f32;
         let viewport_pos = ctx.canvas_viewport.position.cast::<f32>();
+        let canvas_pos = self.node.transform.translation;
         let pos = mouse_pos.cast() - viewport_pos;
-        let mut pos = (pos.cast::<f32>() / pixel_size);
+        let mut pos = (pos.cast::<f32>() / pixel_size) - canvas_pos.cast();
         let height = self.node.sprite.size.height as f32;
-        pos -= Position::new(0.5, 0.5);
+        // pos -= Position::new(0.5, 0.5);
         pos.floor().cast() 
     }
 
@@ -133,7 +149,6 @@ impl Container {
         match alpha.try_into() {
             Ok(a) => {
                 self.colour.a = a;
-                eprintln!("{:?}", self.colour);
                 self.set_colour(self.colour);
             }
             Err(_) => {}

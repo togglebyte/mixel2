@@ -10,6 +10,7 @@
 * Fill entire layer
 * Draw rect | put cursor into "rectangle" mode
 * Draw circle | put cursor into "circle" mode
+* Shaders for layers
 
 Maaaaaybe?
 # Draw mode

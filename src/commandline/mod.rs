@@ -93,6 +93,7 @@ impl CommandLine {
                 _ => {}
             },
             Input::Mouse(_) => {}
+            Input::Scroll(_) => {}
         }
 
         None
@@ -138,7 +139,7 @@ impl Listener for CommandLine {
             | Message::Action(_)
             | Message::Command(_)
             | Message::Mouse(_)
-            | Message::TranslatedMouse(_)
+            | Message::TranslatedCursor(_)
             | Message::LayerChanged { .. }
             | Message::Noop => {}
         }

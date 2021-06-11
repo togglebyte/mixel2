@@ -1,7 +1,7 @@
 use nightmaregl::{Position, Size};
 use nightmaregl::pixels::Pixel;
 
-use crate::binarytree::Split;
+use crate::layout::Split;
 use crate::canvas::LayerId;
 
 #[derive(Debug)]

@@ -6,12 +6,12 @@ use nightmaregl::{Context, Position, Size};
 use pretty_env_logger;
 
 mod application;
-mod binarytree;
 mod border;
 mod canvas;
 mod commandline;
 mod config;
 mod input;
+mod layout;
 mod listener;
 mod message;
 mod mouse;
@@ -31,7 +31,7 @@ fn main() -> Result<()> {
     let config = Config::from_path("config")?;
 
     let (el, mut context) = Context::builder("Mixel: the modal pixel editor")
-        .vsync(false)
+        .vsync(true)
         // .resizable(false)
         // .with_size(Size::new(1880, 1024))
         .build()?;
@@ -50,6 +50,9 @@ fn main() -> Result<()> {
     // Event loop
     eventloop.run(move |event| {
         match event {
+            Event::MouseWheel { y, .. } => {
+                app.input(Input::Scroll(y as i32), modifiers, &mut context);
+            }
             Event::MouseMoved { x, y } => {
                 mouse.pos.x = x as i32;
                 mouse.pos.y = y as i32;

@@ -1,13 +1,15 @@
 //! This works as a thin layer for the `Containers`,
 //! as containers does not implement `Listener`.
+//!
+//! So in essence this just routes messages to the `Containers`.
 use anyhow::Result;
 use nightmaregl::{ Renderer, VertexData, Viewport, Transform };
 use nightmaregl::texture::Texture;
 
 use crate::listener::{MessageCtx, Listener};
 use crate::Message;
-use crate::border::{Border, BorderType};
 use crate::commandline::Command;
+use crate::input::Input;
 
 pub mod message;
 mod containers;
@@ -25,26 +27,17 @@ pub use layer::LayerId;
 pub use savebuffer::SaveBuffer;
 
 pub struct Canvas {
-    /// All container viewports should be relative 
-    /// to this one.
-    viewport: Viewport,
     /// All <whatevers> 
     containers: Containers,
     /// Background for transparency
     background: Texture<i32>,
-    /// Border around all containers
-    border: Border,
-    /// Render the border
-    renderer: Renderer<VertexData>,
 }
 
+// TODO: do we really need the containers to own a viewport?
 impl Canvas {
     pub fn new(viewport: Viewport, ctx: &mut MessageCtx) -> Result<Self> {
         let inst = Self {
             background: Texture::from_disk("background.png")?,
-            viewport,
-            border: Border::new(BorderType::Canvas, ctx.textures, &viewport),
-            renderer: Renderer::default(ctx.context)?,
             containers: Containers::new(viewport, ctx)?,
         };
 
@@ -56,8 +49,7 @@ impl Listener for Canvas {
     fn message(&mut self, message: &Message, ctx: &mut MessageCtx) -> Message {
         match message {
             Message::Resize(new_size) => {
-                self.viewport.resize(*new_size);
-                self.border.resize(&self.viewport);
+                self.containers.resize(*new_size);
             }
             Message::Command(Command::Split(dir)) => {
                 self.containers.split(*dir, ctx);
@@ -107,11 +99,15 @@ impl Listener for Canvas {
                 self.containers.save_current(path, *overwrite, ctx.context);
             }
             Message::Action(action) => {
-                self.containers.action(*action);
+                return self.containers.action(*action);
             }
             Message::Mouse(mouse) => {
                 let pos = self.containers.mouse_input(*mouse, ctx);
-                return Message::TranslatedMouse(pos);
+                return Message::TranslatedCursor(pos);
+            }
+            Message::Input(Input::Scroll(delta), _) => {
+                eprintln!("{:?}", delta);
+                self.containers.change_pixel_size(*delta);
             }
 
             // Unhandled messages
@@ -119,7 +115,7 @@ impl Listener for Canvas {
             | Message::CursorPos(_)
             | Message::ModeChanged(_)
             | Message::Command(_)
-            | Message::TranslatedMouse(_)
+            | Message::TranslatedCursor(_)
             | Message::LayerChanged { .. }
             | Message::Noop => {}
         }
@@ -128,17 +124,6 @@ impl Listener for Canvas {
     }
 
     fn render(&mut self, ctx: &mut MessageCtx) -> Result<()> {
-        // let parent_transform = Transform::new();
-        // self.border.render(
-        //     &parent_transform,
-        //     ctx.textures,
-        //     &self.viewport,
-        //     &self.renderer,
-        //     ctx.context,
-        // );
-
-        self.containers.render(&self.background, ctx);
-
-        Ok(())
+        self.containers.render(&self.background, ctx)
     }
 }

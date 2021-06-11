@@ -1,10 +1,13 @@
 use std::collections::HashMap;
 use std::ops::{Deref, DerefMut};
 
+use anyhow::Result;
 use nightmaregl::texture::Texture;
 use nightmaregl::{Size, Viewport, Renderer, VertexData, Context, Transform};
 
 use crate::Node;
+
+const BORDER_ZINDEX: i32 = 999;
 
 // -----------------------------------------------------------------------------
 //     - Border type -
@@ -57,21 +60,21 @@ impl Border {
         let texture = &textures[&border_type];
 
         let mut top = Node::new(texture);
-        top.sprite.z_index = 9999;
+        top.sprite.z_index = BORDER_ZINDEX;
         top.sprite.size = Size::new(viewport.size().width, 4);
         top.transform.translation.y = viewport.size().height - 4;
 
         let mut right = Node::new(texture);
-        right.sprite.z_index = 9999;
+        right.sprite.z_index = BORDER_ZINDEX;
         right.sprite.size = Size::new(4, viewport.size().height);
         right.transform.translation.x = viewport.size().width - 4;
 
         let mut bottom = Node::new(texture);
-        bottom.sprite.z_index = 9999;
+        bottom.sprite.z_index = BORDER_ZINDEX;
         bottom.sprite.size = Size::new(viewport.size().width, 4);
 
         let mut left = Node::new(texture);
-        left.sprite.z_index = 9999;
+        left.sprite.z_index = BORDER_ZINDEX;
         left.sprite.size = Size::new(4, viewport.size().height);
 
         Self {
@@ -108,13 +111,15 @@ impl Border {
         viewport: &Viewport,
         renderer: &Renderer<VertexData>,
         context: &mut Context,
-    ) {
+    ) -> Result<()> {
         let texture = &textures[&self.border_type];
-        let _ = renderer.render(
+        renderer.render(
             texture,
             &self.vertex_data(parent),
             viewport,
             context,
-        );
+        )?;
+
+        Ok(())
     }
 }
