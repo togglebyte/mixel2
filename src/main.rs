@@ -5,6 +5,8 @@ use nightmaregl::pixels::Pixel;
 use nightmaregl::{Context, Position, Size};
 use pretty_env_logger;
 
+pub mod plugins;
+
 mod application;
 mod border;
 mod canvas;
@@ -32,8 +34,8 @@ fn main() -> Result<()> {
 
     let (el, mut context) = Context::builder("Mixel: the modal pixel editor")
         .vsync(true)
-        // .resizable(false)
-        // .with_size(Size::new(1880, 1024))
+        .resizable(false)
+        .with_size(Size::new(1880/2, 1024))
         .build()?;
 
     context.window().set_cursor_visible(false);

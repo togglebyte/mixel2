@@ -10,6 +10,7 @@ use crate::listener::{MessageCtx, Listener};
 use crate::Message;
 use crate::commandline::Command;
 use crate::input::Input;
+use crate::plugins::Plugin;
 
 pub mod message;
 mod containers;
@@ -31,14 +32,25 @@ pub struct Canvas {
     containers: Containers,
     /// Background for transparency
     background: Texture<i32>,
+    /// Plugin
+    plugin: Plugin,
 }
 
-// TODO: do we really need the containers to own a viewport?
 impl Canvas {
     pub fn new(viewport: Viewport, ctx: &mut MessageCtx) -> Result<Self> {
+        // TODO: pfft, lazy
+        let plugin = match Plugin::new() {
+            Ok(p) => p,
+            Err(e) => {
+                eprintln!("{:?}", e);
+                panic!();
+            }
+        };
+
         let inst = Self {
             background: Texture::from_disk("background.png")?,
             containers: Containers::new(viewport, ctx)?,
+            plugin,
         };
 
         Ok(inst)
@@ -97,6 +109,12 @@ impl Listener for Canvas {
             }
             Message::Command(Command::Save { path, overwrite }) => {
                 self.containers.save_current(path, *overwrite, ctx.context);
+            }
+            // Message::Command(Command::PluginCall(call)) => {
+            //     self.plugin.exec(call);
+            // }
+            Message::Command(Command::Lua(code)) => {
+                self.plugin.exec_code(code, &mut self.containers);
             }
             Message::Action(action) => {
                 return self.containers.action(*action);

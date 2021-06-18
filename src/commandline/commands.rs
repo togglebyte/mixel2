@@ -3,6 +3,7 @@ use nightmaregl::pixels::Pixel;
 
 use crate::layout::Split;
 use crate::canvas::LayerId;
+use crate::plugins::PluginCall;
 
 #[derive(Debug)]
 pub enum Command {
@@ -20,6 +21,8 @@ pub enum Command {
     NewLayer,
     RemoveLayer,
     ChangeLayer(LayerId),
+    PluginCall(PluginCall),
+    Lua(String),
 }
 
 #[derive(Debug, Default)]
