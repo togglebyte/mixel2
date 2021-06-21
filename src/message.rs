@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use nightmaregl::events::{MouseButton, ButtonState, Modifiers};
 use nightmaregl::{Position, Size};
 
@@ -19,6 +21,7 @@ pub enum Message {
     Mouse(Mouse),
     TranslatedCursor(Position<i32>),
     LayerChanged { layer: LayerId, total_layers: usize },
+    ReloadPlugin(PathBuf),
     Noop,
 }
 

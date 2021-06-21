@@ -61,24 +61,9 @@ impl<'a> Parser<'a> {
             "layer" => Command::ChangeLayer(LayerId::from_display(or_noop!(self.args_to_usize()))),
             "newlayer" => Command::NewLayer,
             "removelayer" => Command::RemoveLayer,
-            "call" => Command::PluginCall(or_noop!(self.parse_plugin_call())),
             "lua" => Command::Lua(self.args.to_owned()),
             _ => Command::Noop,
         }
-    }
-
-    fn parse_plugin_call(&self) -> Option<PluginCall> {
-        let bracket_index = self.args.find('(')?;
-        let name = self.args[..bracket_index].to_string();
-
-        let args = self.args[bracket_index+1..]
-            .strip_suffix(')')?
-            .split_terminator(',')
-            .map(|s| s.trim().to_string())
-            .filter_map(Arg::from_str)
-            .collect::<Vec<Arg>>();
-
-        Some(PluginCall::new(name, args))
     }
 
     fn args_to_usize(&self) -> Option<usize> {

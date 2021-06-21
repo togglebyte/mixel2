@@ -1,4 +1,6 @@
+use std::path::PathBuf;
 use std::collections::VecDeque;
+
 use anyhow::Result;
 use nightmaregl::events::{Key, Modifiers};
 use nightmaregl::{Renderer, VertexData, Viewport, Context, Size, Position};
@@ -172,6 +174,12 @@ impl App {
         self.listeners.iter_mut().for_each(|l| {
             l.render(&mut ctx);
         });
+    }
+
+    pub fn reload_plugins(&mut self, path: PathBuf, context: &mut Context) {
+        // Window size needs to be known at `message handling`
+        self.handle_messages(Message::ReloadPlugin(path), context);
+        
     }
 
     fn handle_messages(&mut self, m: Message, context: &mut Context) {

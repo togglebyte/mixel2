@@ -110,9 +110,9 @@ impl Listener for Canvas {
             Message::Command(Command::Save { path, overwrite }) => {
                 self.containers.save_current(path, *overwrite, ctx.context);
             }
-            // Message::Command(Command::PluginCall(call)) => {
-            //     self.plugin.exec(call);
-            // }
+            Message::ReloadPlugin(path) => {
+                self.plugin.reload(path);
+            }
             Message::Command(Command::Lua(code)) => {
                 self.plugin.exec_code(code, &mut self.containers);
             }

@@ -21,7 +21,6 @@ pub enum Command {
     NewLayer,
     RemoveLayer,
     ChangeLayer(LayerId),
-    PluginCall(PluginCall),
     Lua(String),
 }
 

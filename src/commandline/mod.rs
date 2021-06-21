@@ -141,6 +141,7 @@ impl Listener for CommandLine {
             | Message::Mouse(_)
             | Message::TranslatedCursor(_)
             | Message::LayerChanged { .. }
+            | Message::ReloadPlugin(_)
             | Message::Noop => {}
         }
 

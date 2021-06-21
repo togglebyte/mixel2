@@ -95,6 +95,7 @@ impl Listener for Status {
             | Message::CursorPos(_)
             | Message::Action(_)
             | Message::Command(_)
+            | Message::ReloadPlugin(_)
             | Message::Noop => {}
         }
 

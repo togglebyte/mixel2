@@ -1,3 +1,5 @@
+use std::thread;
+
 use anyhow::Result;
 use log::error;
 use nightmaregl::events::{ButtonState, Event, EventLoop, LoopAction, Modifiers, MouseButton};
@@ -12,6 +14,7 @@ mod border;
 mod canvas;
 mod commandline;
 mod config;
+mod fsevents;
 mod input;
 mod layout;
 mod listener;
@@ -24,6 +27,7 @@ use application::App;
 use config::Config;
 use input::Input;
 use message::Message;
+use fsevents::PluginWatcher;
 pub use node::Node;
 pub use mouse::Mouse;
 
@@ -34,13 +38,13 @@ fn main() -> Result<()> {
 
     let (el, mut context) = Context::builder("Mixel: the modal pixel editor")
         .vsync(true)
-        .resizable(false)
-        .with_size(Size::new(1880/2, 1024))
+        // .resizable(false)
+        // .with_size(Size::new(1880/2, 1024))
         .build()?;
 
     context.window().set_cursor_visible(false);
 
-    let eventloop = EventLoop::new(el);
+    let eventloop: EventLoop<_> = EventLoop::new(el);
 
     let window_size = context.window_size();
     let mut app = App::new(config, window_size, &mut context)?;
@@ -49,9 +53,19 @@ fn main() -> Result<()> {
     let mut modifiers = Modifiers::empty();
     let mut mouse = Mouse::new();
 
+    let proxy = eventloop.proxy();
+
+    thread::spawn(move || {
+        let watcher = PluginWatcher::new("plugins", proxy).unwrap();
+        watcher.watch();
+    });
+
     // Event loop
     eventloop.run(move |event| {
         match event {
+            Event::UserEvent(path) => {
+                app.reload_plugins(path, &mut context);
+            }
             Event::MouseWheel { y, .. } => {
                 app.input(Input::Scroll(y as i32), modifiers, &mut context);
             }

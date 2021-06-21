@@ -105,6 +105,14 @@ impl Plugin {
         Ok(inst)
     }
 
+    pub fn reload(&mut self, path: impl AsRef<Path>) {
+        // TODO: we are now reloading ALL plugins.
+        //       That's silly.
+        if let Ok(inst) = Self::new() {
+            *self = inst;
+        }
+    }
+
     // TODO add app context, that contains viewport, app things
     pub fn exec_code(&mut self, code: &str, containers: &mut Containers) -> LuaResult<()> {
         let containers = RefCell::new(containers);
