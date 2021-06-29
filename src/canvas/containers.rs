@@ -235,6 +235,10 @@ impl Containers {
         self.selected().move_cursor(pos);
         self.update_positions(pos);
 
+        if let Some(MouseButton::Middle) = mouse.button {
+            // Move the canvas
+        }
+
         let size = self.selected().node.sprite.size;
         let pos = Position::new(pos.x, size.height - pos.y - 1);
 
@@ -304,7 +308,6 @@ impl Containers {
     }
 
     pub(super) fn change_pixel_size(&mut self, offset: i32) {
-        eprintln!("{:?}", offset);
         self.selected().renderer.pixel_size += offset;
     }
 }

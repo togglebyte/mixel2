@@ -124,7 +124,6 @@ impl Listener for Canvas {
                 return Message::TranslatedCursor(pos);
             }
             Message::Input(Input::Scroll(delta), _) => {
-                eprintln!("{:?}", delta);
                 self.containers.change_pixel_size(*delta);
             }
 

@@ -59,13 +59,6 @@ impl Container {
         let transform = Transform::new(pos.to_vector());
         inst.node.transform = transform;
 
-        // Centre the sprite
-        // TODO: it doesn't quite look like it is in the centre
-        //       is it the border? is it the viewport?
-        // let position = (*inst.viewport.size() / 2 / inst.renderer.pixel_size).to_vector();
-        // let position = Position::new(150, 150);
-        // inst.node.transform.translate_mut(position);
-
         Ok(inst)
     }
 
