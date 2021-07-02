@@ -121,7 +121,7 @@ impl Plugin {
 
             let f = scope.create_function_mut(|_, (x, y): (i32, i32)| {
                 let mut containers = containers.borrow_mut();
-                containers.draw(Position::new(x, y));
+                // containers.draw(Position::new(x, y));
                 Ok(())
             }).unwrap();
             globals.set("putPixel", f);

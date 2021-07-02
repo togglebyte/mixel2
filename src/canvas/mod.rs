@@ -3,7 +3,7 @@
 //!
 //! So in essence this just routes messages to the `Containers`.
 use anyhow::Result;
-use nightmaregl::{ Renderer, VertexData, Viewport, Transform };
+use nightmaregl::{ Renderer, VertexData, Viewport, Transform, Position };
 use nightmaregl::texture::Texture;
 
 use crate::listener::{MessageCtx, Listener};
@@ -27,6 +27,9 @@ pub use image::Image;
 pub use layer::LayerId;
 pub use savebuffer::SaveBuffer;
 
+/// Coords in canvas space
+pub struct Coords(Position<i32>);
+
 pub struct Canvas {
     /// All <whatevers> 
     containers: Containers,
@@ -38,7 +41,9 @@ pub struct Canvas {
 
 impl Canvas {
     pub fn new(viewport: Viewport, ctx: &mut MessageCtx) -> Result<Self> {
-        // TODO: pfft, lazy
+        // TODO: pfft, lazy! 
+        //       Don't panic, return the error good and proper.
+        // let plugin = match Plugin::new().map_err(|p| {}) {
         let plugin = match Plugin::new() {
             Ok(p) => p,
             Err(e) => {
@@ -61,26 +66,25 @@ impl Listener for Canvas {
     fn message(&mut self, message: &Message, ctx: &mut MessageCtx) -> Message {
         match message {
             Message::Resize(new_size) => {
-                self.containers.resize(*new_size);
+                self.containers.resize(new_size.cast());
             }
             Message::Command(Command::Split(dir)) => {
                 self.containers.split(*dir, ctx);
             }
             Message::Command(Command::NewImage(size)) => {
                 let image = Image::new(*size);
-                self.containers.add_image(*size, image);
+                self.containers.add_image(size.cast(), image);
             }
             Message::Command(Command::CloseSelectedSplit) => {
                 self.containers.close_selected();
             }
-            Message::Command(Command::Split(split)) => {
-                self.containers.split(*split, ctx);
-            }
             Message::Command(Command::Put(pos)) => {
-                self.containers.draw(*pos);
+                let coords = Coords(*pos);
+                self.containers.draw(coords);
             }
             Message::Command(Command::Clear(pos)) => {
-                self.containers.clear_pixel(*pos);
+                let coords = Coords(*pos);
+                self.containers.clear_pixel(coords);
             }
             Message::Command(Command::SetColour(colour)) => {
                 self.containers.set_colour(*colour);
@@ -124,7 +128,7 @@ impl Listener for Canvas {
                 return Message::TranslatedCursor(pos);
             }
             Message::Input(Input::Scroll(delta), _) => {
-                self.containers.change_pixel_size(*delta);
+                self.containers.change_scale(*delta);
             }
 
             // Unhandled messages

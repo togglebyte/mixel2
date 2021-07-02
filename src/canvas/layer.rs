@@ -1,6 +1,7 @@
-use nightmaregl::{Size, Position};
+use nightmaregl::Size;
 use nightmaregl::texture::Texture;
 use nightmaregl::pixels::{Pixel, Pixels};
+use super::Coords;
 
 // -----------------------------------------------------------------------------
 //     - Layer id -
@@ -44,18 +45,19 @@ pub struct Layer {
 impl Layer {
     pub fn new(size: Size<i32>) -> Self {
         let buffer = Pixels::from_pixel(Pixel::transparent(), size.cast());
-        let texture = Texture::default_with_data(size, buffer.as_bytes());
+        let texture = Texture::default_with_data(size.cast(), buffer.as_bytes());
         Self { texture, buffer, dirty: false }
     }
 
-    pub fn push_pixel(&mut self, pixel: Pixel, position: Position<i32>) {
+    pub fn push_pixel(&mut self, pixel: Pixel, coords: Coords) {
         self.buffer.insert_pixel(pixel, position.cast());
         self.dirty = true;
     }
 
-    // pub fn resize(&mut self, _new_size: Size<i32>) {
-    //     todo!("oh no you don't!");
-    // }
+    pub fn resize(&mut self, new_size: Size<i32>) {
+        drop(new_size);
+        todo!("oh no you don't!");
+    }
 
     pub fn clear(&mut self) {
         self.buffer.iter_mut().for_each(|p| *p = Pixel::transparent());
@@ -65,7 +67,7 @@ impl Layer {
     // TODO: only draw the dirty region
     pub fn draw_to_texture(&mut self) {
         self.texture.write_region(
-            Position::zero(),
+            nightmaregl::Position::zero(),
             self.buffer.size().cast(),
             self.buffer.as_bytes(),
         );

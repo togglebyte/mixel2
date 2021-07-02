@@ -5,7 +5,7 @@ use nightmaregl::pixels::Pixel;
 use crate::layout::Split;
 use crate::canvas::LayerId;
 use crate::plugins::{Arg, PluginCall};
-use super::commands::{Command, Extent};
+use super::commands::Command;
 
 macro_rules! or_noop {
     ($e:expr) => {
@@ -32,24 +32,28 @@ impl<'a> Parser<'a> {
     }
 
     pub fn parse(self) -> Command {
-        macro_rules! extend {
-            ($dir:ident) => {
-                match self.args.parse::<i32>() {
-                    Ok(n) => Command::Extend(Extent { $dir: n, ..Default::default() }),
-                    Err(_) => Command::Noop,
-                }
-            }
-        }
+
+        // TODO: this shouls resize
+        //       all the textures in all the layers.
+        //       Rename this to something other than extend
+        // macro_rules! extend {
+        //     ($dir:ident) => {
+        //         match self.args.parse::<i32>() {
+        //             Ok(n) => Command::Extend(Extent { $dir: n, ..Default::default() }),
+        //             Err(_) => Command::Noop,
+        //         }
+        //     }
+        // }
 
         info!("{:?} | {}", self.command, self.args);
 
         match self.command {
             "q" => Command::Quit,
             w@"w" | w@"w!" => Command::Save { path: self.args.to_owned(), overwrite: w == "w!" },
-            "extendl" => extend!(left),
-            "extendr" => extend!(right),
-            "extendu" => extend!(up),
-            "extendd" => extend!(down),
+            // "extendl" => extend!(left),
+            // "extendr" => extend!(right),
+            // "extendu" => extend!(up),
+            // "extendd" => extend!(down),
             "put" => Command::Put(or_noop!(self.args_to_pos())),
             "clear" => Command::Clear(or_noop!(self.args_to_pos())),
             "new" => Command::NewImage(or_noop!(self.args_to_size())),
@@ -57,7 +61,7 @@ impl<'a> Parser<'a> {
             "splitv" => Command::Split(Split::Vert),
             "close" => Command::CloseSelectedSplit,
             "colour" | "color" => Command::SetColour(or_noop!(self.args_to_rgb())),
-            "alpha" => Command::SetAlpha(or_noop!(self.args_to_usize())),
+            "alpha" => Command::SetAlpha(or_noop!(self.args_to_u8())),
             "layer" => Command::ChangeLayer(LayerId::from_display(or_noop!(self.args_to_usize()))),
             "newlayer" => Command::NewLayer,
             "removelayer" => Command::RemoveLayer,
@@ -68,6 +72,10 @@ impl<'a> Parser<'a> {
 
     fn args_to_usize(&self) -> Option<usize> {
         self.args.parse::<usize>().ok()
+    }
+
+    fn args_to_u8(&self) -> Option<u8> {
+        self.args.parse::<u8>().ok()
     }
 
     fn args_to_rgb(&self) -> Option<Pixel> {

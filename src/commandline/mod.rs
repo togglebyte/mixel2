@@ -37,7 +37,7 @@ impl CommandLine {
     pub fn new(size: Size<i32>, context: &mut Context) -> Result<Self> {
         let text_renderer = Renderer::default_font(context)?;
         let font_size = 18.0;
-        let viewport = Viewport::new(Position::new(0, 0), viewport_size(size, font_size));
+        let viewport = Viewport::new(Position::new(0, 0), viewport_size(size, font_size as i32));
 
         let mut text = Text::from_path(
             "/usr/share/fonts/TTF/Hack-Regular.ttf",
@@ -128,7 +128,7 @@ impl Listener for CommandLine {
         match message {
             Message::Input(input, _) => return self.input(*input).map(Message::Command).unwrap_or(Message::Noop),
             Message::Resize(new_size) => {
-                self.viewport.resize(viewport_size(*new_size, self.font_size));
+                self.viewport.resize(viewport_size(*new_size, self.font_size as i32));
             }
             Message::ModeChanged(mode) => {
                 self.mode = *mode;
@@ -216,6 +216,6 @@ impl Caret {
 //     - Viewport size -
 //     Used when resizing
 // -----------------------------------------------------------------------------
-fn viewport_size(size: Size<i32>, font_size: f32) -> Size<i32> {
-    Size::new(size.width, (font_size * 2.0) as i32)
+fn viewport_size(size: Size<i32>, font_size: i32) -> Size<i32> {
+    Size::new(size.width, font_size * 2)
 }

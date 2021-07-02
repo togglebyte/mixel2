@@ -1,11 +1,11 @@
 use std::path::Path;
 
 use anyhow::Result;
-use nightmaregl::{Position, Size, VertexData, Context, Viewport, Renderer, Transform, Sprite};
+use nightmaregl::{Size, VertexData, Context, Viewport, Renderer, Transform, Sprite};
 use nightmaregl::pixels::Pixel;
 use nightmaregl::texture::Texture;
 
-use super::layer::{LayerId, Layer};
+use super::layer::{LayerId, Layer, Coords};
 
 // -----------------------------------------------------------------------------
 //     - Image -
@@ -19,8 +19,8 @@ pub struct Image {
 impl Image {
     pub(super) fn new(size: Size<i32>) -> Self {
         Self {
-            layers: vec![Layer::new(size)],
-            layer_id: LayerId::from_index(0),
+            layers: vec![Layer::new(size.cast())],
+            layer_id: LayerId::from_index(0)t,
             dirty: false,
         }
     }
@@ -31,12 +31,12 @@ impl Image {
         unimplemented!()
     }
 
-    pub(super) fn put_pixel(&mut self, pixel: Pixel, pos: Position<i32>) {
-        self.layers[self.layer_id.as_index()].push_pixel(pixel, pos);
+    pub(super) fn put_pixel(&mut self, pixel: Pixel, coords: Coords) {
+        self.layers[self.layer_id.as_index()].push_pixel(pixel, coords);
         self.dirty = true;
     }
 
-    pub(super) fn clear_pixel(&mut self, pos: Position<i32>) {
+    pub(super) fn clear_pixel(&mut self, coords: Coords) {
         self.layers[self.layer_id.as_index()].push_pixel(Pixel::transparent(), pos);
         self.dirty = true;
     }
@@ -89,7 +89,6 @@ impl Image {
     pub fn render(
         &self,
         renderer: &Renderer<VertexData>, 
-        // mut vertex_data: VertexData,
         mut sprite: Sprite<i32>,
         transform: &Transform<i32>,
         viewport: &Viewport,
@@ -99,6 +98,7 @@ impl Image {
         const SPRITE_Z: i32 = 150;
 
         // Do NOT reverse these AGAIN!
+        // They are in the correct order now.
         for (mut z_index, layer) in self.layers.iter().enumerate() {
             sprite.z_index = SPRITE_Z - z_index as i32;
             let vertex_data = VertexData::new(&sprite, transform);

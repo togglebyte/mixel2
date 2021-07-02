@@ -26,8 +26,7 @@ impl Status {
     pub fn new(size: Size<i32>, context: &mut Context) -> Result<Self> {
         let font_size = 18.0;
         let position = {
-            let size = size.cast::<f32>();
-            Position::new(10.0, size.height - 10.0 - font_size * 2.0)
+            Position::new(10.0, size.height as f32 - 10.0 - font_size * 2.0)
         };
 
         let mut text = Text::from_path(
@@ -37,7 +36,7 @@ impl Status {
             context,
         )?;
 
-        text.position(position.cast());
+        text.position(position);
         text.z_index(9999);
 
         let renderer = Renderer::default_font(context)?;

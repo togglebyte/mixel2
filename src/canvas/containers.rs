@@ -1,12 +1,15 @@
 //! Shows and renders all containers.
 //! A `Container` holds the viewport
+//!
+//! All coordinates to be drawn should be of type `Coord` and not `Position<i32>`,
+//! to keep from translating positions multiple times.
 use std::path::Path;
 
 use anyhow::Result;
 use nightmaregl::events::{ButtonState, MouseButton};
 use nightmaregl::pixels::Pixel;
 use nightmaregl::texture::Texture;
-use nightmaregl::{Position, Point, Size, Sprite, Transform, Viewport, Rect, Context};
+use nightmaregl::{Position, Point, Size, Sprite, Transform, Viewport, Rect, Context, Vector};
 
 use crate::Mouse;
 use crate::border::BorderType;
@@ -16,7 +19,8 @@ use crate::layout::{Split, Layout};
 use crate::listener::MessageCtx;
 use crate::message::Message;
 
-use super::{Container, Image, SaveBuffer};
+use super::{Container, Image, SaveBuffer, Coords};
+
 
 // -----------------------------------------------------------------------------
 //     - Containers -
@@ -43,12 +47,13 @@ impl Containers {
     /// The container holds the drawable area of the screen.
     /// A container can be split into multiple containers.
     pub fn new(viewport: Viewport, ctx: &mut MessageCtx) -> Result<Self> {
+        let mut sprite = Sprite::from_size(Size::new(32, 32));
+        sprite.anchor = (sprite.size / 2).to_vector();
         let container = Container::new(
             viewport.clone(),
             Split::Horz,
             ctx,
-            Sprite::from_size(Size::new(32, 32)),
-            // Transform::new(Position::new(10, 10)),
+            sprite,
         )?;
 
         let mut inst = Self {
@@ -83,15 +88,18 @@ impl Containers {
     }
 
     pub fn resize(&mut self, mut new_size: Size<i32>) {
-        // HACK! remove this dirt
+        // TODO: HACK! remove this dirt
         // Do this because of the padding
         new_size.width -= 128 * 2;
         new_size.height -= 128 * 2;
         // End of hack
 
+        // Rebuild the layout
         self.layout.set_size(new_size);
         self.layout.rebuild();
         self.layout.layout(&mut self.inner);
+
+        // Resize all containers after the new layout
         self.inner.iter_mut().for_each(Container::resize);
     }
 
@@ -168,17 +176,17 @@ impl Containers {
         Ok(())
     }
 
-    pub fn draw(&mut self, pos: Position<i32>) {
+    pub fn draw(&mut self, coords: Coords) {
         let container = &mut self.inner[self.selected];
         let image = match container.image_id {
             Some(id) => &mut self.images[id],
             None => return,
         };
 
-        image.put_pixel(container.colour, pos);
+        image.put_pixel(container.colour, coords.0);
     }
 
-    pub fn clear_pixel(&mut self, pos: Position<i32>) {
+    pub fn clear_pixel(&mut self, coords: Coords) {
         let container = &mut self.inner[self.selected];
 
         let image = match container.image_id {
@@ -186,7 +194,7 @@ impl Containers {
             None => return,
         };
 
-        image.clear_pixel(pos);
+        image.clear_pixel(coords.0);
     }
 
     pub fn action(&mut self, action: Action) -> Message {
@@ -194,22 +202,22 @@ impl Containers {
         match action {
             Left => {
                 let pos = self.selected().move_cursor_by(Position::new(-1, 0));
-                self.update_positions(pos);
+                self.update_positions(pos.cast());
                 return Message::TranslatedCursor(pos);
             }
             Right => {
                 let pos = self.selected().move_cursor_by(Position::new(1, 0));
-                self.update_positions(pos);
+                self.update_positions(pos.cast());
                 return Message::TranslatedCursor(pos);
             }
             Up => {
                 let pos = self.selected().move_cursor_by(Position::new(0, 1));
-                self.update_positions(pos);
+                self.update_positions(pos.cast());
                 return Message::TranslatedCursor(pos);
             }
             Down => {
                 let pos = self.selected().move_cursor_by(Position::new(0, -1));
-                self.update_positions(pos);
+                self.update_positions(pos.cast());
                 return Message::TranslatedCursor(pos);
             }
             CanvasZoomIn => self.selected().renderer.pixel_size += 1,
@@ -231,32 +239,32 @@ impl Containers {
     }
 
     pub fn mouse_input(&mut self, mouse: Mouse, ctx: &MessageCtx) -> Position<i32> {
-        let pos = self.selected().translate_mouse(mouse.pos, ctx);
-        self.selected().move_cursor(pos);
-        self.update_positions(pos);
+        let pos = mouse.pos;
+        // let pos = self.selected().translate_mouse(mouse.pos, ctx);
+        // self.selected().move_cursor(pos);
+        // self.update_positions(pos);
 
-        if let Some(MouseButton::Middle) = mouse.button {
-            // Move the canvas
-        }
+        // if let Some(MouseButton::Middle) = mouse.button {
+        //     // Move the canvas
+        // }
 
-        let size = self.selected().node.sprite.size;
-        let pos = Position::new(pos.x, size.height - pos.y - 1);
+        // let size = self.selected().node.sprite.size;
+        // let pos = Position::new(pos.x, size.height - pos.y - 1);
 
-        if let ButtonState::Pressed = mouse.state {
-            let bounding_box = Rect::new(Point::zero(), size);
-            if !bounding_box.contains(pos.to_point()) {
-                return pos;
-            }
+        // if let ButtonState::Pressed = mouse.state {
+        //     let bounding_box = Rect::new(Point::zero(), size);
+        //     if !bounding_box.contains(pos.to_point().cast()) {
+        //         return pos;
+        //     }
 
+        //     if let Some(MouseButton::Left) = mouse.button {
+        //         self.draw(pos.cast());
+        //     }
 
-            if let Some(MouseButton::Left) = mouse.button {
-                self.draw(pos);
-            }
-
-            if let Some(MouseButton::Right) = mouse.button {
-                self.clear_pixel(pos);
-            }
-        }
+        //     if let Some(MouseButton::Right) = mouse.button {
+        //         self.clear_pixel(pos.cast());
+        //     }
+        // }
 
         pos
     }
@@ -266,7 +274,7 @@ impl Containers {
         container.set_colour(colour);
     }
 
-    pub fn set_alpha(&mut self, alpha: usize) {
+    pub fn set_alpha(&mut self, alpha: u8) {
         let container = self.selected();
         container.set_alpha(alpha);
     }
@@ -282,7 +290,7 @@ impl Containers {
 
     pub(super) fn new_layer(&mut self) -> Option<(LayerId, usize)> {
         let size = self.selected().node.sprite.size;
-        self.selected_image().map(|image| image.new_layer(size))
+        self.selected_image().map(|image| image.new_layer(size.cast()))
     }
 
     pub(super) fn set_layer(&mut self, mut layer_id: LayerId) -> Option<(LayerId, usize)> {
@@ -301,13 +309,13 @@ impl Containers {
         if !overwrite && path.as_ref().exists() {
             return
         }
-        let size = self.selected().node.sprite.size.clone();
+        let size = self.selected().node.sprite.size.cast::<i32>();
         let image = self.selected_image().unwrap();
         let mut save_buf = SaveBuffer::new(context, size).unwrap();
         save_buf.save(path, image, size, context);
     }
 
-    pub(super) fn change_pixel_size(&mut self, offset: i32) {
-        self.selected().renderer.pixel_size += offset;
+    pub(super) fn change_scale(&mut self, diff: i32) {
+        self.selected().scale(diff);
     }
 }
