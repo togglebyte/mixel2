@@ -14,7 +14,6 @@ use nightmaregl::{Position, Point, Size, Sprite, Transform, Viewport, Rect, Cont
 use crate::Mouse;
 use crate::border::BorderType;
 use crate::canvas::LayerId;
-use crate::config::Action;
 use crate::layout::{Split, Layout};
 use crate::listener::MessageCtx;
 use crate::message::Message;
@@ -82,6 +81,7 @@ impl Containers {
         self.inner[self.selected].image_id = Some(image_id);
         let mut selected = &mut self.inner[self.selected];
         let sprite = Sprite::from_size(size);
+
         // let pos = (*selected.viewport.size() / 2 / selected.renderer.pixel_size).to_vector();
         // selected.node.sprite = sprite;
         // selected.node.transform.translate_mut(pos);
@@ -183,7 +183,7 @@ impl Containers {
             None => return,
         };
 
-        image.put_pixel(container.colour, coords.0);
+        image.put_pixel(container.colour, coords);
     }
 
     pub fn clear_pixel(&mut self, coords: Coords) {
@@ -194,79 +194,19 @@ impl Containers {
             None => return,
         };
 
-        image.clear_pixel(coords.0);
+        image.clear_pixel(coords);
     }
 
-    pub fn action(&mut self, action: Action) -> Message {
-        use Action::*;
-        match action {
-            Left => {
-                let pos = self.selected().move_cursor_by(Position::new(-1, 0));
-                self.update_positions(pos.cast());
-                return Message::TranslatedCursor(pos);
-            }
-            Right => {
-                let pos = self.selected().move_cursor_by(Position::new(1, 0));
-                self.update_positions(pos.cast());
-                return Message::TranslatedCursor(pos);
-            }
-            Up => {
-                let pos = self.selected().move_cursor_by(Position::new(0, 1));
-                self.update_positions(pos.cast());
-                return Message::TranslatedCursor(pos);
-            }
-            Down => {
-                let pos = self.selected().move_cursor_by(Position::new(0, -1));
-                self.update_positions(pos.cast());
-                return Message::TranslatedCursor(pos);
-            }
-            CanvasZoomIn => self.selected().renderer.pixel_size += 1,
-            CanvasZoomOut => self.selected().renderer.pixel_size -= 1,
-            _ => {}
-        }
-
-        Message::Noop
-    }
-
-    fn update_positions(&mut self, pos: Position<i32>) {
+    pub fn update_coords(&mut self, coords: Coords) {
+        // Update the cursor position for all 
+        // containers that is currently displaying the 
+        // selected image.
         let image_id = self.selected().image_id;
         let selected = self.selected;
         self.inner
             .iter_mut()
-            .enumerate()
-            .filter(|(i, cont)| cont.image_id == image_id && *i != selected) 
-            .for_each(|(_, cont)| cont.move_cursor(pos));
-    }
-
-    pub fn mouse_input(&mut self, mouse: Mouse, ctx: &MessageCtx) -> Position<i32> {
-        let pos = mouse.pos;
-        // let pos = self.selected().translate_mouse(mouse.pos, ctx);
-        // self.selected().move_cursor(pos);
-        // self.update_positions(pos);
-
-        // if let Some(MouseButton::Middle) = mouse.button {
-        //     // Move the canvas
-        // }
-
-        // let size = self.selected().node.sprite.size;
-        // let pos = Position::new(pos.x, size.height - pos.y - 1);
-
-        // if let ButtonState::Pressed = mouse.state {
-        //     let bounding_box = Rect::new(Point::zero(), size);
-        //     if !bounding_box.contains(pos.to_point().cast()) {
-        //         return pos;
-        //     }
-
-        //     if let Some(MouseButton::Left) = mouse.button {
-        //         self.draw(pos.cast());
-        //     }
-
-        //     if let Some(MouseButton::Right) = mouse.button {
-        //         self.clear_pixel(pos.cast());
-        //     }
-        // }
-
-        pos
+            .filter(|cont| cont.image_id == image_id) 
+            .for_each(|cont| cont.move_cursor(coords));
     }
 
     pub fn set_colour(&mut self, colour: Pixel) {

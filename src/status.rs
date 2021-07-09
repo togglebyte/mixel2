@@ -5,6 +5,7 @@ use nightmaregl::{
     Context, Position, Renderer, Size, VertexData, Viewport,
 };
 
+use crate::Coords;
 use crate::application::Mode;
 use crate::canvas::LayerId;
 use crate::commandline::Command;
@@ -15,7 +16,7 @@ pub struct Status {
     dirty: bool,
     text: Text,
     mode: Mode,
-    cur_pos: Position<i32>,
+    cursor_coords: Coords,
     layer: LayerId,
     total_layers: usize,
     renderer: Renderer<VertexData>,
@@ -44,7 +45,7 @@ impl Status {
         let mut inst = Self {
             dirty: true,
             text,
-            cur_pos: Position::new(0, 0),
+            cursor_coords: Coords::zero(),
             mode: Mode::Normal,
             layer: LayerId::from_display(1),
             total_layers: 1,
@@ -58,7 +59,7 @@ impl Status {
     fn update_text(&mut self) {
         let text = format!(
             "x: {} y: {} | mode: {:?} | layer: {}/{}",
-            self.cur_pos.x, self.cur_pos.y, 
+            self.cursor_coords.0.x, self.cursor_coords.0.y, 
             self.mode, 
             self.layer.as_display(), self.total_layers,
         );
@@ -79,9 +80,9 @@ impl Listener for Status {
                 self.mode = *mode;
                 self.dirty = true;
             }
-            Message::Resize(size) => self.viewport.resize(*size),
-            Message::TranslatedCursor(pos) => {
-                self.cur_pos = *pos;
+            Message::Resize(ref size) => self.viewport.resize(*size),
+            Message::CursorCoords(coords) => {
+                self.cursor_coords = *coords;
                 self.dirty = true;
             }
             Message::LayerChanged { layer, total_layers } => {
@@ -90,7 +91,6 @@ impl Listener for Status {
                 self.dirty = true;
             }
             | Message::Input(_, _)
-            | Message::Mouse(_)
             | Message::CursorPos(_)
             | Message::Action(_)
             | Message::Command(_)

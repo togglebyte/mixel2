@@ -5,7 +5,8 @@ use nightmaregl::{Size, VertexData, Context, Viewport, Renderer, Transform, Spri
 use nightmaregl::pixels::Pixel;
 use nightmaregl::texture::Texture;
 
-use super::layer::{LayerId, Layer, Coords};
+use super::layer::{LayerId, Layer};
+use crate::Coords;
 
 // -----------------------------------------------------------------------------
 //     - Image -
@@ -20,7 +21,7 @@ impl Image {
     pub(super) fn new(size: Size<i32>) -> Self {
         Self {
             layers: vec![Layer::new(size.cast())],
-            layer_id: LayerId::from_index(0)t,
+            layer_id: LayerId::from_index(0),
             dirty: false,
         }
     }
@@ -37,7 +38,7 @@ impl Image {
     }
 
     pub(super) fn clear_pixel(&mut self, coords: Coords) {
-        self.layers[self.layer_id.as_index()].push_pixel(Pixel::transparent(), pos);
+        self.layers[self.layer_id.as_index()].push_pixel(Pixel::transparent(), coords);
         self.dirty = true;
     }
 

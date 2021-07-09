@@ -1,7 +1,7 @@
 use nightmaregl::{Size, Texture, Position};
 use nightmaregl::pixels::{Pixels, Pixel};
 
-use crate::Node;
+use crate::{Coords, Node};
 
 pub struct Cursor {
     pub node: Node<i32>,
@@ -12,7 +12,7 @@ pub struct Cursor {
 }
 
 impl Cursor {
-    pub fn new(position: Position<i32>, sprite_offset: Position<i32>) -> Self {
+    pub fn new(coords: Coords, sprite_offset: Position<i32>) -> Self {
         let size = Size::new(1, 1);
         let pixel = Pixel::black();
         let pixels = Pixels::from_pixel(pixel, size.cast());
@@ -25,7 +25,7 @@ impl Cursor {
             texture,
             node,
             colour: pixel,
-            position,
+            coords,
             visible: true,
         }
     }

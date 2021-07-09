@@ -5,6 +5,7 @@ use nightmaregl::{Context, Texture, Position, Renderer, VertexData};
 use crate::listener::{Listener, MessageCtx};
 use crate::message::Message;
 use crate::node::Node;
+use crate::input::Input;
 
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct Mouse {
@@ -50,7 +51,7 @@ impl MouseCursor {
 
 impl Listener for MouseCursor {
     fn message(&mut self, msg: &Message, ctx: &mut MessageCtx) -> Message {
-        if let Message::Mouse(mouse) = msg {
+        if let Message::Input(Input::Mouse(mouse), _) = msg {
             self.node.transform.translate_mut(mouse.pos);
         }
         

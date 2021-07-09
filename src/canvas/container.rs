@@ -14,7 +14,7 @@ use nightmaregl::{Position, Renderer, Size, Sprite, Transform, Vector, VertexDat
 use crate::border::{Border, BorderType};
 use crate::listener::MessageCtx;
 
-use super::{Cursor, Image};
+use super::{Cursor, Image, Coords};
 use crate::layout::Split;
 use crate::Node;
 
@@ -51,9 +51,9 @@ impl Container {
             node: Node::from_sprite(sprite),
             dir,
             image_id: None,
-            cursor: Cursor::new(Position::zero(), sprite.anchor),
+            cursor: Cursor::new(Coords::zero(), sprite.anchor),
             colour: Pixel::black(),
-            scale: Vector::new(4, 4),
+            scale: Vector::new(8, 8),
         };
 
         // Centre the canvas.
@@ -65,15 +65,16 @@ impl Container {
         Ok(inst)
     }
 
-    pub fn move_cursor_by(&mut self, pos: Position<i32>) -> Position<i32> {
+    pub fn move_cursor_by(&mut self, coords: Coords) -> Coords {
         let translation = self.cursor.node.transform.translation;
-        let new_pos = Position::new(translation.x + pos.x, translation.y + pos.y);
-        self.cursor.node.transform.translate_mut(new_pos.cast());
-        new_pos
+        let height = self.node.sprite.size.height - 1;
+        let mut current_coords = Coords::from_translation(translation, height);
+        current_coords + coords
     }
 
-    pub fn move_cursor(&mut self, pos: Position<i32>) {
-        self.cursor.node.transform.translate_mut(pos.cast());
+    pub fn move_cursor(&mut self, coords: Coords) {
+        let height = self.node.sprite.size.height - 1;
+        self.cursor.node.transform.translate_mut(coords.to_translation(height));
     }
 
     pub fn render(

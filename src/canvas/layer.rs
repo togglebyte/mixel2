@@ -1,7 +1,7 @@
 use nightmaregl::Size;
 use nightmaregl::texture::Texture;
 use nightmaregl::pixels::{Pixel, Pixels};
-use super::Coords;
+use crate::Coords;
 
 // -----------------------------------------------------------------------------
 //     - Layer id -
@@ -50,7 +50,7 @@ impl Layer {
     }
 
     pub fn push_pixel(&mut self, pixel: Pixel, coords: Coords) {
-        self.buffer.insert_pixel(pixel, position.cast());
+        self.buffer.insert_pixel(coords.0.cast(), pixel);
         self.dirty = true;
     }
 

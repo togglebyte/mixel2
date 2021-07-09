@@ -13,6 +13,7 @@ mod application;
 mod border;
 mod canvas;
 mod commandline;
+mod coords;
 mod config;
 mod fsevents;
 mod input;
@@ -30,6 +31,7 @@ use message::Message;
 use fsevents::PluginWatcher;
 pub use node::Node;
 pub use mouse::Mouse;
+pub use coords::Coords;
 
 fn main() -> Result<()> {
     pretty_env_logger::init();
@@ -38,8 +40,8 @@ fn main() -> Result<()> {
 
     let (el, mut context) = Context::builder("Mixel: the modal pixel editor")
         .vsync(true)
-        // .resizable(false)
-        // .with_size(Size::new(1880/2, 1024))
+        .resizable(false)
+        .with_size(Size::new(1880/2, 1024))
         .build()?;
 
     context.window().set_cursor_visible(false);

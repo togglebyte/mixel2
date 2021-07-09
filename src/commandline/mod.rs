@@ -138,8 +138,7 @@ impl Listener for CommandLine {
             Message::CursorPos(_)
             | Message::Action(_)
             | Message::Command(_)
-            | Message::Mouse(_)
-            | Message::TranslatedCursor(_)
+            | Message::CursorCoords(_)
             | Message::LayerChanged { .. }
             | Message::ReloadPlugin(_)
             | Message::Noop => {}

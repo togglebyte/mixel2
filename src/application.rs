@@ -121,7 +121,7 @@ impl App {
 
     pub fn input(
         &mut self,
-        input: Input,
+        mut input: Input,
         modifiers: Modifiers,
         context: &mut Context,
     ) -> Result<()> {
@@ -136,11 +136,11 @@ impl App {
             _ => None
         };
 
-        if let Input::Mouse(mut mouse) = input {
+        if let Input::Mouse(ref mut mouse) = input {
             // Flip the y coords
             let max_y = self.app_viewport.size().height;
             mouse.pos.y = max_y - mouse.pos.y;
-            self.handle_messages(Message::Mouse(mouse), context);
+            // self.handle_messages(Message::Mouse(mouse), context);
         }
 
         if let Some(mode) = mode {

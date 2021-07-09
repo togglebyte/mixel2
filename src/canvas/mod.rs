@@ -5,12 +5,13 @@
 use anyhow::Result;
 use nightmaregl::{ Renderer, VertexData, Viewport, Transform, Position };
 use nightmaregl::texture::Texture;
+use nightmaregl::events::{ButtonState, MouseButton};
 
-use crate::listener::{MessageCtx, Listener};
-use crate::Message;
 use crate::commandline::Command;
 use crate::input::Input;
+use crate::listener::{MessageCtx, Listener};
 use crate::plugins::Plugin;
+use crate::{Coords, Message};
 
 pub mod message;
 mod containers;
@@ -20,15 +21,14 @@ mod cursor;
 mod container;
 mod savebuffer;
 
+use crate::config::Action;
+
 pub use container::Container;
 pub use containers::Containers;
 pub use cursor::Cursor;
 pub use image::Image;
 pub use layer::LayerId;
 pub use savebuffer::SaveBuffer;
-
-/// Coords in canvas space
-pub struct Coords(Position<i32>);
 
 pub struct Canvas {
     /// All <whatevers> 
@@ -59,6 +59,13 @@ impl Canvas {
         };
 
         Ok(inst)
+    }
+
+    fn change_cursor_coords(&mut self, coords: Coords) -> Message {
+        let coords = self.containers.selected().move_cursor_by(coords);
+        eprintln!("{:?}", coords);
+        self.containers.update_coords(coords);
+        Message::CursorCoords(coords)
     }
 }
 
@@ -109,7 +116,6 @@ impl Listener for Canvas {
                     Some((layer, total_layers)) => return Message::LayerChanged { layer, total_layers },
                     None => {}
                 }
-                
             }
             Message::Command(Command::Save { path, overwrite }) => {
                 self.containers.save_current(path, *overwrite, ctx.context);
@@ -121,22 +127,58 @@ impl Listener for Canvas {
                 self.plugin.exec_code(code, &mut self.containers);
             }
             Message::Action(action) => {
-                return self.containers.action(*action);
+                use Action::*;
+                match action {
+                    Left => return self.change_cursor_coords(Coords::new(-1, 0)),
+                    Right => return self.change_cursor_coords(Coords::new(1, 0)),
+                    Up => return self.change_cursor_coords(Coords::new(0, -1)),
+                    Down => return self.change_cursor_coords(Coords::new(0, 1)),
+                    CanvasZoomIn => self.containers.selected().renderer.pixel_size += 1,
+                    CanvasZoomOut => self.containers.selected().renderer.pixel_size -= 1,
+                    _ => {}
+                }
             }
-            Message::Mouse(mouse) => {
-                let pos = self.containers.mouse_input(*mouse, ctx);
-                return Message::TranslatedCursor(pos);
+            Message::Input(Input::Mouse(mouse), _) => {
+                // Convert the mouse position to image coords
+                // for the selected canvas.
+
+                let node = self.containers.selected().node;
+                let anchor = node.sprite.anchor.cast::<f32>();
+                let node_pos = node.transform.translation;
+
+                let padding = self.containers.viewport.position;
+                let mut offset_pos = mouse.pos.cast::<f32>() - node_pos.cast::<f32>() - padding.cast::<f32>();
+
+                let scale = self.containers.selected().scale.cast::<f32>();
+                offset_pos.x /= scale.x;
+                offset_pos.y /= scale.y;
+                offset_pos += anchor;
+                offset_pos.y = node.sprite.size.height as f32 - offset_pos.y;
+
+                let coords = Coords::from(offset_pos);
+
+                self.containers.update_coords(coords);
+                if let ButtonState::Pressed = mouse.state {
+                    if let Some(MouseButton::Left) = mouse.button {
+                        self.containers.draw(coords);
+                    }
+
+                    if let Some(MouseButton::Right) = mouse.button {
+                        self.containers.clear_pixel(coords);
+                    }
+                }
+
+                return Message::CursorCoords(coords);
             }
             Message::Input(Input::Scroll(delta), _) => {
                 self.containers.change_scale(*delta);
             }
-
             // Unhandled messages
             Message::Input(_, _)
             | Message::CursorPos(_)
             | Message::ModeChanged(_)
             | Message::Command(_)
-            | Message::TranslatedCursor(_)
+            | Message::CursorCoords(_)
             | Message::LayerChanged { .. }
             | Message::Noop => {}
         }
@@ -147,4 +189,5 @@ impl Listener for Canvas {
     fn render(&mut self, ctx: &mut MessageCtx) -> Result<()> {
         self.containers.render(&self.background, ctx)
     }
+
 }
