@@ -49,6 +49,7 @@ impl Containers {
         let mut sprite = Sprite::from_size(Size::new(32, 32));
         sprite.anchor = (sprite.size / 2).to_vector();
         let container = Container::new(
+            0,
             viewport.clone(),
             Split::Horz,
             ctx,
@@ -117,6 +118,7 @@ impl Containers {
         let sprite = selected.node.sprite.clone();
 
         let mut container = Container::new(
+            new_id,
             viewport,
             Split::Horz,
             ctx,

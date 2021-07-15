@@ -10,6 +10,7 @@ use anyhow::Result;
 use nightmaregl::pixels::Pixel;
 use nightmaregl::texture::Texture;
 use nightmaregl::{Position, Renderer, Size, Sprite, Transform, Vector, VertexData, Viewport};
+use nightmaregl::text::{Text, WordWrap};
 
 use crate::border::{Border, BorderType};
 use crate::listener::MessageCtx;
@@ -33,16 +34,23 @@ pub struct Container {
     cursor: Cursor,
     pub colour: Pixel,
     pub scale: Vector<i32>,
+
+    text_renderer: Renderer<VertexData>,
+    container_id: usize,
+    text: Text,
 }
 
 impl Container {
     pub fn new(
+        container_id: usize,
         viewport: Viewport,
         dir: Split,
         ctx: &mut MessageCtx,
         sprite: Sprite<i32>,
     ) -> Result<Self> {
         let border_type = BorderType::Inactive;
+
+        let font_size = 22.0;
 
         let mut inst = Self {
             border: Border::new(border_type, ctx.textures, &viewport),
@@ -54,13 +62,29 @@ impl Container {
             cursor: Cursor::new(Coords::zero(), sprite.anchor),
             colour: Pixel::black(),
             scale: Vector::new(8, 8),
+
+            // Might not keep this?
+            text_renderer: Renderer::default_font(ctx.context)?,
+            container_id,
+            text: Text::from_path(
+                "/usr/share/fonts/TTF/Hack-Regular.ttf",
+                font_size,
+                WordWrap::NoWrap,
+                &ctx.context,
+            )?,
         };
 
         // Centre the canvas.
+        // TODO: check the viewport size... might be halved
+        //       when it shouldn't be (for splitting).
+        //       We can verify this if the border is 
+        //       based on the viewport size.
         let pos = (*inst.viewport.size() / 2).cast();
         let mut transform = Transform::new(pos.to_vector());
         transform.scale_mut(inst.scale);
         inst.node.transform = transform;
+
+        inst.text.set_text(format!("id: {}", inst.container_id));
 
         Ok(inst)
     }
@@ -124,6 +148,14 @@ impl Container {
                 ctx.context,
             )?;
         }
+
+        // Container id
+        self.text_renderer.render(
+            &self.text.texture(),
+            &self.text.vertex_data(),
+            &self.viewport,
+            ctx.context,
+        );
 
         Ok(())
     }
