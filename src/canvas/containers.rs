@@ -263,4 +263,10 @@ impl Containers {
     pub(super) fn change_scale(&mut self, diff: i32) {
         self.selected().scale(diff);
     }
+
+    pub(super) fn move_canvas(&mut self, offset: Position<i32>) {
+        let selected = self.selected();
+        let tran = selected.node.transform.translation;
+        selected.node.transform.translate_mut(tran + offset);
+    }
 }

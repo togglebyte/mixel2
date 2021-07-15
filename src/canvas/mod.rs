@@ -37,6 +37,8 @@ pub struct Canvas {
     background: Texture<i32>,
     /// Plugin
     plugin: Plugin,
+
+    drag_pos: Option<Position<i32>>,
 }
 
 impl Canvas {
@@ -56,6 +58,7 @@ impl Canvas {
             background: Texture::from_disk("background.png")?,
             containers: Containers::new(viewport, ctx)?,
             plugin,
+            drag_pos: None,
         };
 
         Ok(inst)
@@ -158,13 +161,33 @@ impl Listener for Canvas {
                 let coords = Coords::from(offset_pos);
 
                 self.containers.update_coords(coords);
-                if let ButtonState::Pressed = mouse.state {
-                    if let Some(MouseButton::Left) = mouse.button {
-                        self.containers.draw(coords);
-                    }
+                match mouse.state {
+                    ButtonState::Pressed => {
+                        if let Some(MouseButton::Left) = mouse.button {
+                            self.containers.draw(coords);
+                        }
 
-                    if let Some(MouseButton::Right) = mouse.button {
-                        self.containers.clear_pixel(coords);
+                        if let Some(MouseButton::Right) = mouse.button {
+                            self.containers.clear_pixel(coords);
+                        }
+
+                        if let Some(MouseButton::Middle) = mouse.button {
+                            match self.drag_pos {
+                                None => self.drag_pos = Some(mouse.pos),
+                                Some(pos) => {
+                                    let diff = mouse.pos - pos;
+                                    self.drag_pos = Some(mouse.pos);
+                                    self.containers.move_canvas(diff);
+                                }
+                            }
+                            // Check difference and move canvas accordingly
+                            // start tracking the mouse down point
+                        }
+                    }
+                    ButtonState::Released => {
+                        if let Some(MouseButton::Middle) = mouse.button {
+                            self.drag_pos = None;
+                        }
                     }
                 }
 
