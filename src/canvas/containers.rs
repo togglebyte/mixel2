@@ -72,9 +72,9 @@ impl Containers {
     }
 
     /// Add a new image to the current container
-    /// TODO: can't delete an image now because of how stupid this is.
-    ///       Deleting an image would offset every image after it in
-    ///       the vector.
+    // TODO: can't delete an image now because of how stupid this is.
+    //       Deleting an image would offset every image after it in
+    //       the vector.
     pub fn add_image(&mut self, size: Size<i32>, image: Image) {
         let image_id = self.images.len();
         self.images.push(image);
@@ -114,6 +114,8 @@ impl Containers {
         self.layout.split(self.selected, new_id, dir);
 
         let selected = self.selected();
+
+        let selected_id = selected.container_id;
         let viewport = selected.viewport.clone();
         let sprite = selected.node.sprite.clone();
 
@@ -131,6 +133,7 @@ impl Containers {
         self.layout.layout(&mut self.inner);
         self.inner
             .iter_mut()
+            .filter(|cont| cont.container_id == new_id || cont.container_id == selected_id)
             .for_each(|cont| {
                 cont.border.resize(&cont.viewport);
                 let mut cur_pos = cont.node.transform.translation;

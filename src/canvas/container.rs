@@ -36,7 +36,7 @@ pub struct Container {
     pub scale: Vector<i32>,
 
     text_renderer: Renderer<VertexData>,
-    container_id: usize,
+    pub container_id: usize,
     text: Text,
 }
 
@@ -75,10 +75,6 @@ impl Container {
         };
 
         // Centre the canvas.
-        // TODO: check the viewport size... might be halved
-        //       when it shouldn't be (for splitting).
-        //       We can verify this if the border is 
-        //       based on the viewport size.
         let pos = (*inst.viewport.size() / 2).cast();
         let mut transform = Transform::new(pos.to_vector());
         transform.scale_mut(inst.scale);

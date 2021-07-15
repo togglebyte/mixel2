@@ -66,6 +66,7 @@ impl Layout {
     }
 
     pub fn split(&mut self, left_id: usize, right_id: usize, split: Split) {
+        eprintln!("L: {} | R: {}", left_id, right_id);
         if let Some(node) = self.find_node(left_id) {
             match node {
                 Layout::Leaf { size, pos, .. } => {
