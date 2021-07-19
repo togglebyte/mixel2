@@ -50,6 +50,16 @@ impl Layer {
     }
 
     pub fn push_pixel(&mut self, pixel: Pixel, coords: Coords) {
+        if coords.0.x < 0 || coords.0.y < 0 {
+            return;
+        }
+
+        let size = self.buffer.size().cast();
+
+        if coords.0.x >= size.width || coords.0.y >= size.height {
+            return
+        }
+
         self.buffer.insert_pixel(coords.0.cast(), pixel);
         self.dirty = true;
     }
