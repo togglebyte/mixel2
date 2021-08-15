@@ -21,4 +21,5 @@ pub enum Command {
     RemoveLayer,
     ChangeLayer(LayerId),
     Lua(String),
+    Log(String),
 }

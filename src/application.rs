@@ -7,15 +7,16 @@ use nightmaregl::{Renderer, VertexData, Viewport, Context, Size, Position};
 use nightmaregl::texture::Texture;
 use nightmaregl::pixels::Pixel;
 
+use crate::border::{BorderType, Textures};
+use crate::canvas::Canvas;
 use crate::commandline::{Command, CommandLine};
 use crate::config::Config;
+use crate::console::Console;
 use crate::input::{InputToAction, Input};
 use crate::listener::{MessageCtx, Listener};
 use crate::message::Message;
-use crate::status::Status;
-use crate::canvas::Canvas;
-use crate::border::{BorderType, Textures};
 use crate::mouse::MouseCursor;
+use crate::status::Status;
 
 const VIEWPORT_PADDING:i32 = 128;
 
@@ -108,6 +109,7 @@ impl App {
         inst.listeners.push(Box::new(CommandLine::new(win_size, ctx.context)?));
         inst.listeners.push(Box::new(MouseCursor::new(&mut ctx)?));
         inst.listeners.push(Box::new(InputToAction::new(inst.mode)));
+        inst.listeners.push(Box::new(Console::new(&mut ctx)?));
 
         Ok(inst)
     }

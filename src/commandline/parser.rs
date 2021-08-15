@@ -66,6 +66,7 @@ impl<'a> Parser<'a> {
             "newlayer" => Command::NewLayer,
             "removelayer" => Command::RemoveLayer,
             "lua" => Command::Lua(self.args.to_owned()),
+            "log" => Command::Log(self.args.to_owned()),
             _ => Command::Noop,
         }
     }
