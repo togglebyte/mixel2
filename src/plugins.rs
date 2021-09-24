@@ -5,8 +5,8 @@ use std::path::{Component, Path};
 
 use mlua::prelude::*;
 use mlua::{Lua, Result, Function, Variadic};
-use nightmaregl::Position;
-use nightmaregl::pixels::Pixel;
+use nightmare::Position;
+use nightmare::pixels::Pixel;
 
 use crate::canvas::Containers;
 

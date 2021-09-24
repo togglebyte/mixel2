@@ -1,4 +1,4 @@
-use nightmaregl::events::{Key, Modifiers};
+use nightmare::events::{Key, Modifiers};
 use crate::input::Input;
 
 fn keys_and_mods(keys: impl Iterator<Item=Input>) -> (Vec<Input>, Vec<Modifiers>) {

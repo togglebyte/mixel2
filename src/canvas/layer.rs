@@ -1,6 +1,8 @@
-use nightmaregl::Size;
-use nightmaregl::texture::Texture;
-use nightmaregl::pixels::{Pixel, Pixels};
+use nightmare::{Context, Size, Viewport};
+use nightmare::texture::Texture;
+use nightmare::pixels::{Pixel, Pixels};
+use nightmare::render2d::SimpleRenderer;
+use nightmare::shaders::ShaderProgram;
 use crate::Coords;
 
 // -----------------------------------------------------------------------------
@@ -40,12 +42,15 @@ pub struct Layer {
     pub texture: Texture<i32>,
     pub buffer: Pixels<Pixel>,
     pub(super) dirty: bool,
+    pub shader: Option<ShaderProgram>,
+    pub(super) renderer: SimpleRenderer,
 }
 
 impl Layer {
-    pub fn new(size: Size<i32>) -> Self {
+    pub fn new(size: Size<i32>, context: &mut Context, viewport: &Viewport) -> Self {
         let buffer = Pixels::from_pixel(Pixel::transparent(), size.cast());
         let texture = Texture::default_with_data(size.cast(), buffer.as_bytes());
+        let renderer = SimpleRenderer::new(context, viewport.view_projection());
         Self { texture, buffer, dirty: false }
     }
 
@@ -77,7 +82,7 @@ impl Layer {
     // TODO: only draw the dirty region
     pub fn draw_to_texture(&mut self) {
         self.texture.write_region(
-            nightmaregl::Position::zero(),
+            nightmare::Position::zero(),
             self.buffer.size().cast(),
             self.buffer.as_bytes(),
         );

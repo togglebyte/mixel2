@@ -1,5 +1,5 @@
 use anyhow::Result;
-use nightmaregl::{Context, Renderer, VertexData, Viewport};
+use nightmare::{Context, VertexData, Viewport};
 
 use crate::border::Textures;
 use crate::config::Config;

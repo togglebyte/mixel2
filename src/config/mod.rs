@@ -3,7 +3,7 @@ use std::path::Path;
 use std::fs::read as read_data;
 
 use anyhow::Result;
-use nightmaregl::events::Modifiers;
+use nightmare::events::Modifiers;
 use serde::Deserialize;
 
 use crate::input::Input;

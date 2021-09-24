@@ -2,9 +2,9 @@ use std::thread;
 
 use anyhow::Result;
 use log::error;
-use nightmaregl::events::{ButtonState, Event, EventLoop, LoopAction, Modifiers, MouseButton};
-use nightmaregl::pixels::Pixel;
-use nightmaregl::{Context, Position, Size};
+use nightmare::events::{ButtonState, Event, EventLoop, LoopAction, Modifiers, MouseButton};
+use nightmare::pixels::Pixel;
+use nightmare::{Context, Position, Size};
 use pretty_env_logger;
 
 pub mod plugins;

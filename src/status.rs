@@ -1,16 +1,15 @@
 use anyhow::Result;
 use log::error;
-use nightmaregl::text::{Text, WordWrap};
-use nightmaregl::{
-    Context, Position, Renderer, Size, VertexData, Viewport,
-};
+use nightmare::text::{Text, WordWrap};
+use nightmare::{Context, Position, Size, VertexData, Viewport};
+use nightmare::render2d::SimpleRenderer;
 
-use crate::Coords;
 use crate::application::Mode;
 use crate::canvas::LayerId;
 use crate::commandline::Command;
 use crate::listener::{Listener, MessageCtx};
 use crate::message::Message;
+use crate::Coords;
 
 pub struct Status {
     dirty: bool,
@@ -19,7 +18,7 @@ pub struct Status {
     cursor_coords: Coords,
     layer: LayerId,
     total_layers: usize,
-    renderer: Renderer<VertexData>,
+    renderer: SimpleRenderer,
     viewport: Viewport,
 }
 
@@ -40,7 +39,8 @@ impl Status {
         text.position(position);
         text.z_index(9999);
 
-        let renderer = Renderer::default_font(context)?;
+        let viewport = Viewport::new(Position::zero(), size);
+        let renderer = SimpleRenderer::new(context, viewport.view_projection())?;
 
         let mut inst = Self {
             dirty: true,
@@ -49,7 +49,7 @@ impl Status {
             mode: Mode::Normal,
             layer: LayerId::from_display(1),
             total_layers: 1,
-            viewport: Viewport::new(Position::zero(), size),
+            viewport,
             renderer,
         };
 
@@ -59,9 +59,11 @@ impl Status {
     fn update_text(&mut self) {
         let text = format!(
             "x: {} y: {} | mode: {:?} | layer: {}/{}",
-            self.cursor_coords.0.x, self.cursor_coords.0.y, 
-            self.mode, 
-            self.layer.as_display(), self.total_layers,
+            self.cursor_coords.0.x,
+            self.cursor_coords.0.y,
+            self.mode,
+            self.layer.as_display(),
+            self.total_layers,
         );
 
         if let Err(e) = self.text.set_text(text) {
@@ -90,7 +92,7 @@ impl Listener for Status {
                 self.total_layers = *total_layers;
                 self.dirty = true;
             }
-            | Message::Input(_, _)
+            Message::Input(_, _)
             | Message::CursorPos(_)
             | Message::Action(_)
             | Message::Command(_)

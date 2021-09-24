@@ -1,6 +1,7 @@
 use anyhow::Result;
-use nightmaregl::events::{ButtonState, MouseButton};
-use nightmaregl::{Context, Texture, Position, Renderer, VertexData};
+use nightmare::events::{ButtonState, MouseButton};
+use nightmare::{Context, Texture, Position, VertexData};
+use nightmare::render2d::SimpleRenderer;
 
 use crate::listener::{Listener, MessageCtx};
 use crate::message::Message;
@@ -31,9 +32,9 @@ pub struct MouseCursor {
 }
 
 impl MouseCursor {
-    pub fn new(ctx: &mut MessageCtx) -> Result<Self> {
+    pub fn new(ctx: &mut MessageCtx, viewport: Viewport) -> Result<Self> {
         let texture = Texture::from_disk("cursor.png")?;
-        let renderer = Renderer::default(ctx.context)?;
+        let renderer = SimpleRenderer::new(ctx.context, viewport.view_projection())?;
         let mut node = Node::new(&texture);
         node.sprite.z_index = 10;
         node.sprite.anchor = (node.sprite.size / 2).to_vector();

@@ -15,7 +15,7 @@ figment = "0.10.5"
 log = "0.4.14"
 mlua = { version = "0.5.4", features = ["lua54"] }
 nalgebra = "0.26.1"
-nightmaregl = { path = "../nightmaregl" }
+nightmare = { path = "../nightmaregl/nightmare" }
 notify = "4.0.17"
 num-traits = "0.2.14"
 pretty_env_logger = "0.4.0"

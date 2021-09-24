@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
-use nightmaregl::events::{MouseButton, ButtonState, Modifiers};
-use nightmaregl::{Position, Size};
+use nightmare::events::{MouseButton, ButtonState, Modifiers};
+use nightmare::{Position, Size};
 
 use crate::application::Mode;
 use crate::canvas::LayerId;

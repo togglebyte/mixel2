@@ -6,10 +6,10 @@
 use std::path::Path;
 
 use anyhow::Result;
-use nightmaregl::events::{ButtonState, MouseButton};
-use nightmaregl::pixels::Pixel;
-use nightmaregl::texture::Texture;
-use nightmaregl::{Position, Point, Size, Sprite, Transform, Viewport, Rect, Context, Vector};
+use nightmare::events::{ButtonState, MouseButton};
+use nightmare::pixels::Pixel;
+use nightmare::texture::Texture;
+use nightmare::{Position, Point, Size, Sprite, Transform, Viewport, Rect, Context, Vector};
 
 use crate::Mouse;
 use crate::border::BorderType;

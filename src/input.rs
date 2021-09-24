@@ -1,5 +1,5 @@
-use nightmaregl::events::{ButtonState, MouseButton, Key};
-use nightmaregl::Position;
+use nightmare::events::{ButtonState, MouseButton, Key};
+use nightmare::Position;
 
 use crate::application::Mode;
 use crate::listener::{Listener, MessageCtx};

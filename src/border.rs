@@ -2,8 +2,9 @@ use std::collections::HashMap;
 use std::ops::{Deref, DerefMut};
 
 use anyhow::Result;
-use nightmaregl::texture::Texture;
-use nightmaregl::{Size, Viewport, Renderer, VertexData, Context, Transform};
+use nightmare::texture::Texture;
+use nightmare::{Size, Viewport, VertexData, Context, Transform};
+use nightmare::render2d::SimpleRenderer;
 
 use crate::Node;
 
@@ -106,10 +107,10 @@ impl Border {
 
     pub fn render(
         &self,
-        parent: &Transform<i32>,
+        parent: &Transform,
         textures: &Textures,
         viewport: &Viewport,
-        renderer: &Renderer<VertexData>,
+        renderer: &SimpleRenderer,
         context: &mut Context,
     ) -> Result<()> {
         let texture = &textures[&self.border_type];

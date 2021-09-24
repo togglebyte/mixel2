@@ -2,10 +2,11 @@ use std::path::PathBuf;
 use std::collections::VecDeque;
 
 use anyhow::Result;
-use nightmaregl::events::{Key, Modifiers};
-use nightmaregl::{Renderer, VertexData, Viewport, Context, Size, Position};
-use nightmaregl::texture::Texture;
-use nightmaregl::pixels::Pixel;
+use nightmare::events::{Key, Modifiers};
+use nightmare::{Viewport, Context, Size, Position};
+use nightmare::texture::Texture;
+use nightmare::pixels::Pixel;
+use nightmare::render2d::SimpleRenderer;
 
 use crate::border::{BorderType, Textures};
 use crate::canvas::Canvas;
@@ -51,7 +52,7 @@ pub struct App {
     app_viewport: Viewport,
     canvas_viewport: Viewport,
     textures: Textures,
-    border_renderer: Renderer<VertexData>,
+    renderer: SimpleRenderer,
 }
 
 impl App {
@@ -82,6 +83,7 @@ impl App {
         //     - Canvas viewport -
         // -----------------------------------------------------------------------------
         let canvas_viewport = canvas_viewport(&app_viewport);
+        let renderer = SimpleRenderer::new(context, app_viewport.view_projections())?;
 
         let mut inst = Self {
             win_size,
@@ -92,7 +94,7 @@ impl App {
             app_viewport,
             canvas_viewport,
             textures,
-            border_renderer: Renderer::default(context)?,
+            renderer,
         };
 
         let mut ctx = MessageCtx { 
@@ -100,7 +102,7 @@ impl App {
             canvas_viewport: &inst.canvas_viewport,
             app_viewport: &inst.app_viewport,
             textures: &inst.textures,
-            border_renderer: &inst.border_renderer,
+            renderer: &inst.renderer,
             context,
         };
 

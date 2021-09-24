@@ -4,7 +4,7 @@ use std::thread;
 use std::time::Duration;
 
 use anyhow::Result;
-use nightmaregl::events::EventProxy;
+use nightmare::events::EventProxy;
 use notify::{DebouncedEvent, RecommendedWatcher, RecursiveMode, Watcher};
 
 use crate::listener::{Listener, MessageCtx};

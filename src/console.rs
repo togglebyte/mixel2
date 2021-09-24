@@ -1,7 +1,7 @@
 use anyhow::Result;
-use nightmaregl::{Position, Context, Renderer, VertexData, Viewport, Sprite, Texture, Size};
-use nightmaregl::pixels::{Pixels, Pixel};
-use nightmaregl::text::{WordWrap, Text};
+use nightmare::{Position, Context, VertexData, Viewport, Sprite, Texture, Size};
+use nightmare::pixels::{Pixels, Pixel};
+use nightmare::text::{WordWrap, Text};
 
 use crate::commandline::Command;
 use crate::listener::{Listener, MessageCtx};
@@ -20,11 +20,13 @@ pub struct Console {
 
 impl Console {
     pub fn new(ctx: &mut MessageCtx) -> Result<Self> {
-        let text_renderer = Renderer::default_font(ctx.context)?;
-        let renderer = Renderer::default(ctx.context)?;
         let mut size = *ctx.app_viewport.size();
         size.height /= 2;
         let pos = Position::new(0, size.height);
+        let viewport = Viewport::new(pos, size);
+
+        let text_renderer = SimpleRenderer::new(ctx.context, viewport.view_projection())?;
+        let renderer = SimpleRenderer::new(ctx.context, viewport.view_projection())?;
 
         let pixels = Pixels::from_pixel(Pixel { a: 128, ..Pixel::black() }, Size::new(1, 1));
         let texture = Texture::default_with_data(Size::new(1, 1), pixels.as_bytes());
@@ -45,7 +47,7 @@ impl Console {
             lines: Vec::new(),
             renderer,
             text_renderer,
-            viewport: Viewport::new(pos, size),
+            viewport,
             node,
             texture,
             text,

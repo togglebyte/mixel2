@@ -3,9 +3,9 @@
 //!
 //! So in essence this just routes messages to the `Containers`.
 use anyhow::Result;
-use nightmaregl::{ Renderer, VertexData, Viewport, Transform, Position };
-use nightmaregl::texture::Texture;
-use nightmaregl::events::{ButtonState, MouseButton};
+use nightmare::{ VertexData, Viewport, Transform, Position };
+use nightmare::texture::Texture;
+use nightmare::events::{ButtonState, MouseButton};
 
 use crate::commandline::Command;
 use crate::input::Input;
@@ -136,8 +136,8 @@ impl Listener for Canvas {
                     Right => return self.change_cursor_coords(Coords::new(1, 0)),
                     Up => return self.change_cursor_coords(Coords::new(0, -1)),
                     Down => return self.change_cursor_coords(Coords::new(0, 1)),
-                    CanvasZoomIn => self.containers.selected().renderer.pixel_size += 1,
-                    CanvasZoomOut => self.containers.selected().renderer.pixel_size -= 1,
+                    CanvasZoomIn => self.containers.selected().scale += 1,
+                    CanvasZoomOut => self.containers.selected().scale -= 1,
                     _ => {}
                 }
             }

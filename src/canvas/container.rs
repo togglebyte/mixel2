@@ -7,10 +7,11 @@
 use std::convert::TryInto;
 
 use anyhow::Result;
-use nightmaregl::pixels::Pixel;
-use nightmaregl::texture::Texture;
-use nightmaregl::{Position, Renderer, Size, Sprite, Transform, Vector, VertexData, Viewport};
-use nightmaregl::text::{Text, WordWrap};
+use nightmare::pixels::Pixel;
+use nightmare::texture::Texture;
+use nightmare::{Position, Size, Sprite, Transform, Vector, VertexData, Viewport, create_model_matrix};
+use nightmare::text::{Text, WordWrap};
+use nightmare::render2d::SimpleRenderer;
 
 use crate::border::{Border, BorderType};
 use crate::listener::MessageCtx;
@@ -25,19 +26,17 @@ const MAX_ZOOM: i32 = 60;
 //     - Container -
 // -----------------------------------------------------------------------------
 pub struct Container {
-    dir: Split,
-    pub viewport: Viewport,
-    pub renderer: Renderer<VertexData>,
     pub(super) border: Border,
+    pub viewport: Viewport,
     pub node: Node<i32>,
     pub image_id: Option<usize>,
-    cursor: Cursor,
     pub colour: Pixel,
-    pub scale: Vector<i32>,
-
-    text_renderer: Renderer<VertexData>,
+    pub(super) scale: u32,
     pub container_id: usize,
-    text: Text,
+
+    dir: Split,
+    cursor: Cursor,
+    renderer: SimpleRenderer,
 }
 
 impl Container {
@@ -48,30 +47,23 @@ impl Container {
         ctx: &mut MessageCtx,
         sprite: Sprite<i32>,
     ) -> Result<Self> {
+
         let border_type = BorderType::Inactive;
 
         let font_size = 22.0;
 
+        let renderer = SimpleRenderer::new(ctx.context, viewport.view_projection())?;
+
         let mut inst = Self {
             border: Border::new(border_type, ctx.textures, &viewport),
             viewport,
-            renderer: Renderer::default(ctx.context)?,
+            renderer,
             node: Node::from_sprite(sprite),
             dir,
             image_id: None,
             cursor: Cursor::new(Coords::zero(), sprite.anchor),
             colour: Pixel::black(),
-            scale: Vector::new(8, 8),
-
-            // Might not keep this?
-            text_renderer: Renderer::default_font(ctx.context)?,
-            container_id,
-            text: Text::from_path(
-                "/usr/share/fonts/TTF/Hack-Regular.ttf",
-                font_size,
-                WordWrap::NoWrap,
-                &ctx.context,
-            )?,
+            scale: 8,
         };
 
         // Centre the canvas.
@@ -104,27 +96,24 @@ impl Container {
         image: &Image,
     ) -> Result<()> {
         // Border
-        self.border.render(
-            &Transform::default(),
-            ctx.textures,
-            &self.viewport,
-            ctx.border_renderer,
-            ctx.context,
-        )?;
+        // self.border.render(
+        //     &Transform::default(),
+        //     ctx.textures,
+        //     &self.viewport,
+        //     ctx.border_renderer,
+        //     ctx.context,
+        // )?;
 
         let mut sprite = self.node.sprite;
         sprite.z_index = 999;
         let mut transform = self.node.transform;
         // transform.scale_mut(self.scale);
-        let vertex_data = VertexData::new(&sprite, &transform);
+        let model = create_model_matrix(&sprite, &transform);
 
         // Render the "transparent" background texture
-        self.renderer.render(
-            background_texture,
-            &[vertex_data],
-            &self.viewport,
-            ctx.context,
-        );
+        background_texture.bind();
+        self.renderer.load_data(&[model], ctx.context);
+        self.renderer.render_instanced(ctx.context, 1);
 
         // Render all layers
         image.render(

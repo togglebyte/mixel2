@@ -1,8 +1,8 @@
 use std::path::Path;
 
 use anyhow::Result;
-use nightmaregl::texture::Texture;
-use nightmaregl::{Renderer, Position, Size, Sprite, VertexData, Point, Rect, Context, Viewport, RelativeViewport};
+use nightmare::texture::Texture;
+use nightmare::{Renderer, Position, Size, Sprite, VertexData, Point, Rect, Context, Viewport, RelativeViewport};
 
 use crate::listener::{Listener, MessageCtx};
 use crate::message::Message;

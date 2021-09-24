@@ -2,25 +2,27 @@ use std::path::Path;
 
 use anyhow::Result;
 use log::error;
-use nightmaregl::texture::{Format, Texture};
-use nightmaregl::{Context, Position, Renderer, Size, Sprite, VertexData, Viewport, Transform};
-use nightmaregl::framebuffer::Framebuffer;
-use nightmaregl::pixels::Pixel;
+use nightmare::texture::{Format, Texture};
+use nightmare::{Context, Position, Size, Sprite, VertexData, Viewport, Transform};
+use nightmare::framebuffer::Framebuffer;
+use nightmare::pixels::Pixel;
+use nightmare::render2d::SimpleRenderer;
 
 use super::layer::Layer;
 use super::Image;
 
 pub struct SaveBuffer {
-    renderer: Renderer<VertexData>,
+    renderer: SimpleRenderer,
     viewport: Viewport,
 }
 
 impl SaveBuffer {
     pub fn new(context: &mut Context, size: Size<i32>) -> Result<Self> {
-        let renderer = Renderer::default(context)?;
+        let viewport = Viewport::new(Position::zero(), size);
+        let renderer = SimpleRenderer::new(context, viewport.view_projection())?;
         let inst = Self {
             renderer,
-            viewport: Viewport::new(Position::zero(), size),
+            viewport,
         };
 
         Ok(inst)

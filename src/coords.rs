@@ -1,5 +1,5 @@
 use std::ops::{AddAssign, Add};
-use nightmaregl::{Vector, Position};
+use nightmare::{Vector, Position};
 
 /// Coords in canvas space.
 /// Coords places zero zero at the top left of the canvas.

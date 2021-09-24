@@ -1,17 +1,17 @@
 use anyhow::Result;
 use log::error;
-use nightmaregl::events::Key;
-use nightmaregl::text::{Text, WordWrap};
-use nightmaregl::pixels::{Pixel, Pixels};
-use nightmaregl::{
-    Context, Position, Renderer, Size, Texture, VertexData, Viewport,
-};
+use nightmare::events::Key;
+use nightmare::pixels::{Pixel, Pixels};
+use nightmare::text::{Text, WordWrap};
+use nightmare::{Context, Position, Size, Texture, VertexData, Viewport};
+use nightmare::text::default_font_shader;
+use nightmare::render2d::SimpleRenderer;
 
-use crate::Node;
 use crate::application::Mode;
 use crate::input::Input;
 use crate::listener::{Listener, MessageCtx};
 use crate::message::Message;
+use crate::Node;
 
 mod commands;
 mod parser;
@@ -23,7 +23,7 @@ use parser::Parser;
 //     - Command line -
 // -----------------------------------------------------------------------------
 pub struct CommandLine {
-    text_renderer: Renderer<VertexData>,
+    text_renderer: SimpleRenderer,
     font_size: f32,
     caret: Caret,
     viewport: Viewport,
@@ -35,9 +35,12 @@ pub struct CommandLine {
 
 impl CommandLine {
     pub fn new(size: Size<i32>, context: &mut Context) -> Result<Self> {
-        let text_renderer = Renderer::default_font(context)?;
+        let text_renderer = SimpleRenderer::default_font(context)?;
         let font_size = 18.0;
-        let viewport = Viewport::new(Position::new(0, 0), viewport_size(size, font_size as i32));
+        let viewport = Viewport::new(
+            Position::new(0, 0),
+            viewport_size(size, font_size as i32),
+        );
 
         let mut text = Text::from_path(
             "/usr/share/fonts/TTF/Hack-Regular.ttf",
@@ -116,7 +119,10 @@ impl CommandLine {
             }
         }
 
-        self.caret.node.transform.translate_mut(Position::new(self.text.caret().x, self.font_size / 3.0));
+        self.caret.node.transform.translate_mut(Position::new(
+            self.text.caret().x,
+            self.font_size / 3.0,
+        ));
     }
 }
 
@@ -126,9 +132,15 @@ impl CommandLine {
 impl Listener for CommandLine {
     fn message(&mut self, message: &Message, _: &mut MessageCtx) -> Message {
         match message {
-            Message::Input(input, _) => return self.input(*input).map(Message::Command).unwrap_or(Message::Noop),
+            Message::Input(input, _) => {
+                return self
+                    .input(*input)
+                    .map(Message::Command)
+                    .unwrap_or(Message::Noop)
+            }
             Message::Resize(new_size) => {
-                self.viewport.resize(viewport_size(*new_size, self.font_size as i32));
+                self.viewport
+                    .resize(viewport_size(*new_size, self.font_size as i32));
             }
             Message::ModeChanged(mode) => {
                 self.mode = *mode;
@@ -150,17 +162,17 @@ impl Listener for CommandLine {
     fn render(&mut self, ctx: &mut MessageCtx) -> Result<()> {
         match self.mode {
             Mode::Command => {}
-            _ => return Ok(())
+            _ => return Ok(()),
         }
 
         let texture = self.text.texture();
         let text_vertex_data = self.text.vertex_data();
 
         self.text_renderer.render(
-            texture, 
+            texture,
             &text_vertex_data,
             &self.viewport,
-            ctx.context
+            ctx.context,
         )?;
 
         self.caret.render(ctx.context, &self.viewport);
@@ -178,21 +190,23 @@ struct Caret {
 }
 
 impl Caret {
-    pub fn new(font_size: f32, context: &mut Context) -> Result<Self> {
-        let renderer = Renderer::default_font(context)?;
+    pub fn new(font_size: f32, context: &mut Context, viewport: &Viewport) -> Result<Self> {
+        let shader = default_font_shader()?;
+        let mut renderer = SimpleRenderer::new(context, viewport.view_projection())?;
+        renderer.set_shader(shader);
+
 
         let caret_size = Size::new(font_size, font_size * 2.0);
         let caret_pixels = Pixels::from_pixel(Pixel::white(), Size::new(1, 1));
 
-        let texture = Texture::default_with_data(Size::new(1.0, 1.0), caret_pixels.as_bytes());
+        let texture = Texture::default_with_data(
+            Size::new(1.0, 1.0),
+            caret_pixels.as_bytes(),
+        );
         let mut node = Node::new(&texture);
         node.sprite.size = caret_size;
 
-        let inst = Self {
-            renderer,
-            texture,
-            node,
-        };
+        let inst = Self { renderer, texture, node };
 
         Ok(inst)
     }

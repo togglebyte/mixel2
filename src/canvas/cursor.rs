@@ -1,5 +1,5 @@
-use nightmaregl::{Size, Texture, Position};
-use nightmaregl::pixels::{Pixels, Pixel};
+use nightmare::{Size, Texture, Position};
+use nightmare::pixels::{Pixels, Pixel};
 
 use crate::{Coords, Node};
 

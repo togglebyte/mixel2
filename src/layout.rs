@@ -1,7 +1,7 @@
 use std::mem::replace;
 use std::fmt;
 
-use nightmaregl::{Position, Size, Rect, Point};
+use nightmare::{Position, Size, Rect, Point};
 use crate::canvas::Container;
 
 #[derive(Debug, Copy, Clone)]
@@ -232,7 +232,7 @@ impl fmt::Display for Layout {
 #[cfg(test)]
 mod test {
     use super::*;
-    use nightmaregl::*;
+    use nightmare::*;
 
     #[test]
     fn split_horz_and_resize() {

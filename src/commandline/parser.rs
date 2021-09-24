@@ -1,6 +1,6 @@
 use log::info;
-use nightmaregl::{Position, Size};
-use nightmaregl::pixels::Pixel;
+use nightmare::{Position, Size};
+use nightmare::pixels::Pixel;
 
 use crate::layout::Split;
 use crate::canvas::LayerId;

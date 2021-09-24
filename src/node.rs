@@ -1,22 +1,20 @@
 use std::ops::{Div, MulAssign};
 
-use nightmaregl::{VertexData, Sprite, Transform, Texture};
+use nightmare::{VertexData, Sprite, Transform, Texture};
 use nalgebra::Scalar;
 use num_traits::cast::NumCast;
 use num_traits::{One, Zero};
 
 /// Node to keep track of sprites and transforms.
 #[derive(Debug, Copy, Clone)]
-pub struct Node<T: Copy + NumCast + Zero + MulAssign + Default + Scalar + Div<Output = T>> {
-    pub sprite: Sprite<T>,
-    pub transform: Transform<T>,
+pub struct Node {
+    pub sprite: Sprite,
+    pub transform: Transform,
 }
 
-impl<T> Node<T>
-    where T: Copy + NumCast + Zero + One + MulAssign + Default + Scalar + Div<Output = T>
-{
+impl Node {
     /// Creata `Node` from a texture
-    pub fn new(texture: &Texture<T>) -> Self {
+    pub fn new(texture: &Texture) -> Self {
         let sprite = Sprite::new(texture);
         let transform = Transform::default();
 
@@ -27,24 +25,23 @@ impl<T> Node<T>
     }
 
     /// Create a `Node` from a sprite
-    pub fn from_sprite(sprite: Sprite<T>) -> Self {
+    pub fn from_sprite(sprite: Sprite) -> Self {
         Self {
             sprite,
             transform: Transform::default(),
         }
     }
 
-    /// Get vertex data
-    pub fn vertex_data(&self) -> VertexData {
-        VertexData::new(&self.sprite, &self.transform)
+    /// Get the view model
+    pub fn model(&self) -> Model {
+        create_model_matrix(&self.sprite, &self.transform)
     }
 
     /// Pass in the parent nodes transform
-    pub fn relative_vertex_data<U>(&self, transform: &Transform<U>) -> VertexData
-        where U: Copy + NumCast + Zero + One + MulAssign + Default + Scalar + Div<Output = U>
-    {
-        let mut vd = self.vertex_data();
-        vd.make_relative(transform);
-        vd
+    pub fn relative_vertex_data(&self, transform: &Transform) -> Model {
+        todo!()
+        // let mut model = self.model();
+        // vd.make_relative(transform);
+        // vd
     }
 }

@@ -1,9 +1,10 @@
 use std::path::Path;
 
 use anyhow::Result;
-use nightmaregl::{Size, VertexData, Context, Viewport, Renderer, Transform, Sprite};
-use nightmaregl::pixels::Pixel;
-use nightmaregl::texture::Texture;
+use nightmare::{Size, VertexData, Context, Viewport, Transform, Sprite, create_model_matrix};
+use nightmare::pixels::Pixel;
+use nightmare::texture::Texture;
+use nightmare::render2d::SimpleRenderer;
 
 use super::layer::{LayerId, Layer};
 use crate::Coords;
@@ -89,9 +90,9 @@ impl Image {
 
     pub fn render(
         &self,
-        renderer: &Renderer<VertexData>, 
-        mut sprite: Sprite<i32>,
-        transform: &Transform<i32>,
+        renderer: &SimpleRenderer, 
+        mut sprite: Sprite,
+        transform: &Transform,
         viewport: &Viewport,
         context: &mut Context
     ) -> Result<()> {
@@ -102,9 +103,8 @@ impl Image {
         // They are in the correct order now.
         for (mut z_index, layer) in self.layers.iter().enumerate() {
             sprite.z_index = SPRITE_Z - z_index as i32;
-            let vertex_data = VertexData::new(&sprite, transform);
-            renderer
-                .render(&layer.texture, &[vertex_data], viewport, context)?;
+            let model = create_model_matrix(&sprite, transform);
+            renderer.render(&[model], context)?;
         }
 
         Ok(())
