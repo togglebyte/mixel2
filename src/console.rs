@@ -2,6 +2,7 @@ use anyhow::Result;
 use nightmare::{Position, Context, VertexData, Viewport, Sprite, Texture, Size};
 use nightmare::pixels::{Pixels, Pixel};
 use nightmare::text::{WordWrap, Text};
+use nightmare::shaders::default_font_shader;
 
 use crate::commandline::Command;
 use crate::listener::{Listener, MessageCtx};
@@ -10,11 +11,11 @@ use crate::{Message, Node};
 pub struct Console {
     visible: bool,
     lines: Vec<String>,
-    renderer: Renderer<VertexData>,
-    text_renderer: Renderer<VertexData>,
+    renderer: SimpleRenderer,
+    text_renderer: SimpleRenderer,
     viewport: Viewport,
-    node: Node<i32>,
-    texture: Texture<i32>,
+    node: Node,
+    texture: Texture,
     text: Text,
 }
 
@@ -26,6 +27,9 @@ impl Console {
         let viewport = Viewport::new(pos, size);
 
         let text_renderer = SimpleRenderer::new(ctx.context, viewport.view_projection())?;
+        let font_shader = default_font_shader();
+        text_renderer.set_shader(font_shader);
+
         let renderer = SimpleRenderer::new(ctx.context, viewport.view_projection())?;
 
         let pixels = Pixels::from_pixel(Pixel { a: 128, ..Pixel::black() }, Size::new(1, 1));

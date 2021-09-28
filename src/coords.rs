@@ -24,8 +24,8 @@ impl Coords {
     }
 }
 
-impl From<Vector<f32>> for Coords {
-    fn from(vec: Vector<f32>) -> Self {
+impl From<Vector> for Coords {
+    fn from(vec: Vector) -> Self {
         Self(vec.cast())
     }
 }

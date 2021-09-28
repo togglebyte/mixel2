@@ -184,9 +184,9 @@ impl Listener for CommandLine {
 //     - Caret -
 // -----------------------------------------------------------------------------
 struct Caret {
-    renderer: Renderer<VertexData>,
-    texture: Texture<f32>,
-    node: Node<f32>,
+    renderer: SimpleRenderer,
+    texture: Texture,
+    node: Node,
 }
 
 impl Caret {

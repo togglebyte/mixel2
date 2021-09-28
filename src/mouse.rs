@@ -1,6 +1,6 @@
 use anyhow::Result;
 use nightmare::events::{ButtonState, MouseButton};
-use nightmare::{Context, Texture, Position, VertexData};
+use nightmare::{Context, Texture, Position, VertexData, Viewport};
 use nightmare::render2d::SimpleRenderer;
 
 use crate::listener::{Listener, MessageCtx};
@@ -12,7 +12,7 @@ use crate::input::Input;
 pub struct Mouse {
     pub state: ButtonState,
     pub button: Option<MouseButton>,
-    pub pos: Position<i32>,
+    pub pos: Position,
 }
 
 impl Mouse {
@@ -26,9 +26,9 @@ impl Mouse {
 }
 
 pub struct MouseCursor {
-    node: Node<i32>,
-    texture: Texture<i32>,
-    renderer: Renderer<VertexData>,
+    node: Node,
+    texture: Texture,
+    renderer: SimpleRenderer,
 }
 
 impl MouseCursor {
