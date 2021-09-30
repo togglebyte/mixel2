@@ -90,7 +90,7 @@ impl<'a> Parser<'a> {
         Some(pixel)
     }
 
-    fn args_to_pos(&self) -> Option<Position<i32>> {
+    fn args_to_pos(&self) -> Option<Position> {
         let mut parts = self.args.split_whitespace();
         let x = parts.next().map(str::parse::<i32>).map(Result::ok).flatten()?;
         let y = parts.next().map(str::parse::<i32>).map(Result::ok).flatten()?;
@@ -98,7 +98,7 @@ impl<'a> Parser<'a> {
         Some(Position::new(x, y))
     }
 
-    fn args_to_size(&self) -> Option<Size<i32>> {
+    fn args_to_size(&self) -> Option<Size> {
         let mut parts = self.args.split_whitespace();
         let width = parts.next().map(str::parse::<i32>).map(Result::ok).flatten()?;
         let height = parts.next().map(str::parse::<i32>).map(Result::ok).flatten()?;

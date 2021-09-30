@@ -15,11 +15,11 @@ impl Coords {
         Self(Position::zero())
     }
 
-    pub fn to_translation(self, height: i32) -> Position<i32> {
+    pub fn to_translation(self, height: i32) -> Position {
         Position::new(self.0.x, height - self.0.y)
     }
 
-    pub fn from_translation(translation: Position<i32>, height: i32) -> Self {
+    pub fn from_translation(translation: Position, height: i32) -> Self {
         Self(Position::new(translation.x, height - translation.y))
     }
 }

@@ -34,7 +34,7 @@ pub struct CommandLine {
 }
 
 impl CommandLine {
-    pub fn new(size: Size<i32>, context: &mut Context) -> Result<Self> {
+    pub fn new(size: Size, context: &mut Context) -> Result<Self> {
         let text_renderer = SimpleRenderer::default_font(context)?;
         let font_size = 18.0;
         let viewport = Viewport::new(
@@ -229,6 +229,6 @@ impl Caret {
 //     - Viewport size -
 //     Used when resizing
 // -----------------------------------------------------------------------------
-fn viewport_size(size: Size<i32>, font_size: i32) -> Size {
+fn viewport_size(size: Size, font_size: i32) -> Size {
     Size::new(size.width, font_size * 2)
 }

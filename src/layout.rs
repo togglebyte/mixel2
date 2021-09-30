@@ -37,28 +37,28 @@ impl Layout {
         }
     }
 
-    fn pos(&self) -> Position<i32> {
+    fn pos(&self) -> Position {
         match self {
             Self::Leaf { pos, .. } => *pos,
             Self::Branch { pos, .. } => *pos,
         }
     }
 
-    fn size(&self) -> Size<i32> {
+    fn size(&self) -> Size {
         match self {
             Self::Leaf { size, .. } => *size,
             Self::Branch { size, .. } => *size,
         }
     }
 
-    pub fn set_size(&mut self, new_size: Size<i32>) {
+    pub fn set_size(&mut self, new_size: Size) {
         match self {
             Self::Leaf { size, .. } => *size = new_size,
             Self::Branch { size, .. } => *size = new_size,
         }
     }
 
-    fn set_pos(&mut self, new_pos: Position<i32>) {
+    fn set_pos(&mut self, new_pos: Position) {
         match self {
             Self::Leaf { pos, .. } => *pos = new_pos,
             Self::Branch { pos, .. } => *pos = new_pos,
@@ -96,7 +96,7 @@ impl Layout {
         }
     }
 
-    pub fn resize(&mut self, node_id: usize, new_size: Size<i32>) {
+    pub fn resize(&mut self, node_id: usize, new_size: Size) {
         if let Some(n) = self.find_node(node_id) {
             n.set_size(new_size);
             self.rebuild();

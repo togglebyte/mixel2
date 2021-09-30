@@ -23,7 +23,7 @@ pub struct Status {
 }
 
 impl Status {
-    pub fn new(size: Size<i32>, context: &mut Context) -> Result<Self> {
+    pub fn new(size: Size, context: &mut Context) -> Result<Self> {
         let font_size = 18.0;
         let position = {
             Position::new(10.0, size.height as f32 - 10.0 - font_size * 2.0)
