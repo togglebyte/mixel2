@@ -13,8 +13,8 @@ use crate::{Mouse, Coords};
 #[derive(Debug)]
 pub enum Message {
     Input(Input, Modifiers),
-    CursorPos(Position<i32>),
-    Resize(Size<i32>),
+    CursorPos(Position),
+    Resize(Size),
     ModeChanged(Mode),
     Command(Command),
     Action(Action),

@@ -4,15 +4,15 @@ use nightmare::pixels::{Pixels, Pixel};
 use crate::{Coords, Node};
 
 pub struct Cursor {
-    pub node: Node<i32>,
-    pub texture: Texture<i32>,
+    pub node: Node,
+    pub texture: Texture,
     pub coords: Coords,
     pub visible: bool,
     colour: Pixel,
 }
 
 impl Cursor {
-    pub fn new(coords: Coords, sprite_offset: Position<i32>) -> Self {
+    pub fn new(coords: Coords, sprite_offset: Position) -> Self {
         let size = Size::new(1, 1);
         let pixel = Pixel::black();
         let pixels = Pixels::from_pixel(pixel, size.cast());

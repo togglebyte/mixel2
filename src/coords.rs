@@ -4,7 +4,7 @@ use nightmare::{Vector, Position};
 /// Coords in canvas space.
 /// Coords places zero zero at the top left of the canvas.
 #[derive(Debug, Copy, Clone)]
-pub struct Coords(pub Position<i32>);
+pub struct Coords(pub Position);
 
 impl Coords {
     pub fn new(x: i32, y: i32) -> Self {

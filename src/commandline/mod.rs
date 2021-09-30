@@ -5,7 +5,7 @@ use nightmare::pixels::{Pixel, Pixels};
 use nightmare::text::{Text, WordWrap};
 use nightmare::{Context, Position, Size, Texture, VertexData, Viewport};
 use nightmare::text::default_font_shader;
-use nightmare::render2d::SimpleRenderer;
+use nightmare::render2d::{SimpleRenderer, Model};
 
 use crate::application::Mode;
 use crate::input::Input;
@@ -23,7 +23,7 @@ use parser::Parser;
 //     - Command line -
 // -----------------------------------------------------------------------------
 pub struct CommandLine {
-    text_renderer: SimpleRenderer,
+    text_renderer: SimpleRenderer<Model>,
     font_size: f32,
     caret: Caret,
     viewport: Viewport,
@@ -184,7 +184,7 @@ impl Listener for CommandLine {
 //     - Caret -
 // -----------------------------------------------------------------------------
 struct Caret {
-    renderer: SimpleRenderer,
+    renderer: SimpleRenderer<Model>,
     texture: Texture,
     node: Node,
 }
@@ -229,6 +229,6 @@ impl Caret {
 //     - Viewport size -
 //     Used when resizing
 // -----------------------------------------------------------------------------
-fn viewport_size(size: Size<i32>, font_size: i32) -> Size<i32> {
+fn viewport_size(size: Size<i32>, font_size: i32) -> Size {
     Size::new(size.width, font_size * 2)
 }

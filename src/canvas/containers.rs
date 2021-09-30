@@ -75,7 +75,7 @@ impl Containers {
     // TODO: can't delete an image now because of how stupid this is.
     //       Deleting an image would offset every image after it in
     //       the vector.
-    pub fn add_image(&mut self, size: Size<i32>, image: Image) {
+    pub fn add_image(&mut self, size: Size, image: Image) {
         let image_id = self.images.len();
         self.images.push(image);
 
@@ -88,7 +88,7 @@ impl Containers {
         // selected.node.transform.translate_mut(pos);
     }
 
-    pub fn resize(&mut self, mut new_size: Size<i32>) {
+    pub fn resize(&mut self, mut new_size: Size) {
         // TODO: HACK! remove this dirt
         // Do this because of the padding
         new_size.width -= 128 * 2;
@@ -164,7 +164,7 @@ impl Containers {
         // }
     }
 
-    pub fn render(&mut self, background: &Texture<i32>, ctx: &mut MessageCtx) -> Result<()> {
+    pub fn render(&mut self, background: &Texture, ctx: &mut MessageCtx) -> Result<()> {
         for (id, container) in self.inner.iter_mut().enumerate() {
             let image = match container.image_id {
                 Some(id) => &mut self.images[id],
@@ -264,7 +264,7 @@ impl Containers {
         self.selected().scale(diff);
     }
 
-    pub(super) fn move_canvas(&mut self, offset: Position<i32>) {
+    pub(super) fn move_canvas(&mut self, offset: Position) {
         let selected = self.selected();
         let tran = selected.node.transform.translation;
         selected.node.transform.translate_mut(tran + offset);

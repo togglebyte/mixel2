@@ -2,7 +2,7 @@ use anyhow::Result;
 use log::error;
 use nightmare::text::{Text, WordWrap};
 use nightmare::{Context, Position, Size, VertexData, Viewport};
-use nightmare::render2d::SimpleRenderer;
+use nightmare::render2d::{SimpleRenderer, Model};
 
 use crate::application::Mode;
 use crate::canvas::LayerId;
@@ -18,7 +18,7 @@ pub struct Status {
     cursor_coords: Coords,
     layer: LayerId,
     total_layers: usize,
-    renderer: SimpleRenderer,
+    renderer: SimpleRenderer<Model>,
     viewport: Viewport,
 }
 

@@ -4,7 +4,7 @@ use std::ops::{Deref, DerefMut};
 use anyhow::Result;
 use nightmare::texture::Texture;
 use nightmare::{Size, Viewport, VertexData, Context, Transform};
-use nightmare::render2d::SimpleRenderer;
+use nightmare::render2d::{SimpleRenderer, Model};
 
 use crate::Node;
 
@@ -23,7 +23,7 @@ pub enum BorderType {
 // -----------------------------------------------------------------------------
 //     - Textures -
 // -----------------------------------------------------------------------------
-pub struct Textures(pub HashMap<BorderType, Texture<i32>>);
+pub struct Textures(pub HashMap<BorderType, Texture>);
 
 impl Textures {
     pub fn new() -> Self {
@@ -32,7 +32,7 @@ impl Textures {
 }
 
 impl Deref for Textures {
-    type Target = HashMap<BorderType, Texture<i32>>;
+    type Target = HashMap<BorderType, Texture>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -50,10 +50,10 @@ impl DerefMut for Textures {
 // -----------------------------------------------------------------------------
 pub struct Border {
     pub border_type: BorderType,
-    top: Node<i32>,
-    right: Node<i32>,
-    bottom: Node<i32>,
-    left: Node<i32>,
+    top: Node,
+    right: Node,
+    bottom: Node,
+    left: Node,
 }
 
 impl Border {
@@ -96,7 +96,7 @@ impl Border {
         self.top.transform.translation.y = viewport.size().height - 4;
     }
 
-    fn vertex_data(&self, parent: &Transform<i32>) -> [VertexData; 4] {
+    fn vertex_data(&self, parent: &Transform) -> [VertexData; 4] {
         [
             self.top.relative_vertex_data(parent),
             self.right.relative_vertex_data(parent),
@@ -110,7 +110,7 @@ impl Border {
         parent: &Transform,
         textures: &Textures,
         viewport: &Viewport,
-        renderer: &SimpleRenderer,
+        renderer: &SimpleRenderer<Model>,
         context: &mut Context,
     ) -> Result<()> {
         let texture = &textures[&self.border_type];

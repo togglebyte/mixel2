@@ -34,11 +34,11 @@ pub struct Canvas {
     /// All <whatevers> 
     containers: Containers,
     /// Background for transparency
-    background: Texture<i32>,
+    background: Texture,
     /// Plugin
     plugin: Plugin,
 
-    drag_pos: Option<Position<i32>>,
+    drag_pos: Option<Position>,
 }
 
 impl Canvas {

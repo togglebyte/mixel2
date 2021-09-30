@@ -1,6 +1,6 @@
 use anyhow::Result;
 use nightmare::{Context, VertexData, Viewport};
-use nightmare::render2d::SimpleRenderer;
+use nightmare::render2d::{SimpleRenderer, Model};
 
 use crate::border::Textures;
 use crate::config::Config;
@@ -22,5 +22,5 @@ pub struct MessageCtx<'a> {
     pub canvas_viewport: &'a Viewport,
     pub app_viewport: &'a Viewport,
     pub textures: &'a Textures,
-    pub border_renderer: &'a SimpleRenderer,
+    pub border_renderer: &'a SimpleRenderer<Model>,
 }

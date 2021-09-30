@@ -1,6 +1,6 @@
 use std::ops::{Div, MulAssign};
 
-use nightmare::{VertexData, Sprite, Transform, Texture};
+use nightmare::{VertexData, Sprite, Transform, Texture, create_model_matrix};
 use nightmare::render2d::Model;
 use nalgebra::Scalar;
 use num_traits::cast::NumCast;

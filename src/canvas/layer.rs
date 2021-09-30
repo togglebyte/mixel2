@@ -1,7 +1,7 @@
 use nightmare::{Context, Size, Viewport};
 use nightmare::texture::Texture;
 use nightmare::pixels::{Pixel, Pixels};
-use nightmare::render2d::SimpleRenderer;
+use nightmare::render2d::{SimpleRenderer, Model};
 use nightmare::shaders::ShaderProgram;
 use crate::Coords;
 
@@ -39,15 +39,15 @@ impl LayerId {
 //     - Layers -
 // -----------------------------------------------------------------------------
 pub struct Layer {
-    pub texture: Texture<i32>,
+    pub texture: Texture,
     pub buffer: Pixels<Pixel>,
     pub(super) dirty: bool,
     pub shader: Option<ShaderProgram>,
-    pub(super) renderer: SimpleRenderer,
+    pub(super) renderer: SimpleRenderer<Model>,
 }
 
 impl Layer {
-    pub fn new(size: Size<i32>, context: &mut Context, viewport: &Viewport) -> Self {
+    pub fn new(size: Size, context: &mut Context, viewport: &Viewport) -> Self {
         let buffer = Pixels::from_pixel(Pixel::transparent(), size.cast());
         let texture = Texture::default_with_data(size.cast(), buffer.as_bytes());
         let renderer = SimpleRenderer::new(context, viewport.view_projection());
@@ -69,7 +69,7 @@ impl Layer {
         self.dirty = true;
     }
 
-    pub fn resize(&mut self, new_size: Size<i32>) {
+    pub fn resize(&mut self, new_size: Size) {
         drop(new_size);
         todo!("oh no you don't!");
     }

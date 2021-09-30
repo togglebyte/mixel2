@@ -16,8 +16,8 @@ fn placeholder() -> Layout {
 
 #[derive(Debug)]
 pub enum Layout {
-    Leaf { id: usize, size: Size<i32>, pos: Position<i32> },
-    Branch { left: Box<Layout>, right: Box<Layout>, size: Size<i32>, pos: Position<i32> },
+    Leaf { id: usize, size: Size, pos: Position },
+    Branch { left: Box<Layout>, right: Box<Layout>, size: Size, pos: Position },
 }
 
 impl Layout {

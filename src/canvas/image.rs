@@ -4,7 +4,7 @@ use anyhow::Result;
 use nightmare::{Size, VertexData, Context, Viewport, Transform, Sprite, create_model_matrix};
 use nightmare::pixels::Pixel;
 use nightmare::texture::Texture;
-use nightmare::render2d::SimpleRenderer;
+use nightmare::render2d::{SimpleRenderer, Model};
 
 use super::layer::{LayerId, Layer};
 use crate::Coords;
@@ -19,7 +19,7 @@ pub struct Image {
 }
 
 impl Image {
-    pub(super) fn new(size: Size<i32>) -> Self {
+    pub(super) fn new(size: Size) -> Self {
         Self {
             layers: vec![Layer::new(size.cast())],
             layer_id: LayerId::from_index(0),
@@ -43,7 +43,7 @@ impl Image {
         self.dirty = true;
     }
 
-    pub(super) fn new_layer(&mut self, size: Size<i32>) -> (LayerId, usize) {
+    pub(super) fn new_layer(&mut self, size: Size) -> (LayerId, usize) {
         let new_layer_id = LayerId::from_index(self.layers.len());
         self.layers.push(Layer::new(size));
         self.layer_id = new_layer_id;
@@ -90,7 +90,7 @@ impl Image {
 
     pub fn render(
         &self,
-        renderer: &SimpleRenderer, 
+        renderer: &SimpleRenderer<Model>, 
         mut sprite: Sprite,
         transform: &Transform,
         viewport: &Viewport,

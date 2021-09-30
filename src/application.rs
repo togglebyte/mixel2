@@ -6,7 +6,7 @@ use nightmare::events::{Key, Modifiers};
 use nightmare::{Viewport, Context, Size, Position};
 use nightmare::texture::Texture;
 use nightmare::pixels::Pixel;
-use nightmare::render2d::SimpleRenderer;
+use nightmare::render2d::{SimpleRenderer, Model};
 
 use crate::border::{BorderType, Textures};
 use crate::canvas::Canvas;
@@ -46,17 +46,17 @@ pub enum Mode {
 pub struct App {
     pub close: bool,
     mode: Mode,
-    win_size: Size<i32>,
+    win_size: Size,
     config: Config,
     listeners: Vec<Box<dyn Listener>>,
     app_viewport: Viewport,
     canvas_viewport: Viewport,
     textures: Textures,
-    renderer: SimpleRenderer,
+    renderer: SimpleRenderer<Model>,
 }
 
 impl App {
-    pub fn new(config: Config, win_size: Size<i32>, context: &mut Context) -> Result<Self> {
+    pub fn new(config: Config, win_size: Size, context: &mut Context) -> Result<Self> {
         let app_viewport = Viewport::new(
             Position::zero(),
             win_size
@@ -116,7 +116,7 @@ impl App {
         Ok(inst)
     }
 
-    pub fn resize(&mut self, new_size: Size<i32>, context: &mut Context) {
+    pub fn resize(&mut self, new_size: Size, context: &mut Context) {
         self.win_size = new_size;
         self.app_viewport.resize(new_size);
         self.canvas_viewport = canvas_viewport(&self.app_viewport);

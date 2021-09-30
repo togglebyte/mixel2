@@ -11,7 +11,7 @@ use nightmare::pixels::Pixel;
 use nightmare::texture::Texture;
 use nightmare::{Position, Size, Sprite, Transform, Vector, VertexData, Viewport, create_model_matrix};
 use nightmare::text::{Text, WordWrap};
-use nightmare::render2d::SimpleRenderer;
+use nightmare::render2d::{SimpleRenderer, Model};
 
 use crate::border::{Border, BorderType};
 use crate::listener::MessageCtx;
@@ -28,7 +28,7 @@ const MAX_ZOOM: i32 = 60;
 pub struct Container {
     pub(super) border: Border,
     pub viewport: Viewport,
-    pub node: Node<i32>,
+    pub node: Node,
     pub image_id: Option<usize>,
     pub colour: Pixel,
     pub(super) scale: u32,
@@ -36,7 +36,7 @@ pub struct Container {
 
     dir: Split,
     cursor: Cursor,
-    renderer: SimpleRenderer,
+    renderer: SimpleRenderer<Model>,
 }
 
 impl Container {
@@ -45,7 +45,7 @@ impl Container {
         viewport: Viewport,
         dir: Split,
         ctx: &mut MessageCtx,
-        sprite: Sprite<i32>,
+        sprite: Sprite,
     ) -> Result<Self> {
 
         let border_type = BorderType::Inactive;
@@ -91,7 +91,7 @@ impl Container {
 
     pub fn render(
         &self,
-        background_texture: &Texture<i32>,
+        background_texture: &Texture,
         ctx: &mut MessageCtx,
         image: &Image,
     ) -> Result<()> {
@@ -149,7 +149,7 @@ impl Container {
         self.border.resize(&self.viewport);
     }
 
-    pub fn translate_mouse(&self, mouse_pos: Position<i32>, ctx: &MessageCtx) -> Position<i32> {
+    pub fn translate_mouse(&self, mouse_pos: Position, ctx: &MessageCtx) -> Position {
         let transform = self.node.transform;
         let canvas_pos = transform.translation;
         let mut pos = Position::new(mouse_pos.x - canvas_pos.x, mouse_pos.y - canvas_pos.y);

@@ -1,8 +1,8 @@
 use anyhow::Result;
 use nightmare::{Position, Context, VertexData, Viewport, Sprite, Texture, Size};
 use nightmare::pixels::{Pixels, Pixel};
-use nightmare::text::{WordWrap, Text};
-use nightmare::shaders::default_font_shader;
+use nightmare::text::{default_font_shader, WordWrap, Text};
+use nightmare::render2d::{SimpleRenderer, Model};
 
 use crate::commandline::Command;
 use crate::listener::{Listener, MessageCtx};
@@ -11,8 +11,8 @@ use crate::{Message, Node};
 pub struct Console {
     visible: bool,
     lines: Vec<String>,
-    renderer: SimpleRenderer,
-    text_renderer: SimpleRenderer,
+    renderer: SimpleRenderer<Model>,
+    text_renderer: SimpleRenderer<Model>,
     viewport: Viewport,
     node: Node,
     texture: Texture,

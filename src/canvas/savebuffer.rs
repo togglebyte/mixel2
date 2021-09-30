@@ -6,18 +6,18 @@ use nightmare::texture::{Format, Texture};
 use nightmare::{Context, Position, Size, Sprite, VertexData, Viewport, Transform};
 use nightmare::framebuffer::Framebuffer;
 use nightmare::pixels::Pixel;
-use nightmare::render2d::SimpleRenderer;
+use nightmare::render2d::{SimpleRenderer, Model};
 
 use super::layer::Layer;
 use super::Image;
 
 pub struct SaveBuffer {
-    renderer: SimpleRenderer,
+    renderer: SimpleRenderer<Model>,
     viewport: Viewport,
 }
 
 impl SaveBuffer {
-    pub fn new(context: &mut Context, size: Size<i32>) -> Result<Self> {
+    pub fn new(context: &mut Context, size: Size) -> Result<Self> {
         let viewport = Viewport::new(Position::zero(), size);
         let renderer = SimpleRenderer::new(context, viewport.view_projection())?;
         let inst = Self {
@@ -32,7 +32,7 @@ impl SaveBuffer {
         &mut self,
         path: impl AsRef<Path>,
         image: &Image,
-        size: Size<i32>,
+        size: Size,
         context: &mut Context,
     ) -> Result<()> {
         self.viewport.resize(size);
@@ -40,7 +40,7 @@ impl SaveBuffer {
 
         let mut fb = Framebuffer::default();
 
-        let texture = Texture::<i32>::new()
+        let texture = Texture::new()
             .with_format(Format::Rgba)
             .with_no_data(size);
 
