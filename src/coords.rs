@@ -7,19 +7,19 @@ use nightmare::{Vector, Position};
 pub struct Coords(pub Position);
 
 impl Coords {
-    pub fn new(x: i32, y: i32) -> Self {
+    pub fn new(x: f32, y: f32) -> Self {
         Self(Position::new(x, y))
     }
 
     pub fn zero() -> Self {
-        Self(Position::zero())
+        Self(Position::zeros())
     }
 
-    pub fn to_translation(self, height: i32) -> Position {
+    pub fn to_translation(self, height: f32) -> Position {
         Position::new(self.0.x, height - self.0.y)
     }
 
-    pub fn from_translation(translation: Position, height: i32) -> Self {
+    pub fn from_translation(translation: Position, height: f32) -> Self {
         Self(Position::new(translation.x, height - translation.y))
     }
 }

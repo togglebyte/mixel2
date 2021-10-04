@@ -7,29 +7,29 @@ use nightmare::pixels::Pixel;
 use nightmare::{Context, Position, Size};
 use pretty_env_logger;
 
-pub mod plugins;
+// pub mod plugins;
 
 mod application;
-mod border;
-mod canvas;
+// mod border;
+// mod canvas;
 mod commandline;
 mod config;
-mod console;
+// mod console;
 mod coords;
-mod fsevents;
+// mod fsevents;
 mod input;
-mod layout;
+// mod layout;
 mod listener;
 mod message;
 mod mouse;
 mod node;
-mod status;
+// mod status;
 
 use application::App;
 use config::Config;
 use input::Input;
 use message::Message;
-use fsevents::PluginWatcher;
+// use fsevents::PluginWatcher;
 pub use node::Node;
 pub use mouse::Mouse;
 pub use coords::Coords;
@@ -58,10 +58,10 @@ fn main() -> Result<()> {
 
     let proxy = eventloop.proxy();
 
-    thread::spawn(move || {
-        let watcher = PluginWatcher::new("plugins", proxy).unwrap();
-        watcher.watch();
-    });
+    // thread::spawn(move || {
+    //     let watcher = PluginWatcher::new("plugins", proxy).unwrap();
+    //     watcher.watch();
+    // });
 
     // Event loop
     eventloop.run(move |event| {
@@ -73,8 +73,7 @@ fn main() -> Result<()> {
                 app.input(Input::Scroll(y as i32), modifiers, &mut context);
             }
             Event::MouseMoved { x, y } => {
-                mouse.pos.x = x as i32;
-                mouse.pos.y = y as i32;
+                mouse.set_pos(Position::new(x, y));
                 app.input(Input::mouse(mouse), modifiers, &mut context);
             }
             Event::MouseButton { button, state } => {

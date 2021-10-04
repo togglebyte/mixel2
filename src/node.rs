@@ -17,7 +17,7 @@ impl Node {
     /// Creata `Node` from a texture
     pub fn new(texture: &Texture) -> Self {
         let sprite = Sprite::new(texture);
-        let transform = Transform::default();
+        let transform = Transform::identity();
 
         Self {
             sprite,
@@ -29,13 +29,14 @@ impl Node {
     pub fn from_sprite(sprite: Sprite) -> Self {
         Self {
             sprite,
-            transform: Transform::default(),
+            transform: Transform::identity(),
         }
     }
 
     /// Get the view model
     pub fn model(&self) -> Model {
-        create_model_matrix(&self.sprite, &self.transform)
+        let matrix = create_model_matrix(&self.sprite, &self.transform);
+        Model::new(matrix, self.sprite.texture_rect)
     }
 
     /// Pass in the parent nodes transform

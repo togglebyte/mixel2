@@ -1,9 +1,9 @@
 use nightmare::{Position, Size};
 use nightmare::pixels::Pixel;
 
-use crate::layout::Split;
-use crate::canvas::LayerId;
-use crate::plugins::PluginCall;
+// use crate::layout::Split;
+// use crate::canvas::LayerId;
+// use crate::plugins::PluginCall;
 
 #[derive(Debug)]
 pub enum Command {
@@ -15,11 +15,11 @@ pub enum Command {
     SetAlpha(u8),
     Clear(Position),
     NewImage(Size),
-    Split(Split),
+    // Split(Split),
     CloseSelectedSplit,
     NewLayer,
     RemoveLayer,
-    ChangeLayer(LayerId),
+    // ChangeLayer(LayerId),
     Lua(String),
     Log(String),
 }

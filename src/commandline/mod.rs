@@ -2,10 +2,9 @@ use anyhow::Result;
 use log::error;
 use nightmare::events::Key;
 use nightmare::pixels::{Pixel, Pixels};
-use nightmare::text::{Text, WordWrap};
+use nightmare::render2d::{Model, SimpleRenderer};
+use nightmare::text::{default_font_shader, Text, WordWrap};
 use nightmare::{Context, Position, Size, Texture, VertexData, Viewport};
-use nightmare::text::default_font_shader;
-use nightmare::render2d::{SimpleRenderer, Model};
 
 use crate::application::Mode;
 use crate::input::Input;
@@ -35,19 +34,15 @@ pub struct CommandLine {
 
 impl CommandLine {
     pub fn new(size: Size, context: &mut Context) -> Result<Self> {
-        let text_renderer = SimpleRenderer::default_font(context)?;
         let font_size = 18.0;
-        let viewport = Viewport::new(
-            Position::new(0, 0),
-            viewport_size(size, font_size as i32),
-        );
 
-        let mut text = Text::from_path(
-            "/usr/share/fonts/TTF/Hack-Regular.ttf",
-            font_size,
-            WordWrap::NoWrap,
-            context,
-        )?;
+        let viewport = Viewport::new(Position::new(0.0, 0.0), viewport_size(size, font_size));
+
+        let shader = default_font_shader()?;
+        let mut text_renderer = SimpleRenderer::new(context, viewport.view_projection())?;
+        text_renderer.set_shader(shader, viewport.view_projection(), context);
+
+        let mut text = Text::from_path("/usr/share/fonts/TTF/Hack-Regular.ttf", font_size, WordWrap::NoWrap, context)?;
 
         text.position(Position::new(0.0, font_size / 1.7));
         text.z_index(9999);
@@ -55,7 +50,7 @@ impl CommandLine {
         let inst = Self {
             text_renderer,
             font_size,
-            caret: Caret::new(font_size, context)?,
+            caret: Caret::new(font_size, context, &viewport)?,
             viewport,
             text,
             input_buffer: String::new(),
@@ -66,7 +61,7 @@ impl CommandLine {
         Ok(inst)
     }
 
-    fn input(&mut self, input: Input) -> Option<Command> {
+    fn input(&mut self, input: Input, context: &mut Context) -> Option<Command> {
         match self.mode {
             Mode::Command => {}
             _ => return None,
@@ -77,20 +72,20 @@ impl CommandLine {
             Input::Char(c) => {
                 self.input_buffer.push(c);
                 self.visible_buffer.push(c);
-                self.update_text();
+                self.update_text(context);
             }
             Input::Key(key) => match key {
                 Key::Back => {
                     self.visible_buffer.pop();
                     self.input_buffer.pop();
-                    self.update_text();
+                    self.update_text(context);
                 }
                 Key::Return => {
                     let input = self.input_buffer.drain(..).collect::<String>();
                     let parser = Parser::new(&input);
                     let command = parser.parse();
                     self.visible_buffer.clear();
-                    self.update_text();
+                    self.update_text(context);
                     return Some(command);
                 }
                 _ => {}
@@ -102,14 +97,12 @@ impl CommandLine {
         None
     }
 
-    fn update_text(&mut self) {
+    fn update_text(&mut self, context: &mut Context) {
         if let Err(e) = self.text.set_text(&self.visible_buffer) {
             error!("Failed to set text: {:?}", e);
         }
 
-        while self.text.caret().x + self.caret.node.sprite.size.width
-            > self.viewport.size().width as f32
-        {
+        while self.text.caret().x + self.caret.node.sprite.size.x > self.viewport.size().x {
             if self.visible_buffer.is_empty() {
                 break;
             }
@@ -119,10 +112,10 @@ impl CommandLine {
             }
         }
 
-        self.caret.node.transform.translate_mut(Position::new(
-            self.text.caret().x,
-            self.font_size / 3.0,
-        ));
+        self.caret.node.transform.isometry.translation = Position::new(self.text.caret().x, self.font_size / 3.0).into();
+
+        let models = self.text.models();
+        self.text_renderer.load_data(&models, context);
     }
 }
 
@@ -130,17 +123,17 @@ impl CommandLine {
 //     - Listener -
 // -----------------------------------------------------------------------------
 impl Listener for CommandLine {
-    fn message(&mut self, message: &Message, _: &mut MessageCtx) -> Message {
+    fn message(&mut self, message: &Message, ctx: &mut MessageCtx) -> Message {
         match message {
             Message::Input(input, _) => {
                 return self
-                    .input(*input)
+                    .input(*input, ctx.context)
                     .map(Message::Command)
                     .unwrap_or(Message::Noop)
             }
             Message::Resize(new_size) => {
                 self.viewport
-                    .resize(viewport_size(*new_size, self.font_size as i32));
+                    .resize(viewport_size(*new_size, self.font_size));
             }
             Message::ModeChanged(mode) => {
                 self.mode = *mode;
@@ -151,7 +144,7 @@ impl Listener for CommandLine {
             | Message::Action(_)
             | Message::Command(_)
             | Message::CursorCoords(_)
-            | Message::LayerChanged { .. }
+            // | Message::LayerChanged { .. }
             | Message::ReloadPlugin(_)
             | Message::Noop => {}
         }
@@ -159,24 +152,16 @@ impl Listener for CommandLine {
         Message::Noop
     }
 
-    fn render(&mut self, ctx: &mut MessageCtx) -> Result<()> {
+    fn render(&mut self, ctx: &mut MessageCtx) {
         match self.mode {
             Mode::Command => {}
-            _ => return Ok(()),
+            _ => return,
         }
 
-        let texture = self.text.texture();
-        let text_vertex_data = self.text.vertex_data();
+        self.text.texture().bind();
 
-        self.text_renderer.render(
-            texture,
-            &text_vertex_data,
-            &self.viewport,
-            ctx.context,
-        )?;
-
+        self.text_renderer.render_instanced(ctx.context, 1);
         self.caret.render(ctx.context, &self.viewport);
-        Ok(())
     }
 }
 
@@ -193,16 +178,12 @@ impl Caret {
     pub fn new(font_size: f32, context: &mut Context, viewport: &Viewport) -> Result<Self> {
         let shader = default_font_shader()?;
         let mut renderer = SimpleRenderer::new(context, viewport.view_projection())?;
-        renderer.set_shader(shader);
-
+        renderer.set_shader(shader, viewport.view_projection(), context);
 
         let caret_size = Size::new(font_size, font_size * 2.0);
-        let caret_pixels = Pixels::from_pixel(Pixel::white(), Size::new(1, 1));
+        let caret_pixels = Pixels::from_pixel(Pixel::white(), Size::new(1.0, 1.0));
 
-        let texture = Texture::default_with_data(
-            Size::new(1.0, 1.0),
-            caret_pixels.as_bytes(),
-        );
+        let texture = Texture::default_with_data(Size::new(1.0, 1.0), caret_pixels.as_bytes());
         let mut node = Node::new(&texture);
         node.sprite.size = caret_size;
 
@@ -212,16 +193,8 @@ impl Caret {
     }
 
     fn render(&mut self, context: &mut Context, viewport: &Viewport) {
-        let res = self.renderer.render(
-            &self.texture,
-            &[self.node.vertex_data()],
-            viewport,
-            context,
-        );
-
-        if let Err(e) = res {
-            error!("caret renderer failed: {:?}", e);
-        }
+        self.renderer.load_data(&[self.node.model()], context);
+        self.renderer.render_instanced(context, 1);
     }
 }
 
@@ -229,6 +202,6 @@ impl Caret {
 //     - Viewport size -
 //     Used when resizing
 // -----------------------------------------------------------------------------
-fn viewport_size(size: Size, font_size: i32) -> Size {
-    Size::new(size.width, font_size * 2)
+fn viewport_size(size: Size, font_size: f32) -> Size {
+    Size::new(size.x, font_size * 2.0)
 }

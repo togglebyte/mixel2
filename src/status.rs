@@ -39,13 +39,13 @@ impl Status {
         text.position(position);
         text.z_index(9999);
 
-        let viewport = Viewport::new(Position::zero(), size);
+        let viewport = Viewport::new(Position::zeros(), size);
         let renderer = SimpleRenderer::new(context, viewport.view_projection())?;
 
         let mut inst = Self {
             dirty: true,
             text,
-            cursor_coords: Coords::zero(),
+            cursor_coords: Coords::zeros(),
             mode: Mode::Normal,
             layer: LayerId::from_display(1),
             total_layers: 1,

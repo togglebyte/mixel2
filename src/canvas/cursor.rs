@@ -32,6 +32,6 @@ impl Cursor {
 
     pub fn set_colour(&mut self, colour: Pixel) {
         let size = Size::new(1usize, 1);
-        self.texture.write_region(Position::zero(), size.cast(), Pixels::from_pixel(colour, size).as_bytes());
+        self.texture.write_region(Position::zeros(), size.cast(), Pixels::from_pixel(colour, size).as_bytes());
     }
 }

@@ -10,7 +10,7 @@ pub enum Split {
 }
 
 fn placeholder() -> Node {
-    Node::Leaf { id: std::usize::MAX, size: Size::new(1, 1), pos: Position::zero() }
+    Node::Leaf { id: std::usize::MAX, size: Size::new(1, 1), pos: Position::zeros() }
 }
 
 #[derive(Debug)]
@@ -231,12 +231,12 @@ mod test {
 
     #[test]
     fn split_horz_and_resize() {
-        let mut tree = Node::Leaf { id: 0, pos: Position::zero(), size: Size::new(20, 20) };
+        let mut tree = Node::Leaf { id: 0, pos: Position::zeros(), size: Size::new(20, 20) };
         tree.split(0, 100, Split::Horz);
         tree.resize(0, Size::new(20, 5));
 
         // Left branch
-        let expected = (0, Size::new(20, 5), Position::zero());
+        let expected = (0, Size::new(20, 5), Position::zeros());
         let actual = tree.layout()[0];
         assert_eq!(expected, actual);
 
@@ -248,7 +248,7 @@ mod test {
 
     #[test]
     fn double_split() {
-        let mut tree = Node::Leaf { id: 0, pos: Position::zero(), size: Size::new(20, 20) };
+        let mut tree = Node::Leaf { id: 0, pos: Position::zeros(), size: Size::new(20, 20) };
         tree.split(0, 100, Split::Horz);
         tree.split(100, 200, Split::Vert);
         tree.resize(100, Size::new(3, 10));

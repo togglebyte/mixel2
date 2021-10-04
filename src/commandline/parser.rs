@@ -2,9 +2,9 @@ use log::info;
 use nightmare::{Position, Size};
 use nightmare::pixels::Pixel;
 
-use crate::layout::Split;
-use crate::canvas::LayerId;
-use crate::plugins::{Arg, PluginCall};
+// use crate::layout::Split;
+// use crate::canvas::LayerId;
+// use crate::plugins::{Arg, PluginCall};
 use super::commands::Command;
 
 macro_rules! or_noop {
@@ -57,14 +57,14 @@ impl<'a> Parser<'a> {
             "put" => Command::Put(or_noop!(self.args_to_pos())),
             "clear" => Command::Clear(or_noop!(self.args_to_pos())),
             "new" => Command::NewImage(or_noop!(self.args_to_size())),
-            "split" => Command::Split(Split::Horz),
-            "splitv" => Command::Split(Split::Vert),
+            // "split" => Command::Split(Split::Horz),
+            // "splitv" => Command::Split(Split::Vert),
             "close" => Command::CloseSelectedSplit,
             "colour" | "color" => Command::SetColour(or_noop!(self.args_to_rgb())),
             "alpha" => Command::SetAlpha(or_noop!(self.args_to_u8())),
-            "layer" => Command::ChangeLayer(LayerId::from_display(or_noop!(self.args_to_usize()))),
-            "newlayer" => Command::NewLayer,
-            "removelayer" => Command::RemoveLayer,
+            // "layer" => Command::ChangeLayer(LayerId::from_display(or_noop!(self.args_to_usize()))),
+            // "newlayer" => Command::NewLayer,
+            // "removelayer" => Command::RemoveLayer,
             "lua" => Command::Lua(self.args.to_owned()),
             "log" => Command::Log(self.args.to_owned()),
             _ => Command::Noop,
@@ -92,16 +92,16 @@ impl<'a> Parser<'a> {
 
     fn args_to_pos(&self) -> Option<Position> {
         let mut parts = self.args.split_whitespace();
-        let x = parts.next().map(str::parse::<i32>).map(Result::ok).flatten()?;
-        let y = parts.next().map(str::parse::<i32>).map(Result::ok).flatten()?;
+        let x = parts.next().map(str::parse::<f32>).map(Result::ok).flatten()?;
+        let y = parts.next().map(str::parse::<f32>).map(Result::ok).flatten()?;
 
         Some(Position::new(x, y))
     }
 
     fn args_to_size(&self) -> Option<Size> {
         let mut parts = self.args.split_whitespace();
-        let width = parts.next().map(str::parse::<i32>).map(Result::ok).flatten()?;
-        let height = parts.next().map(str::parse::<i32>).map(Result::ok).flatten()?;
+        let width = parts.next().map(str::parse::<f32>).map(Result::ok).flatten()?;
+        let height = parts.next().map(str::parse::<f32>).map(Result::ok).flatten()?;
 
         Some(Size::new(width, height))
     }

@@ -38,7 +38,7 @@ fn vertex_data(texture_size: Size<i32>, viewport: &Viewport, pixel_size: i32) ->
     let mut bottom_left = Sprite::from_size(texture_size);
     bottom_left.z_index = z_index;
     bottom_left.texture_rect = Rect::new(Point::new(0, 4), corner_size);
-    bottom_left.position = Position::zero();
+    bottom_left.position = Position::zeros();
     bottom_left.size = corner_size;
 
     // -----------------------------------------------------------------------------
@@ -140,7 +140,7 @@ impl Border {
         let vertex_data = vertex_data(texture_size, &viewport, renderer.pixel_size);
 
         // let viewport = viewport.sub_viewport(viewport.position, viewport.position);
-        let viewport = viewport.relative(Position::zero(), Position::zero());
+        let viewport = viewport.relative(Position::zeros(), Position::zeros());
 
         let inst = Self {
             vertex_data,

@@ -12,7 +12,7 @@ use crate::input::Input;
 pub struct Mouse {
     pub state: ButtonState,
     pub button: Option<MouseButton>,
-    pub pos: Position,
+    pos: (i32, i32),
 }
 
 impl Mouse {
@@ -20,10 +20,19 @@ impl Mouse {
         Self {
             state: ButtonState::Released,
             button: None,
-            pos: Position::zero(),
+            pos: (0, 0),
         }
     }
+
+    pub fn pos(&self) -> Position {
+        Position::new(self.pos.0 as f32, self.pos.1 as f32)
+    }
+
+    pub fn set_pos(&mut self, pos: Position) {
+        self.pos = (pos.x as i32, pos.y as i32)
+    }
 }
+
 
 pub struct MouseCursor {
     node: Node,
@@ -32,12 +41,12 @@ pub struct MouseCursor {
 }
 
 impl MouseCursor {
-    pub fn new(ctx: &mut MessageCtx, viewport: Viewport) -> Result<Self> {
+    pub fn new(ctx: &mut MessageCtx) -> Result<Self> {
         let texture = Texture::from_disk("cursor.png")?;
-        let renderer = SimpleRenderer::new(ctx.context, viewport.view_projection())?;
+        let renderer = SimpleRenderer::new(ctx.context, ctx.app_viewport.view_projection())?;
         let mut node = Node::new(&texture);
         node.sprite.z_index = 10;
-        node.sprite.anchor = (node.sprite.size / 2).to_vector();
+        node.sprite.anchor = node.sprite.size / 2.0;
 
         let inst = Self {
             node,
@@ -53,19 +62,15 @@ impl MouseCursor {
 impl Listener for MouseCursor {
     fn message(&mut self, msg: &Message, ctx: &mut MessageCtx) -> Message {
         if let Message::Input(Input::Mouse(mouse), _) = msg {
-            self.node.transform.translate_mut(mouse.pos);
+            self.node.transform.isometry.translation = mouse.pos().into();
+            let model = self.node.model();
+            self.renderer.load_data(&[model], ctx.context);
         }
         
         Message::Noop
     }
 
-    fn render(&mut self, ctx: &mut MessageCtx) -> Result<()> {
-        self.renderer.render(
-           &self.texture,
-           &[self.node.vertex_data()],
-           ctx.app_viewport,
-           ctx.context,
-        );
-        Ok(())
+    fn render(&mut self, ctx: &mut MessageCtx) {
+        self.renderer.render_instanced(ctx.context, 1);
     }
 }

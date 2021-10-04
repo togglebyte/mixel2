@@ -18,7 +18,7 @@ pub struct SaveBuffer {
 
 impl SaveBuffer {
     pub fn new(context: &mut Context, size: Size) -> Result<Self> {
-        let viewport = Viewport::new(Position::zero(), size);
+        let viewport = Viewport::new(Position::zeros(), size);
         let renderer = SimpleRenderer::new(context, viewport.view_projection())?;
         let inst = Self {
             renderer,

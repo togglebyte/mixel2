@@ -4,7 +4,7 @@ use nightmare::events::{MouseButton, ButtonState, Modifiers};
 use nightmare::{Position, Size};
 
 use crate::application::Mode;
-use crate::canvas::LayerId;
+// use crate::canvas::LayerId;
 use crate::commandline::Command;
 use crate::config::Action;
 use crate::input::Input;
@@ -19,7 +19,7 @@ pub enum Message {
     Command(Command),
     Action(Action),
     CursorCoords(Coords),
-    LayerChanged { layer: LayerId, total_layers: usize },
+    // LayerChanged { layer: LayerId, total_layers: usize },
     ReloadPlugin(PathBuf),
     Noop,
 }

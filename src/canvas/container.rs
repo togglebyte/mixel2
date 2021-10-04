@@ -61,7 +61,7 @@ impl Container {
             node: Node::from_sprite(sprite),
             dir,
             image_id: None,
-            cursor: Cursor::new(Coords::zero(), sprite.anchor),
+            cursor: Cursor::new(Coords::zeros(), sprite.anchor),
             colour: Pixel::black(),
             scale: 8,
         };

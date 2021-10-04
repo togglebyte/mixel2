@@ -82,7 +82,7 @@ impl Layer {
     // TODO: only draw the dirty region
     pub fn draw_to_texture(&mut self) {
         self.texture.write_region(
-            nightmare::Position::zero(),
+            nightmare::Position::zeros(),
             self.buffer.size().cast(),
             self.buffer.as_bytes(),
         );
